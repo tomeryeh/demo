@@ -4,7 +4,7 @@ module.exports = function(grunt) {
 
 	return {
 		js: {
-			files: ['{marionette,react,angular}/src/**/*.js',
+			files: ['src/**/*.js',
 				"../server/*.js",
 				"../tests/{ui,services}/*.js"
 			],
@@ -16,10 +16,7 @@ module.exports = function(grunt) {
 			}
 		},
 		html: {
-			files: ['index.html',
-				'{marionette,angular}/src/**/*.html',
-				'{marionette,react,angular}/src/*.html'
-			],
+			files: ['index.html'],
 			//tasks: ['handlebars'],
 			options: {
 				debounceDelay: 250,
@@ -59,10 +56,8 @@ module.exports = function(grunt) {
 			},
 			files: [
 				'css/app.css',
-				'{marionette,angular}/src/**/*.js',
-				'react/src/bundle.js',
+				'src/**/*.js',
 				'index.html',
-				'marionette,react,angular}/src/*.html',
 				'locales/**/*.json'
 			]
 		}

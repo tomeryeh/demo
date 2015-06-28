@@ -51,7 +51,6 @@ app.use("/bower_components/", function(req, res, next) {
 
 app.use("/src/", function(req, res, next) {
 	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
-
 });
 
 app.use(function(req, res, next) {

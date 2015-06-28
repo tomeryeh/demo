@@ -3,37 +3,25 @@
 //@import  "../bower_components/bootstrap/dist/css/bootstrap.min.css";
 //@import  "../bower_components/bootstrap/dist/css/bootstrap-theme.min.css";
 
-
 @import "login.less";
-
 
 html, body {
 	height: 100%;
 	width: 100%;
 }
 
-
 .container-flex {
 	display: flex;
 	height : 100%;
 	width : 100%;
-  	flex-flow: row wrap;
-  	//background-color: BLUE;
-  	padding: 0;
-  	margin:0;
+	flex-flow: row wrap;
+	padding: 0;
+	margin:0;
 }
 
-.header {
-	height : 10%;
-}
+.header,.footer  {height : 10%;}
 
-.footer {
-	height : 10%;
-}
-
-.footer , .center,.header{
-	flex-basis : 100%;
-}
+.footer , .center,.header{	flex-basis : 100%;}
 
 
 @media (max-width: @screen-xs-max) {
@@ -46,7 +34,6 @@ html, body {
 	height : 80%;
 	display: flex;
 	flex-flow: row wrap;
-
 
 	.left-main {
 		flex-grow: 1;
