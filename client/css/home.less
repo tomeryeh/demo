@@ -1,0 +1,125 @@
+@import "../bower_components/bootstrap/less/variables.less";
+@import "variables.less";
+@z-index-detail: 1;
+@z-index-blur: 4;
+@z-index-sidebar: 6;
+//heigth nav is 
+//@height-nav  : 10%;
+@height-nav: 0.1;
+//ratio between sidebar and main when side bar is visible (not smart phone)
+@sm-ratio-sidebar-main: 0.15;
+//ratio between sidebar and main whe side bar is visible (for smart phone)
+@xs-ratio-sidebar-main: 0.9;
+@slide-duration-sidebar: 0.4s;
+html,
+body,
+.center,
+#main-layout,
+#sidebar,
+#detail-layout {
+	height: 100%;
+}
+#header-layout {
+	margin-bottom: 0;
+	height: percentag(@height-nav);
+	min-height: 40px;
+	line-height: percentag(@height-nav);
+	position: static;
+}
+#middle-layout {
+	height: 100%;
+	width: 100%;
+	position: fixed;
+	padding: 0;
+}
+#sidebar-layout {
+	width: percentage(@sm-ratio-sidebar-main);
+	height: 100%;
+	position: fixed;
+	background-color: @background-color-sidebar-layout;
+	border-right-style: solid;
+	border-right-width: 3px;
+	transform: translateX(0);
+	transition: @slide-duration-sidebar ease all;
+}
+.toggle-siderbar {
+	height: 40px;
+	float: left;
+	position: relative;
+	display: inline;
+	margin: 0;
+}
+.icon-bar {
+	background-color: #fff;
+}
+#toggle-inner-siderbar {
+	float: right;
+}
+#main-layout {
+	width: percentage(1 - @sm-ratio-sidebar-main);
+	//height : percentage(1 - @height-nav);
+	bottom: 0;
+	float: right;
+	position: relative;
+	overflow: hidden;
+	padding-left: 10px;
+	padding-top: 10px;
+	background-color: @background-color-main-layout;
+	transition: width @slide-duration-sidebar;
+}
+#detail-layout {
+	float: right;
+	transform: translate3d(100%, 0, 0);
+	transition: @slide-duration-sidebar ease all;
+	width: 100%;
+	position: fixed;
+	//top : percentage(@nav-height);
+	z-index: @z-index-detail;
+}
+#middle-layout.toggle-detail {
+	#detail-layout {
+		transform: translate3d(0%, 0, 0);
+		transition: @slide-duration-sidebar ease all;
+	}
+}
+#middle-layout.toggle-sidebar {
+	#main-layout {
+		width: 100%;
+	}
+	#sidebar-layout {
+		transform: translate3d(-100%, 0, 0);
+	}
+}
+//for smart phone sidbar overlap most part of main part AND nav bar
+@media (max-width: @screen-xs-max) {
+	#sidebar-layout {
+		width: percentage(@xs-ratio-sidebar-main);
+		top: 0;
+		height: 100%;
+		z-index: @z-index-sidebar;
+	}
+	#main-layout {
+		width: 100%;
+	}
+	#blur-layout {
+		position: fixed;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		z-index: @z-index-blur;
+	}
+	//blur on/off
+	#main-layout {
+		box-shadow: 0 0 0 0 rgba(255, 255, 255, 1);
+		opacity: 0.7;
+	}
+	#middle-layout.toggle-sidebar {
+		#main-layout {
+			opacity: initial;
+		}
+		#blur-layout {
+			width: 0;
+			height: 0;
+		}
+	}
+}

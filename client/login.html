@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../../css/app.css">
+	<style type="text/css"></style>
+</head>
+<title>Choose your flavor</title>
+
+<body>
+	<div class="container">
+		<div class="center-container">
+			<div class="row">
+				<div class="col-xs-4 col-xs-offset-4">
+					<img class="img-responsive login" src="/assets/img/angular.jpg">
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-3 col-md-offset-2 col-xs-8 col-xs-offset-2 col-sm-8">
+					<div class="form-group input-group">
+						<span class=" input-group-addon">
+						<span class="glyphicon glyphicon-user"></span>
+						</span>
+						<input id="user-input" type="user" class="form-control" placeholder="Your name">
+					</div>
+				</div>
+				<div class="col-md-3 col-md-offset-0 col-xs-8 col-xs-offset-2 col-sm-8">
+					<div class="input-group">
+						<span class="input-group-addon" id="sizing-addon1">
+							<span class="glyphicon glyphicon-lock"></span>
+						</span>
+						<input id="password-input" type="password" class="form-control" placeholder="Your Password">
+					</div>
+				</div>
+				<div class="col-md-2 col-md-offset-0 col-xs-6 col-xs-offset-3">
+					<input id="login-button" class="btn btn-primary btn-block" onclick="loginFunc()" type="button" value="Login" title="Login">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="./bower_components/jquery/dist/jquery.min.js"></script>
+	<script src="./bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+	<script>
+	$(document).ready(function() {
+		//alert("cocuco");
+		$('.carousel').carousel();
+	});
+	var loginFunc = function() {
+		var link = document.getElementById("login-button");
+		console.log(link);
+		var lib = "angular";
+		//var lib= "react";
+		if (lib === "angular")
+			window.location.href = "./angular/src/index.html";
+		if (lib === "marionette")
+			window.location.href = "./marionette/src/index.html";
+		if (lib === "react")
+			window.location.href = "./react/src/index.html";
+	};
+	</script>
+	<script src="//localhost:35729/livereload.js"></script>
+
+</body>
+
+</html>

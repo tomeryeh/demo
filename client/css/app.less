@@ -1,0 +1,74 @@
+@import (inline) "../bower_components/bootstrap/dist/css/bootstrap.min.css";
+@import (inline) "../bower_components/bootstrap/dist/css/bootstrap-theme.min.css";
+//@import  "../bower_components/bootstrap/dist/css/bootstrap.min.css";
+//@import  "../bower_components/bootstrap/dist/css/bootstrap-theme.min.css";
+
+
+@import "login.less";
+
+
+html, body {
+	height: 100%;
+	width: 100%;
+}
+
+
+.container-flex {
+	display: flex;
+	height : 100%;
+	width : 100%;
+  	flex-flow: row wrap;
+  	//background-color: BLUE;
+  	padding: 0;
+  	margin:0;
+}
+
+.header {
+	height : 10%;
+}
+
+.footer {
+	height : 10%;
+}
+
+.footer , .center,.header{
+	flex-basis : 100%;
+}
+
+
+@media (max-width: @screen-xs-max) {
+	.left-main, .right-main,.footer,.header{
+		display: none;
+	}
+}
+
+.center {
+	height : 80%;
+	display: flex;
+	flex-flow: row wrap;
+
+
+	.left-main {
+		flex-grow: 1;
+		flex-basis :10%;
+	}
+
+	.right-main {
+		flex-grow: 1;
+		flex-basis :10%;
+	}
+
+	.center-main {
+		align-self:stretch;
+		flex-grow: 4;
+		flex-shrink: 1;
+		background-color: RED;
+		flex-basis :80%;
+		height: 100%; 
+
+	#map-canvas {
+		height: 100%; 
+		margin: 0; padding: 0;}
+	}
+}
+

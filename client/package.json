@@ -1,0 +1,28 @@
+{
+	"name": "all-photo",
+	"version": "0.0.0",
+	"author": "Eric Alvernhe",
+	"license": "BSD-2-Clause",
+	"description": "Try to show photos",
+	"dependencies": {
+		"grunt": "~0.4.5",
+		"install": "~0.1.8",
+		"grunt-contrib-handlebars": "~0.9.3",
+		"npm": "~2.5.0",
+		"jit-grunt": "~0.9.1",
+		"less": "~2.4.0"
+	},
+	"devDependencies": {
+		"grunt-jsonlint": "~1.0.4",
+		"grunt-jsbeautifier": "~0.2.8",
+		"grunt-processhtml": "~0.3.7",
+		"grunt-contrib-jshint": "~0.10.0",
+		"jshint-stylish": "~1.0.0",
+		"grunt-contrib-watch": "^0.6.1",
+		"grunt-contrib-less": "~1.0.0",
+		"grunt-contrib-csslint": "~0.3.1",
+		"grunt-jscs": "~1.2.0",
+		"grunt-config-dir": "~0.3.2",
+		"grunt-newer": "~1.1.0"
+	}
+}
