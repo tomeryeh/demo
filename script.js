@@ -1,4 +1,4 @@
-//var kuzzle = new Kuzzle("http://localhost:8081");
+var kuzzle = new Kuzzle("http://localhost:8081");
 
 angular.module("demo", [])
   .controller("todoCtrl", ["$scope", function($scope) {
@@ -7,11 +7,13 @@ angular.module("demo", [])
     $scope.todos = [];
 
     $scope.init = function() {
+      kuzzle.subscribe("todo", {term: {type:"todo"}}, function(response) {
 
+      });
     };
 
     $scope.addTodo = function() {
-      $scope.todos.push($scope.newTodo);
+      kuzzle.create("todo", {type: "todo", label :$scope.newTodo.label});
       $scope.newTodo = null;
     };
 
@@ -22,5 +24,7 @@ angular.module("demo", [])
     $scope.delete = function(index) {
       $scope.todos.splice(index);
     };
+
+    
 
   }]);
