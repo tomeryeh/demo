@@ -10,7 +10,6 @@ angular.module("demo", [])
       getAllTodo();
 
       kuzzle.subscribe("todo", {term: {type:"todo"}}, function(response) {
-        console.log(response);
         if(response.action === "create") {
           var newTodo = {
             _id: response._id,
@@ -50,7 +49,7 @@ angular.module("demo", [])
     };
 
     $scope.toggleDone = function(index) {
-      kuzzle.update("todo", {_id: $scope.todos[index]._id, done: !$scope.todos[index].done, type: "todo"});
+      kuzzle.update("todo", {_id: $scope.todos[index]._id, done: !$scope.todos[index].done});
     };
 
     $scope.delete = function(index) {
