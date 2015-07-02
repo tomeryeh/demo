@@ -11,7 +11,7 @@ angular.module("demo", [])
     };
 
     $scope.addTodo = function() {
-      $scope.todos.push($scope.newTodo);
+      addToList($scope.newTodo);
       $scope.newTodo = null;
     };
 
@@ -21,6 +21,10 @@ angular.module("demo", [])
 
     $scope.delete = function(index) {
       $scope.todos.splice(index);
+    };
+
+    var addToList = function(todo) {
+      $scope.todos.push(todo);
     };
 
   }]);
