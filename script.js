@@ -24,7 +24,7 @@ angular.module("demo", [])
         if(response.action === "delete") {
           $scope.todos.some(function(todo, index) {
             if(todo._id === response._id) {
-              $scope.todos.splice(index);
+              $scope.todos.splice(index, 1);
               return true;
             }
           });
