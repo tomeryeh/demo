@@ -13,8 +13,8 @@ angular.module("demo", [])
         if(response.action === "create") {
           var newChooseYourDay = {
             _id: response._id,
-            title: response._source.title,
-            dates: response._source.dates,
+            title: response.body.title,
+            dates: response.body.dates,
             done: response.body.done
           };
 

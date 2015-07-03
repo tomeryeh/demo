@@ -27,8 +27,8 @@
                     <tbody>
                         <tr ng-repeat="chooseyourday in chooseyourdays" ng-class="{success: chooseyourday.done}">
                             <td>{{ chooseyourday.title }}</td>
-                            <td><input type="checkbox" ng-checked="chooseyourday.done" ng-click="toggleDone($index)"/></td>
                             <td><p ng-repeat="date in chooseyourday.dates">{{date.value}}</p></td>
+                            <td><input type="checkbox" ng-checked="chooseyourday.done" ng-click="toggleDone($index)"/></td>
                             <td>
                                 <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Delete" ng-click="delete($index)">
                                     <button class="btn btn-danger btn-xs" data-title="Delete" data-toggle="modal" data-target="#delete">
