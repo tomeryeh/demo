@@ -3,15 +3,11 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
     </head>
 
-    <body ng-app="demo">
+    <body ng-app="chooseyourday">
 
         <div class="container" ng-controller="chooseyourdayCtrl" ng-init="init()">
-            <div class="jumbotron">
-                <h1>ChooseYourDay</h1>
-            </div>
-
             <div class="page-header">
-                <h1></h1>
+                <h1>ChooseYourDay <small>Plan your meetings easily</small></h1>
             </div>
 
             <div class="col-md-12">
@@ -49,8 +45,8 @@
                             <input type="text" class="form-control" ng-model="date.value" placeholder="Date"/>
                         </ng-form>
                     </div>
-                    <button type="submit" class="btn btn-primary" ng-click="addADay()">Add a day</button>
-                    <button type="submit" class="btn btn-primary" ng-click="addChooseYourDay()">New Event</button>
+                    <button type="submit" class="btn btn-primary" ng-click="addADay()"><span class="glyphicon glyphicon-calendar"></span> Add a day</button>
+                    <button type="submit" class="btn btn-primary" ng-click="addChooseYourDay()"><span class="glyphicon glyphicon-plus"></span> New Event</button>
                 </form>
             </div>
 

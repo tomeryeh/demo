@@ -1,6 +1,6 @@
 var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
 
-angular.module("demo", [])
+angular.module("chooseyourday", [])
   .controller("chooseyourdayCtrl", ["$scope", function($scope) {
 
     $scope.newChooseYourDay = null;
