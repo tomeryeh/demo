@@ -1,39 +1,40 @@
-var kuzzle = new Kuzzle("http://localhost:8081");
+var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
 
 angular.module("demo", [])
-  .controller("todoCtrl", ["$scope", function($scope) {
+  .controller("chooseyourdayCtrl", ["$scope", function($scope) {
 
-    $scope.newTodo = null;
-    $scope.todos = [];
+    $scope.newChooseYourDay = null;
+    $scope.chooseyourdays = [];
 
     $scope.init = function() {
-      getAllTodo();
+      getAllChooseYourDay();
 
-      kuzzle.subscribe("todo", {term: {type:"todo"}}, function(response) {
+      kuzzle.subscribe("chooseyourday", {term: {type:"chooseyourday"}}, function(response) {
         if(response.action === "create") {
-          var newTodo = {
+          var newChooseYourDay = {
             _id: response._id,
-            label: response.body.label,
+            title: response._source.title,
+            dates: response._source.dates,
             done: response.body.done
           };
 
-          addToList(newTodo);
+          addToList(newChooseYourDay);
         }
 
         if(response.action === "delete") {
-          $scope.todos.some(function(todo, index) {
-            if(todo._id === response._id) {
-              $scope.todos.splice(index, 1);
+          $scope.chooseyourdays.some(function(chooseyourday, index) {
+            if(chooseyourday._id === response._id) {
+              $scope.chooseyourdays.splice(index, 1);
               return true;
             }
           });
         }
 
         if(response.action === "update") {
-          $scope.todos.some(function(todo, index) {
-            if(todo._id === response._id) {
-              console.log($scope.todos[index]);
-              $scope.todos[index].done = response.body.done;
+          $scope.chooseyourdays.some(function(chooseyourday, index) {
+            if(chooseyourday._id === response._id) {
+              console.log($scope.chooseyourdays[index]);
+              $scope.chooseyourdays[index].done = response.body.done;
               return true;
             }
           });
@@ -43,33 +44,48 @@ angular.module("demo", [])
       });
     };
 
-    $scope.addTodo = function() {
-      kuzzle.create("todo", {type: "todo", label: $scope.newTodo.label, done: false}, true);
-      $scope.newTodo = null;
+    $scope.addChooseYourDay = function() {
+      kuzzle.create("chooseyourday", {type: "chooseyourday", date: $scope.newChooseYourDay.date, title: $scope.newChooseYourDay.title, dates: $scope.newChooseYourDay.dates, done: false}, true);
+      $scope.newChooseYourDay = null;
     };
 
+    $scope.addADay = function() {
+      if (typeof $scope.newChooseYourDay == "undefined" || $scope.newChooseYourDay === null) {
+        $scope.newChooseYourDay = {};
+      }
+
+      if (typeof $scope.newChooseYourDay.dates == "undefined") {
+        $scope.newChooseYourDay.dates = [];
+      }
+
+      var i = $scope.newChooseYourDay.dates.length;
+      $scope.newChooseYourDay.dates[i] = { value: "new Date" };
+    }
+
     $scope.toggleDone = function(index) {
-      kuzzle.update("todo", {_id: $scope.todos[index]._id, done: !$scope.todos[index].done});
+      kuzzle.update("chooseyourday", {_id: $scope.chooseyourdays[index]._id, done: !$scope.chooseyourdays[index].done});
     };
 
     $scope.delete = function(index) {
-      kuzzle.delete("todo", $scope.todos[index]._id);
+      kuzzle.delete("chooseyourday", $scope.chooseyourdays[index]._id);
     };
 
-    var addToList = function(todo) {
-      $scope.todos.push(todo);
+    var addToList = function(chooseyourday) {
+      $scope.chooseyourdays.push(chooseyourday);
     };
 
-    var getAllTodo = function() {
-      kuzzle.search("todo", {}, function(response) {
-        response.result.hits.hits.forEach(function(todo) {
-          var newTodo = {
-            _id: todo._id,
-            label: todo._source.label,
-            done: todo._source.done
+    var getAllChooseYourDay = function() {
+      kuzzle.search("chooseyourday", {}, function(response) {
+        response.result.hits.hits.forEach(function(chooseyourday) {
+          var newChooseYourDay = {
+            _id: chooseyourday._id,
+            title: chooseyourday._source.title,
+            dates: chooseyourday._source.dates,
+            done: chooseyourday._source.done
           };
 
-          $scope.todos.push(newTodo);
+        console.log(chooseyourday);
+          $scope.chooseyourdays.push(newChooseYourDay);
         });
 
         $scope.$apply();

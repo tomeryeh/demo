@@ -5,28 +5,30 @@
 
     <body ng-app="demo">
 
-        <div class="container" ng-controller="todoCtrl" ng-init="init()">
+        <div class="container" ng-controller="chooseyourdayCtrl" ng-init="init()">
             <div class="jumbotron">
-                <h1>Kuzzle workshop 1</h1>
+                <h1>ChooseYourDay</h1>
             </div>
 
             <div class="page-header">
-                <h1>TODO</h1>
+                <h1></h1>
             </div>
 
             <div class="col-md-12">
                 <table class="table table-striped">
                     <thead>
                     <tr>
-                        <th>Done</th>
                         <th>Label</th>
+                        <th>Dates</th>
+                        <th>Done</th>
                         <th>Delete</th>
                     </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="todo in todos" ng-class="{success: todo.done}">
-                            <td><input type="checkbox" ng-checked="todo.done" ng-click="toggleDone($index)"/></td>
-                            <td>{{ todo.label }}</td>
+                        <tr ng-repeat="chooseyourday in chooseyourdays" ng-class="{success: chooseyourday.done}">
+                            <td>{{ chooseyourday.title }}</td>
+                            <td><input type="checkbox" ng-checked="chooseyourday.done" ng-click="toggleDone($index)"/></td>
+                            <td><p ng-repeat="date in chooseyourday.dates">{{date.value}}</p></td>
                             <td>
                                 <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Delete" ng-click="delete($index)">
                                     <button class="btn btn-danger btn-xs" data-title="Delete" data-toggle="modal" data-target="#delete">
@@ -40,9 +42,15 @@
 
                 <form class="form-inline">
                     <div class="form-group">
-                        <input type="text" class="form-control" ng-model="newTodo.label" placeholder="something to do..."/>
+                        <input type="text" name="title" class="form-control" ng-model="newChooseYourDay.title" placeholder="New Event ..."/>
                     </div>
-                    <button type="submit" class="btn btn-primary" ng-click="addTodo()">Add</button>
+                    <div ng-repeat="date in newChooseYourDay.dates">
+                        <ng-form name="dateFieldForm">
+                            <input type="text" class="form-control" ng-model="date.value" placeholder="Date"/>
+                        </ng-form>
+                    </div>
+                    <button type="submit" class="btn btn-primary" ng-click="addADay()">Add a day</button>
+                    <button type="submit" class="btn btn-primary" ng-click="addChooseYourDay()">New Event</button>
                 </form>
             </div>
 
