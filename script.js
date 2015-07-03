@@ -59,7 +59,7 @@ angular.module("demo", [])
       }
 
       var i = $scope.newChooseYourDay.dates.length;
-      $scope.newChooseYourDay.dates[i] = { value: "new Date" };
+      $scope.newChooseYourDay.dates[i] = { value: "" };
     }
 
     $scope.toggleDone = function(index) {
