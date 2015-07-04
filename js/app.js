@@ -5,19 +5,25 @@ var chooseYourDay = angular.module("chooseyourday", [
 
 chooseYourDay.config(['$routeProvider',
     function ($routeProvider) {
-        $routeProvider.when('/EventList', {
+        $routeProvider.when('/ListEvent', {
             templateUrl: 'templates/event_list.html',
-            controller: 'EventListController'
+            controller: 'ListEventController'
         }).when('/AddEvent', {
-            templateUrl: 'templates/show_orders.html',
+            templateUrl: 'templates/add_event.html',
             controller: 'AddEventController'
+        }).when('/EditEvent/:eventId', {
+            templateUrl: 'templates/add_event.html',
+            controller: 'AddEventController'
+        }).when('/OpenEvent/:eventId', {
+            templateUrl: 'templates/open_event.html',
+            controller: 'OpenEventController'
         }).otherwise({
-            redirectTo: '/EventList'
+            redirectTo: '/ListEvent'
         });
     }
 ]);
 
-chooseYourDay.controller("EventListController", ["$scope", '$http', function ($scope) {
+chooseYourDay.controller("ListEventController", ["$scope", "$location", function ($scope, $location) {
     $scope.events = [];
 
     $scope.init = function () {
@@ -25,7 +31,7 @@ chooseYourDay.controller("EventListController", ["$scope", '$http', function ($s
 
         kuzzle.subscribe("chooseyourday", { term: { type: "chooseyourday_event" } }, function (response) {
             if (response.action === "create") {
-                $scope.addToList(response.body);
+                $scope.addToList(response._id, response.body);
             }
 
             if (response.action === "delete") {
@@ -40,7 +46,8 @@ chooseYourDay.controller("EventListController", ["$scope", '$http', function ($s
             if (response.action === "update") {
                 $scope.events.some(function (event, index) {
                     if (event._id === response._id) {
-                        $scope.events[index].done = response.body.done;
+                        $scope.events[index].name = response.body.name;
+                        $scope.events[index].dates = response.body.dates;
                         return true;
                     }
                 });
@@ -51,17 +58,18 @@ chooseYourDay.controller("EventListController", ["$scope", '$http', function ($s
     };
 
     $scope.getAllEvents = function () {
-        kuzzle.search("chooseyourday", { "filter": { "term": { "type": "chooseyourday_event" } } }, function (response) {
+        kuzzle.search("chooseyourday", { "filter": { "term": { type: "chooseyourday_event" } } }, function (response) {
             response.result.hits.hits.forEach(function (event) {
-                $scope.addToList(event._source);
+                $scope.addToList(event._id, event._source);
             });
 
             $scope.$apply();
         });
     };
 
-    $scope.addToList = function (data) {
+    $scope.addToList = function (id, data) {
         var newEvent = {
+            _id: id,
             name: data.name,
             dates: data.dates
         };
@@ -72,37 +80,175 @@ chooseYourDay.controller("EventListController", ["$scope", '$http', function ($s
     $scope.delete = function (index) {
         kuzzle.delete("chooseyourday", $scope.events[index]._id);
     };
+
+    $scope.changeView = function (view) {
+        $location.path(view);
+    };
 }]);
 
-chooseYourDay.controller("AddEventController", ["$scope", '$http', function ($scope) {
+chooseYourDay.controller("AddEventController", ["$scope", "$location", "$routeParams", function ($scope, $location, $routeParams) {
+    $scope.newEvent = null;
+    $scope.isNew = false;
+
     $scope.init = function () {
-        if (typeof $scope.newEvent == "undefined" || $scope.newEvent === null) {
-            $scope.newEvent = {};
-        }
+        var $eventId = $routeParams.eventId;
 
-        if (typeof $scope.newEvent.dates == "undefined") {
-            $scope.newEvent.dates = [];
-        }
+        if ($eventId === "new") {
+            $scope.isNew = true;
+            $scope.newEvent = {
+                name: "",
+                dates: []
+            };
 
-        $scope.addADay();
+            $scope.addADay();
+        } else {
+            kuzzle.get("chooseyourday", $eventId, function (response) {
+                $scope.newEvent = {
+                    _id: response.result._id,
+                    name: response.result._source.name,
+                    dates: response.result._source.dates
+                };
+
+                $scope.$apply();
+            });
+        }
     };
 
-    $scope.addADay = function () {
+    $scope.addADay = function (value) {
+        if (typeof (value) === 'undefined') value = "";
         var i = $scope.newEvent.dates.length;
-        $scope.newEvent.dates[i] = { value: "" };
+        $scope.newEvent.dates[i] = { value: value, active: true };
     };
+
+    $scope.removeADay = function (index) {
+        if ($scope.isNew) {
+            if (index !== 0) {
+                $scope.newEvent.dates.splice(index, 1);
+            }
+        } else {
+            $scope.newEvent.dates[index].active = false;
+        }
+    }
 
     $scope.addEvent = function () {
-        console.log($scope.newEvent);
-        kuzzle.create("chooseyourday", { type: "chooseyourday_event", date: $scope.newEvent.date, name: $scope.newEvent.name, dates: $scope.newEvent.dates, done: false }, true);
-        $scope.newEvent = null;
-    };
+        if ($scope.isNew) {
+            kuzzle.create("chooseyourday", {
+                type: "chooseyourday_event",
+                name: $scope.newEvent.name,
+                dates: $scope.newEvent.dates
+            }, true);
+        } else {
+            kuzzle.update("chooseyourday", {
+                _id: $scope.newEvent._id,
+                name: $scope.newEvent.name,
+                dates: $scope.newEvent.dates
+            });
+        }
 
-    $scope.newEvent = null;
+        $scope.newEvent = null;
+        $location.path('/ListEvent');
+    };
 
     $scope.cancelNewEvent = function () {
         $scope.newEvent = null;
     };
+
+    $scope.changeView = function (view) {
+        $location.path(view);
+    };
+}]);
+
+chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeParams", function ($scope, $location, $routeParams) {
+    $scope.currentEvent = null;
+    $scope.participants = null;
+    $scope.editingParticipant = null;
+
+    $scope.init = function () {
+        kuzzle.get("chooseyourday", $routeParams.eventId, function (response) {
+            $scope.currentEvent = {
+                _id: response.result._id,
+                name: response.result._source.name,
+                dates: response.result._source.dates
+            };
+
+            $scope.$apply();
+        });
+
+        $scope.getAllParticipants();
+        var terms = {
+            term: {
+                type: "chooseyourday_event_participants",
+                eventId: $scope.currentEvent._id
+            }
+        };
+
+        kuzzle.subscribe("chooseyourday", terms, function (response) {
+            if (response.action === "create") {
+                $scope.addToParticipants(response._id, response.body);
+            }
+
+            if (response.action === "delete") {
+                $scope.participants.some(function (participant, index) {
+                    if (participant._id === response._id) {
+                        $scope.participants.splice(index, 1);
+                        return true;
+                    }
+                });
+            }
+
+            if (response.action === "update") {
+                $scope.participants.some(function (participant, index) {
+                    if (participant._id === response._id) {
+                        $scope.participants[index].name = response.body.name;
+                        $scope.participants[index].dates = response.body.dates;
+                        return true;
+                    }
+                });
+            }
+
+            $scope.$apply();
+        });
+    };
+
+    $scope.getAllParticipants = function () {
+        var filter = {
+            filter: {
+                term: {
+                    type: "chooseyourday_event_participants",
+                    eventId: $scope.currentEvent._id
+                }
+            }
+        };
+        kuzzle.search("chooseyourday", filter, function (response) {
+            response.result.hits.hits.forEach(function (participant) {
+                $scope.addToParticipants(participant._id, participant._source);
+            });
+
+            $scope.$apply();
+        });
+    };
+
+    $scope.addToParticipants = function (id, data) {
+        var newParticipant = {
+            _id: id,
+            name: data.name,
+            dates: data.dates
+        };
+
+        $scope.events.push(newParticipant);
+    };
+
+    $scope.delete = function (index) {
+        kuzzle.delete("chooseyourday", $scope.events[index]._id);
+    };
+
+    $scope.changeView = function (view) {
+        $location.path(view);
+    };
+
+    $scope.addToParticipants = function () {
+
+    }
 }]);
 
 chooseYourDay.directive("dateTimePicker", ["$timeout", function ($timeout) {
@@ -114,7 +260,11 @@ chooseYourDay.directive("dateTimePicker", ["$timeout", function ($timeout) {
                 sideBySide: true,
                 showClose: true,
                 minDate: moment()
-            }).on('dp.change', function () {
+            }).on('dp.update', function () {
+                $scope.date.value = $(element).find('input').val();
+            }).on('dp.show', function () {
+                $scope.date.value = $(element).find('input').val();
+            }).on('dp.hide', function () {
                 $scope.date.value = $(element).find('input').val();
             });
         }
