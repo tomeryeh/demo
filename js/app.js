@@ -9,7 +9,7 @@ angular.module("chooseyourday", [])
     $scope.init = function() {
       getAllEvents();
 
-      kuzzle.subscribe("chooseyourday_event", {term: {type:"chooseyourday_event"}}, function(response) {
+      kuzzle.subscribe("chooseyourday", {term: {type:"chooseyourday_event"}}, function(response) {
         if(response.action === "create") {
           var newEvent = {
             _id: response._id,
@@ -51,15 +51,17 @@ angular.module("chooseyourday", [])
       if (typeof $scope.newEvent.dates == "undefined") {
         $scope.newEvent.dates = [];
       }
-      $scope.newEvent.dates[0] = { value: "" };
+
+      $scope.addADay();
     };
     
     $scope.cancelNewEvent = function() {
       $scope.newEvent = null;
-    }
+    };
 
     $scope.addEvent = function() {
-      kuzzle.create("chooseyourday_event", {type: "chooseyourday_event", date: $scope.newEvent.date, name: $scope.newEvent.name, dates: $scope.newEvent.dates, done: false}, true);
+      console.log($scope.newEvent);
+      kuzzle.create("chooseyourday", {type: "chooseyourday_event", date: $scope.newEvent.date, name: $scope.newEvent.name, dates: $scope.newEvent.dates, done: false}, true);
       $scope.newEvent = null;
     };
     
@@ -77,11 +79,11 @@ angular.module("chooseyourday", [])
     };
 
     $scope.toggleDone = function(index) {
-      kuzzle.update("chooseyourday_event", {_id: $scope.events[index]._id, done: !$scope.events[index].done});
+      kuzzle.update("chooseyourday", {_id: $scope.events[index]._id, done: !$scope.events[index].done});
     };
 
     $scope.delete = function(index) {
-      kuzzle.delete("chooseyourday_event", $scope.events[index]._id);
+      kuzzle.delete("chooseyourday", $scope.events[index]._id);
     };
 
     var addToList = function(event) {
@@ -89,11 +91,11 @@ angular.module("chooseyourday", [])
     };
 
     var getAllEvents = function() {
-      kuzzle.search("chooseyourday_event", {}, function(response) {
+      kuzzle.search("chooseyourday", {"filter": {"term": {"type": "chooseyourday_event"}}}, function(response) {
         response.result.hits.hits.forEach(function(event) {
           var newEvent = {
             _id: event._id,
-            title: event._source.name,
+            name: event._source.name,
             dates: event._source.dates,
             done: event._source.done
           };
@@ -105,4 +107,18 @@ angular.module("chooseyourday", [])
       });
     };
 
-  }]);
+  }]).directive("dateTimePicker", ["$timeout", function($timeout) {
+    return {
+      link: function($scope, element, attrs) {
+        $(element).datetimepicker({
+          locale: 'en',
+          useCurrent: true,
+          sideBySide: true,
+          showClose: true,
+          minDate: moment()
+        }).on('dp.change', function() {
+          $scope.date.value = $(element).find('input').val();
+        });
+      }
+    };
+}]);
