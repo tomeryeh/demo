@@ -23,7 +23,10 @@ LobbyState.prototype = {
         game.gameData.players = [];
         self = this;
 
+        self.labels = [];
+
         lobbyGame.kuzzle.search('kf-user', filters, function(response) {
+            console.log(response);
             response.result.hits.hits.forEach(function(e, i) {
                 lobbyGame.gameData.players.push({
                     id: e._id,
@@ -40,15 +43,34 @@ LobbyState.prototype = {
     },
     drawLobby: function() {
         var ini = 0.0;
-        lobbyGame.gameData.players.forEach(function(e, i) {
+        game.gameData.players.forEach(function(e, i) {
             var color = Phaser.Color.getWebRGB(e.color);
             var style = {font: "28px Arial", fill: color, align: "center"};
             var text = game.add.text(game.world.centerX, game.world.centerY, e.name, style);
             text.anchor.set(0.5, ini);
+            self.labels.push(text);
             ini += 0.5;
         });
+        if(game.gameData.players.length >= 4) {
+            console.log('Countdown!');
+        }
+    },
+    handleConnect: function() {
+        self.labels.forEach(function(e) {
+            e.destroy();
+        });
+        self.labels = [];
+        self.drawLobby();
+    },
+    handleDisconnect: function() {
+        self.labels.forEach(function(e) {
+            e.destroy();
+        });
+        self.labels = [];
+        self.drawLobby();
     },
     quitGame: function() {
+        lobbyGame.kuzzle.unsubscribe(game.gameData.player.roomId);
         lobbyGame.kuzzle.delete('kf-user', lobbyGame.gameData.player.id, function(response) {
             musicLobby.stop();
             lobbyGame.stateTransition.to('main-menu');

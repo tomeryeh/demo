@@ -75,10 +75,15 @@ CreditsState.prototype = {
 
         back.inputEnabled = true;
         back.events.onInputDown.add(this.backToMenu, this);
+
+        self = this;
     },
     backToMenu: function() {
         musicCredits.stop();
         this.game.stateTransition.to('main-menu');
+    },
+    handleDisconnect: function() {
+        console.log('Disconnect Credits!');
     },
     update: function() {
         filter.update();

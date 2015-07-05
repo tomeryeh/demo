@@ -131,7 +131,8 @@ ConnectingState.prototype = {
             this.game.gameData.player = {'id':createData.result._id, 'name': kuzzleGame.name,color: randColor};
             kuzzleGame.kuzzle.subscribe('kf-user', {exists: {field: 'username'}}, function(data) {
                 console.log(data);
-                if(data.action == "create") {
+                kuzzleGame.gameData.player.roomId = data.internalId;
+                if(data.action == "create" && data._id != this.game.gameData.player.id) {
                     game.gameData.players.push({id: data._id, name: data.body.username, color: data.body.color});
                     var text = game.add.text(game.world.centerX, game.world.centerY, "- Awesome! -\nA new player joined:\n" + data.body.username);
                     text.font = 'Arial';
@@ -146,6 +147,9 @@ ConnectingState.prototype = {
                     text.alpha = 0.0;
                     var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
                     game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+                    if(typeof self.handleConnect == 'function') {
+                        self.handleConnect();
+                    }
                 }
                 if(data.action == "delete") {
                     var deletedPlayer = getPlayerById(data._id);
@@ -153,7 +157,15 @@ ConnectingState.prototype = {
                     console.log(deletedPlayer);
                     var deletedUsername = deletedPlayer.name;
                     var text = game.add.text(game.world.centerX, game.world.centerY, "- Awww.. :( -\nA player left:\n" + deletedUsername);
-                    delete(game.gameData.players.indexOf(deletedPlayer));
+                    var index = -1;
+                    game.gameData.players.forEach(function(e, i) {
+                       if(e.id == data._id) {
+                           index = i;
+                       }
+                    });
+                    if(index != -1) {
+                        game.gameData.players.splice(index, 1);
+                    }
                     console.log('player left:');
                     console.log(game.gameData.players);
                     text.font = 'Arial';
@@ -168,6 +180,9 @@ ConnectingState.prototype = {
                     text.alpha = 0.0;
                     var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
                     game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+                    if(typeof self.handleDisconnect == 'function') {
+                        self.handleDisconnect();
+                    }
                 }
             });
             connectTextTweenOut.start();
