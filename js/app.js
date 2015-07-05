@@ -174,17 +174,7 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
                 "dates": response.result._source.dates
             };
 
-            $scope.newParticipant = {
-                "type": "chooseyourday_p",
-                "name": "",
-                "dates": [],
-                "event": response.result._id
-            };
-
-            angular.forEach(response.result._source.dates, function (value, key) {
-                var i = $scope.newParticipant.dates.length;
-                $scope.newParticipant.dates[i] = { "value": 0 };
-            });
+            $scope.initNewParticipant();
 
             $scope.getAllParticipants();
             $scope.subscribeParticipants();
@@ -200,18 +190,47 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
             "dates": $scope.newParticipant.dates,
             "event": $scope.newParticipant.event
         }, true);
-        $scope.newParticipant = null;
+        $scope.initNewParticipant();
     };
 
     $scope.removeParticipant = function (index) {
         kuzzle.delete(kuzzleChannel, $scope.participants[index]._id);
     };
+    
+    $scope.initNewParticipant = function () {
+        $scope.newParticipant = {
+                "type": "chooseyourday_p",
+                "name": "",
+                "dates": [],
+                "event": $scope.currentEvent._id
+        };
+
+        angular.forEach($scope.currentEvent.dates, function (value, key) {
+            var i = $scope.newParticipant.dates.length;
+            $scope.newParticipant.dates[i] = { "value": 0 };
+        });
+    };
 
     $scope.editParticipant = function (index) {
         $scope.editingParticipant = index;
     };
+    
+    $scope.updateParticipant = function (participant) {
+        kuzzle.update(kuzzleChannel, {
+            "_id": participant._id,
+            "name": participant.name,
+            "dates": participant.dates
+        });
+        
+        $scope.editingParticipant = 'new';
+    };
+    
+    $scope.toggleDate = function (date) {
+        date.value = !date.value;
+    };
 
     $scope.getAllParticipants = function () {
+        // TODO : correct filter
         var filter = { "filter": { "bool": { "must": [{ "term": { "type": "chooseyourday_p" } }] } } };
 
         kuzzle.search(kuzzleChannel, filter, function (response) {
@@ -224,6 +243,7 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
     };
 
     $scope.subscribeParticipants = function () {
+        // TODO : correct filter
         kuzzle.subscribe(kuzzleChannel, { "term": { type: "chooseyourday_p" } }, function (response) {
             console.log(response);
             if (response.action === "create") {
