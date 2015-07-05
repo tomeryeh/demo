@@ -47,9 +47,6 @@ var
         setInterval(function () {
           sendMyPosition()
         }, 3000);
-
-        setUserType('customer');
-
 			}, function() {
 				map.setCenter(defaultCoord);
 			});
