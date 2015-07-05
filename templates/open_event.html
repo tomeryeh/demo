@@ -13,29 +13,32 @@
     <tbody>
         <tr ng-repeat="participant in participants">
             <td>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <button ng-click="removeParticipant($index)" class="btn btn-danger btn-md" data-title="Remove">
                         <span class="glyphicon glyphicon-remove"></span>
                     </button>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <button ng-click="editParticipant($index)" class="btn btn-info btn-md" data-title="Edit">
                         <span class="glyphicon glyphicon-pencil"></span>
                     </button>
                 </div>
-                <div class="col-md-10">
+                <div class="col-md-8">
                     <input ng-if="editingParticipant == $index" ng-model="participant.name" type="text" class="form-control" placeholder="Name"/>
                     <p ng-if="editingParticipant != $index">{{ participant.name}}</p>
                 </div>
             </td>
-		    <td ng-repeat="date in currentEvent.dates" ng-class="{ bg-success: participant.dates[$index].value, bg-danger: !participant.dates[$index].value }" ng-if="date.active" class="text-center">
-                <input ng-if="editingParticipant == $index" type="checkbox" ng-model="participant.dates[$index].value" />
-                <div ng-if="editingParticipant != $index" type="checkbox" ng-model="participant.dates[$index].value" />
+		    <td ng-repeat="date in participant.dates" ng-if="currentEvent.dates[$index].active" class="text-center">
+                <input ng-if="editingParticipant == $index" type="checkbox" ng-model="date.value" />
+                <div ng-class="date.value ? bg-success : bg-danger" ng-if="editingParticipant != $index" type="checkbox">
+                    <span ng-if="date.value" class="glyphicon glyphicon-ok"></span>
+                    <span ng-if="date.value == false" class="glyphicon glyphicon-remove"></span>
+                </div>
             </td>
         </tr>
         <tr>
             <td>
-                <div class="col-md-10 col-md-offset-2">
+                <div class="col-md-10 col-md-offset-4">
                     <input ng-focus="editParticipant('new')" ng-model="newParticipant.name" type="text" class="form-control" placeholder="Name"/>
                 </div>
             </td>
