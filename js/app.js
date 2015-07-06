@@ -1,3 +1,4 @@
+//var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
 var kuzzle = new Kuzzle("http://192.168.1.152:8081/");
 var kuzzleChannel = "chooseyourday";
 var chooseYourDay = angular.module("chooseyourday", [
