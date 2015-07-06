@@ -231,7 +231,7 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
 
     $scope.getAllParticipants = function () {
         // TODO : correct filter
-        var filter = { "filter": { "bool": { "must": [{ "term": { "type": "chooseyourday_p" } }] } } };
+        var filter = { "filter": { "term": { "type": "chooseyourday_p" } } };
 
         kuzzle.search(kuzzleChannel, filter, function (response) {
             response.result.hits.hits.forEach(function (participant) {
