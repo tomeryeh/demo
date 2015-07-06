@@ -3,7 +3,7 @@ ConnectingState.prototype = {
     create: function() {
         name = null;
 
-        musicConnecting = this.game.add.audio('music-lobby');
+        musicConnecting = this.game.add.audio('music-connecting');
         if(this.game.hasMusic) musicConnecting.play();
 
         var fragmentSrc = [
@@ -125,7 +125,7 @@ ConnectingState.prototype = {
         this.game.stateTransition.to('lobby', {playerName: kuzzleGame.name});
     },
     test: function() {
-        var randColor = Phaser.Color.getRandomColor(0, 255);
+        var randColor = Phaser.Color.getRandomColor(150, 200);
         kuzzleGame.kuzzle.create("kf-user", {username: kuzzleGame.name, color: randColor}, true, function(createData) {
             connectText.setText("Connecting to Kuzzle..\nOK!");
             this.game.gameData.player = {'id':createData.result._id, 'name': kuzzleGame.name,color: randColor};

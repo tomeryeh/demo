@@ -1,6 +1,7 @@
 function MainMenuState() {}
 MainMenuState.prototype = {
     create: function() {
+        self = this;
         var fragmentSrc = [
             "precision mediump float;",
             "uniform float     time;",

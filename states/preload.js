@@ -9,7 +9,8 @@ PreloadState.prototype = {
         // Music
         this.game.load.audio('music-main-menu', 'assets/musics/boot-sequence.wav');
         this.game.load.audio('music-options', 'assets/musics/hot-pursuit.wav');
-        this.game.load.audio('music-lobby', 'assets/musics/cyber-soldier.wav');
+        this.game.load.audio('music-connecting', 'assets/musics/cyber-soldier.wav');
+        this.game.load.audio('music-lobby', 'assets/musics/lobby.mp3');
         this.game.load.audio('music-game', 'assets/musics/twin-turbo.wav');
 
             // Intro
@@ -41,6 +42,7 @@ PreloadState.prototype = {
     },
     create: function() {
         this.game.stateTransition = this.game.plugins.add(Phaser.Plugin.StateTransition);
+        this.game.juicy = this.game.plugins.add(Phaser.Plugin.Juicy);
         this.game.stateTransition.configure({
             duration: Phaser.Timer.SECOND * 0.8,
             ease: Phaser.Easing.Exponential.Out,
