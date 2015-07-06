@@ -1,5 +1,5 @@
-var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
-//var kuzzle = new Kuzzle("http://192.168.1.152:8081/");
+//var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
+var kuzzle = new Kuzzle("http://192.168.1.152:8081/");
 var kuzzleChannel = "chooseyourday";
 var chooseYourDay = angular.module("chooseyourday", [
     "ngRoute"
@@ -240,8 +240,8 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
     };
 
     $scope.getAllParticipants = function () {
-        //var filter = { "filter": { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id.toLowerCase() } }] } };
-        var filter = { "filter": { "term": { "type": "chooseyourday_p" } } };
+        var filter = { "filter": { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id.toLowerCase() } }] } };
+        //var filter = { "filter": { "term": { "type": "chooseyourday_p" } } };
 
         kuzzle.search(kuzzleChannel, filter, function (response) {
             response.result.hits.hits.forEach(function (participant) {
@@ -253,8 +253,8 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
     };
 
     $scope.subscribeParticipants = function () {
-        //$scope.roomId = kuzzle.subscribe(kuzzleChannel, { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id.toLowerCase() } }] }, function (response) {
-        $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { "type": "chooseyourday_p" } }, function (response) {
+        $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id } }] }, function (response) {
+        //$scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { "type": "chooseyourday_p" } }, function (response) {
             console.log(response);
             if (response.action === "create") {
                 $scope.addToParticipants(response._id, response.body);
