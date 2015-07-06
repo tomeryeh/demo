@@ -1,5 +1,5 @@
-//var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
-var kuzzle = new Kuzzle("http://192.168.1.152:8081/");
+var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
+//var kuzzle = new Kuzzle("http://192.168.1.152:8081/");
 var kuzzleChannel = "chooseyourday";
 var chooseYourDay = angular.module("chooseyourday", [
     "ngRoute"
@@ -58,12 +58,9 @@ chooseYourDay.controller("ListEventController", ["$scope", "$location", function
 
             $scope.$apply();
         });
-
-        console.log("Subscribe event " + $scope.roomId);
     };
 
     $scope.$on("$destroy", function() {
-        console.log("Unsubscribe event " + $scope.roomId);
         kuzzle.unsubscribe($scope.roomId);
     });
 
@@ -240,8 +237,10 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
     };
 
     $scope.getAllParticipants = function () {
-        var filter = { "filter": { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id.toLowerCase() } }] } };
-        //var filter = { "filter": { "term": { "type": "chooseyourday_p" } } };
+        var filter = { "filter": { "and": [
+            { "term": { "type": "chooseyourday_p" } },
+            { "term": { "event": $scope.currentEvent._id } }
+        ]}};
 
         kuzzle.search(kuzzleChannel, filter, function (response) {
             response.result.hits.hits.forEach(function (participant) {
@@ -253,9 +252,12 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
     };
 
     $scope.subscribeParticipants = function () {
-        $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id } }] }, function (response) {
-        //$scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { "type": "chooseyourday_p" } }, function (response) {
-            console.log(response);
+        var terms = { "and": [
+            { "term": { "type": "chooseyourday_p" } },
+            { "term": { "event": $scope.currentEvent._id } }
+        ]};
+
+        $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (response) {
             if (response.action === "create") {
                 $scope.addToParticipants(response._id, response.body);
             }
@@ -281,12 +283,9 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
 
             $scope.$apply();
         });
-
-        console.log("Subscribe participant " + $scope.roomId);
     };
 
     $scope.$on("$destroy", function() {
-        console.log("Unsubscribe participant " + $scope.roomId);
         kuzzle.unsubscribe($scope.roomId);
     });
 
@@ -305,7 +304,7 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
 
         while (newParticipant.dates.length < $scope.currentEvent.dates.length) {
             var i = newParticipant.dates.length;
-            newParticipant.dates[i] = { "value": 0 };
+            newParticipant.dates[i] = { "value": false };
         }
 
         $scope.participants.push(newParticipant);
