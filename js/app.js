@@ -1,4 +1,4 @@
-var kuzzle = new Kuzzle("http://api.uat.kuzzle.io:7512");
+var kuzzle = new Kuzzle("http://192.168.1.152:8081/");
 var kuzzleChannel = "chooseyourday";
 var chooseYourDay = angular.module("chooseyourday", [
     "ngRoute"
@@ -207,7 +207,7 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
 
         angular.forEach($scope.currentEvent.dates, function (value, key) {
             var i = $scope.newParticipant.dates.length;
-            $scope.newParticipant.dates[i] = { "value": 0 };
+            $scope.newParticipant.dates[i] = { "value": false };
         });
     };
 
@@ -230,7 +230,7 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
     };
 
     $scope.getAllParticipants = function () {
-        // TODO : correct filter
+        //var filter = { "filter": { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id.toLowerCase() } }] } };
         var filter = { "filter": { "term": { "type": "chooseyourday_p" } } };
 
         kuzzle.search(kuzzleChannel, filter, function (response) {
@@ -243,8 +243,8 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
     };
 
     $scope.subscribeParticipants = function () {
-        // TODO : correct filter
-        kuzzle.subscribe(kuzzleChannel, { "term": { type: "chooseyourday_p" } }, function (response) {
+        //kuzzle.subscribe(kuzzleChannel, { "and": [{ "term": { "type": "chooseyourday_p" } }, { "term": { "event": $scope.currentEvent._id.toLowerCase() } }] }, function (response) {
+        kuzzle.subscribe(kuzzleChannel, { "term": { "type": "chooseyourday_p" } }, function (response) {
             console.log(response);
             if (response.action === "create") {
                 $scope.addToParticipants(response._id, response.body);
