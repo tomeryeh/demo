@@ -24,7 +24,7 @@
 
 # Kuzzle SDK JS
 
-* Version: unknown
+* Version: 0.1.2
 * Copyright: 2015 Kuzzle
 * License: Apache 2
 
