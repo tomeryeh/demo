@@ -163,8 +163,9 @@ GameRoundState.prototype = {
     },
     decorTakesDamageFromGroundPound: function() {
         if(groundPounding && flying) {
+            game.juicy.shake(30, 60);
             flying = false;
-            decorHP -= 10;
+            decorHP -= 20;
             this.tweenTint(decor, 0x333333, 0xFF11FF, 100);
             if(decorHP <= 0) {
                 this.decorDies();
@@ -175,6 +176,7 @@ GameRoundState.prototype = {
         l.destroy();
         decorHP -= 1;
         this.tweenTint(decor, 0x333333, 0xFF11FF, 100);
+        game.juicy.shake(20, 30);
         if(decorHP <= 0) {
             this.decorDies();
         }
