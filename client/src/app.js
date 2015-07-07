@@ -33,11 +33,16 @@ var userModule = (function UserModule(app) {
 	function sendMyPosition() {
 
 		//console.log("send my position");
+
 		//console.log(user);
+		var userPosition = app.gisController.getUserPosition();
 		app.kuzzleController.setUserPosition({
 			userId: user.whoami._id,
 			type: user.whoami.type,
-			position: app.gisController.getUserPosition()
+			position: {
+				lat: userPosition.lat(),
+				lon: userPosition.lng(),
+			}
 		});
 	}
 
@@ -81,12 +86,12 @@ var userModule = (function UserModule(app) {
 		init: function() {
 			this.getUserLocally(
 				function(value) {
-					if(value){
+					if (value) {
 						user = JSON.parse(value);
 						//console.dir("data from storage");
 						//console.dir(user);
 						console.dir(user);
-						
+
 					}
 					setInterval(sendMyPosition.bind(this), 3000);
 				}

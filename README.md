@@ -17,5 +17,16 @@ bower update
 
 cd ..
 
-node srever.js
+node server/sever.js
+
+
+launch watch/livereload mode :
+grunt  (or grunt watch)
+
+
+auto indent js and html files :
+grunt jsbeautifier
+
+
+
 

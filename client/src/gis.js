@@ -58,10 +58,11 @@
 				filterUserType = whoami.type === 'taxi' ? 'customer' : 'taxi',
 				filter = {
 					filter: {
-						and: {
+						and: [{
 							term: {
 								type: filterUserType
-							},
+							}
+						}, {
 							geoBoundingBox: {
 								position: {
 									top_left: {
@@ -74,7 +75,7 @@
 									}
 								}
 							}
-						}
+						}]
 					}
 				};
 
