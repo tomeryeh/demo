@@ -7,7 +7,9 @@ Game.prototype = {
 
         game.state.add('preload', PreloadState);
 
-        game.state.add('main-intro', MainIntroState);
+        game.state.add('game-round', GameRoundState);
+
+        /*game.state.add('main-intro', MainIntroState);
 
         game.state.add('main-menu', MainMenuState);
 
@@ -17,7 +19,7 @@ Game.prototype = {
 
         game.state.add('connecting', ConnectingState);
 
-        game.state.add('lobby', LobbyState);
+        game.state.add('lobby', LobbyState);*/
 
         //game.state.add('level', LevelState);
 
