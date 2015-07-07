@@ -6,30 +6,43 @@
 	<link rel="stylesheet" href="../../css/app.css">
 </head>
 <title>Choose your Taxi</title>
+
 <body>
 	<div class="container-flex">
 		<div class="header">
-			Title
+
+			<div class="btn-group btn-group-justified" role="group" aria-label="...">
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-default">I need a ride</button>
+				</div>
+
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-default">I'm looking for a customer</button>
+				</div>
+			</div>
+
 		</div>
 		<div class="center">
-			<div class="left-main">Legend</div>
 			<div class="center-main">
 				<div id="map-canvas"></div>
 			</div>
-			<div class="right-main">
-				Tchat
-			</div>
+
 		</div>
 		<div class="footer">
-			Kuzzle demo all rights reserved
+			Tchat
 		</div>
 	</div>
 	<script src="./bower_components/jquery/dist/jquery.min.js"></script>
 	<script src="./bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="./bower_components/socket.io-client/socket.io.js"></script>
+	<script src="./bower_components/socket.io-client/socket.io.js"></script>
+	<script src="./bower_components/localforage/dist/localforage.js "></script>
+
+
 	<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDHpKsMTw5SciMnH92i-EwvijPpdJrLITY"></script>
-    <script type="text/javascript" src="./lib/kuzzle.min.js"></script>
+	<script type="text/javascript" src="./lib/kuzzle.min.js"></script>
 	<script src="./src/gis.js"></script>
+	<script src="./src/app.js"></script>
 	<script src="//localhost:35729/livereload.js"></script>
 </body>
+
 </html>

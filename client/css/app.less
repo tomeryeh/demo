@@ -1,9 +1,8 @@
 @import (inline) "../bower_components/bootstrap/dist/css/bootstrap.min.css";
 @import (inline) "../bower_components/bootstrap/dist/css/bootstrap-theme.min.css";
-//@import  "../bower_components/bootstrap/dist/css/bootstrap.min.css";
-//@import  "../bower_components/bootstrap/dist/css/bootstrap-theme.min.css";
 
-@import "login.less";
+
+@import "variables.less";
 
 html, body {
 	height: 100%;
@@ -24,12 +23,12 @@ html, body {
 .footer , .center,.header{	flex-basis : 100%;}
 
 
-@media (max-width: @screen-xs-max) {
+/*@media (max-width: @screen-sm-max) {
 	.left-main, .right-main,.footer,.header{
 		display: none;
 	}
 }
-
+*/
 .center {
 	height : 80%;
 	display: flex;
@@ -59,3 +58,22 @@ html, body {
 	}
 }
 
+
+
+
+@media only screen and (orientation:landscape) and (max-device-width: @screen-md-max), (max-width: @screen-md-max){
+
+background-color: #FF00FF;
+
+}
+
+@media only screen and (orientation:landscape) and (max-device-width: @screen-sm-max), (max-width: @screen-sm-max){
+
+background-color: #FFFF00;
+
+}
+
+@media only screen and (orientation:portrait) and (max-device-width: @screen-xs-max), (max-width: @screen-xs-max){
+
+background-color: #00FFFF;
+}
