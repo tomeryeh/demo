@@ -21,6 +21,7 @@ GameRoundState.prototype = {
         game.load.image('smoke-particle', 'assets/sprites/game-round/smoke.png');
         game.load.image('blood-particle', 'assets/sprites/game-round/blood-particle.png');
         game.load.image('laser', 'assets/sprites/game-round/laser.png');
+        game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
         /*game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
         game.load.spritesheet('droid', 'assets/games/starstruck/droid.png', 32, 32);
         game.load.image('starSmall', 'assets/games/starstruck/star.png');
@@ -104,7 +105,15 @@ GameRoundState.prototype = {
         this.enterKey.onDown.add(this.fullScreen, this);
 
         //game.world.setBounds(0, 0, game.world.width, game.world.height * 1.5);
-        //game.camera.follow(player);
+        //game.camera.follow(player)
+
+        decor.blendMode = PIXI.blendModes.ADD;
+        player.blendMode = PIXI.blendModes.ADD;
+        filter = new PIXI.PixelateFilter();
+        filter.size = {x: 7, y: 7};
+        decorHPText.filters = [filter];
+        /*player.filters = [filter];
+        decor.filters = [filter];*/
     },
     update: function() {
         this.updatePlayers();
@@ -165,6 +174,7 @@ GameRoundState.prototype = {
             readyForDoubleJump = false;
             doubleJumped = true;
             emitter.start(false, 2000, 20);
+            emitter.filters = [filter];
             emitterLifeSpan = 30;
         }
 
@@ -244,11 +254,12 @@ GameRoundState.prototype = {
         laser.checkWorldBounds = true;
         laser.body.gravity.x = -1000;
         laser.body.gravity.y = -1000;
+        laser.blendMode = PIXI.blendModes.ADD;
 
         if(direction == 'right')
-            laser.body.velocity.x = 6000;
+            laser.body.velocity.x = 4000;
         if(direction == 'left')
-            laser.body.velocity.x = -6000;
+            laser.body.velocity.x = -4000;
         lasers.push(laser);
     },
     destroyLaser: function(laser) {
