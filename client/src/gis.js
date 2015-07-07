@@ -11,12 +11,10 @@
 	});
 
 	function GisModule() {
-		var
-			map,
-			userMarker,
-			userPosition,
-			kuzzle,
-			defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
+		var	map;
+		var	userMarker;
+		var	userPosition;
+		var	defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
 
 		function generateRandomCabs() {
 			var arrayTaxiMarker = [];
@@ -24,8 +22,9 @@
 
 			//this is what we must get from a first call to Kuzzle :
 
-			//get random positions for taxi arrounf my position
-			for (var i = 0; i < 10; i++) {
+			//get random positions for taxi arround my position
+			var nbRandomItems = 10;
+			for (var i = 0; i < nbRandomItems; i++) {
 				arrayTaxiMarker.push(new google.maps.LatLng(userPosition.lat() + (Math.random() - 0.5) / 100, userPosition.lng() + (Math.random() - 0.5) / 100));
 			}
 
@@ -51,12 +50,13 @@
 		 * - Subscribe to kuzzle with the new filter
 		 */
 		function refreshKuzzleFilter() {
-			var
-				mapBounds = map.getBounds(),
-				swCorner = mapBounds.getSouthWest(),
-				neCorner = mapBounds.getNorthEast(),
-				filterUserType = whoami.type === 'taxi' ? 'customer' : 'taxi',
-				filter = {
+			var kuzzle = api.kuzzleController.getKuzzle();
+			var mapBounds = map.getBounds();
+			var swCorner = mapBounds.getSouthWest();
+			var neCorner = mapBounds.getNorthEast();
+
+			var filterUserType = whoami.type === 'taxi' ? 'customer' : 'taxi';
+			var filter = {
 					filter: {
 						and: [{
 							term: {
@@ -124,7 +124,6 @@
 			getUserPosition: function() {
 				return userPosition;
 			}
-
 		};
 	};
 

@@ -157,6 +157,9 @@ var userModule = (function UserModule(app) {
 		},
 		setUserPosition: function(positions) {
 			kuzzle.create(CABBLE_COLLECTION_POSITIONS, positions, false);
+		},
+		getKuzzle: function(positions) {
+			return kuzzle;
 		}
 	};
 
