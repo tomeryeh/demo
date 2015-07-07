@@ -3,20 +3,8 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-watch');
 
 	return {
-		js: {
-			files: ['src/**/*.js',
-				"../server/*.js",
-				"../tests/{ui,services}/*.js"
-			],
-			tasks: ['newjshint'],
-			options: {
-				debounceDelay: 250,
-				spawn: true,
-				interrupt: true
-			}
-		},
 		html: {
-			files: ['index.html'],
+			files: ['client/index.html'],
 			//tasks: ['handlebars'],
 			options: {
 				debounceDelay: 250,
@@ -33,17 +21,8 @@ module.exports = function(grunt) {
 			}
 		},
 		less: {
-			files: 'css/*.less',
+			files: 'client/css/*.less',
 			tasks: ['less'],
-			options: {
-				debounceDelay: 250,
-				spawn: true,
-				interrupt: true
-			}
-		},
-		json: {
-			files: ['locales/**/*.json'],
-			tasks: ['jsonlint'],
 			options: {
 				debounceDelay: 250,
 				spawn: true,
@@ -55,9 +34,9 @@ module.exports = function(grunt) {
 				livereload: true
 			},
 			files: [
-				'css/app.css',
-				'src/**/*.js',
-				'index.html',
+				'client/css/app.css',
+				'client/src/**/*.js',
+				'client/index.html',
 				'locales/**/*.json'
 			]
 		}

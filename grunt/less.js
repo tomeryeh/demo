@@ -7,12 +7,12 @@ module.exports = function(grunt) {
 
 			options: {
 				paths: [ // Where to look for files to @import
-					"css/"
+					"client/css/"
 				],
 				compress: true
 			},
 			files: [{
-				"css/app.css": "css/app.less"
+				"client/css/app.css": "client/css/app.less"
 			}]
 		}
 	};

@@ -81,11 +81,13 @@ var userModule = (function UserModule(app) {
 		init: function() {
 			this.getUserLocally(
 				function(value) {
-
-					user = JSON.parse(value);
-					//console.dir("data from storage");
-					//console.dir(user);
-					console.dir(user);
+					if(value){
+						user = JSON.parse(value);
+						//console.dir("data from storage");
+						//console.dir(user);
+						console.dir(user);
+						
+					}
 					setInterval(sendMyPosition.bind(this), 3000);
 				}
 				.bind(this));
@@ -99,8 +101,8 @@ var userModule = (function UserModule(app) {
 			})
 		},
 		setUserLocally: function() {
-      console.log("saving user ");
-      //console.log(user);
+			console.log("saving user ");
+			//console.log(user);
 			localforage.setItem('cable_user', JSON.stringify(user));
 		}
 	}
@@ -141,9 +143,9 @@ var userModule = (function UserModule(app) {
 					if (response.error) {
 						console.error(response.error);
 					} else {
-					  app.userController.getUser().userId = response.result._id;
-            app.userController.getUser().whoami._id = response.result._id;
-            app.userController.setUserLocally();
+						app.userController.getUser().userId = response.result._id;
+						app.userController.getUser().whoami._id = response.result._id;
+						app.userController.setUserLocally();
 					}
 				});
 			}
