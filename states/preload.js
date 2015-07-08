@@ -4,6 +4,7 @@ PreloadState.prototype = {
         // Global
         this.game.load.script('blurX', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/BlurX.js');
         this.game.load.script('blurY', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/BlurY.js');
+        this.game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
         this.game.load.image('kuzzle', 'assets/sprites/kuzzle.png');
 
         // Music

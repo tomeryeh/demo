@@ -125,7 +125,7 @@ ConnectingState.prototype = {
         this.game.stateTransition.to('lobby', {playerName: kuzzleGame.name});
     },
     test: function() {
-        var randColor = Phaser.Color.getRandomColor(150, 200);
+        var randColor = Phaser.Color.getRandomColor(30, 220);
         kuzzleGame.kuzzle.create("kf-user", {username: kuzzleGame.name, color: randColor}, true, function(createData) {
             connectText.setText("Connecting to Kuzzle..\nOK!");
             this.game.gameData.player = {'id':createData.result._id, 'name': kuzzleGame.name,color: randColor};

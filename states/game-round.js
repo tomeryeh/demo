@@ -21,7 +21,6 @@ GameRoundState.prototype = {
         game.load.image('smoke-particle', 'assets/sprites/game-round/smoke.png');
         game.load.image('blood-particle', 'assets/sprites/game-round/blood-particle.png');
         game.load.image('laser', 'assets/sprites/game-round/laser.png');
-        game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
         /*game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
         game.load.spritesheet('droid', 'assets/games/starstruck/droid.png', 32, 32);
         game.load.image('starSmall', 'assets/games/starstruck/star.png');
@@ -53,22 +52,13 @@ GameRoundState.prototype = {
         player.height = 85;
         player.width = 64;
 
-        decorShadow = game.add.sprite(game.world.centerX / 2, (game.world.centerY * 2) - 85, 'player');
-        decorShadow.anchor.setTo(0.5, 0.5);
-        decorShadow.height = 170;
-        decorShadow.width = 128;
-        decorShadow.tint = 0x000000;
-        decorShadow.alpha = 0.6;
-        decor = game.add.sprite(game.world.centerX / 2, (game.world.centerY * 2) - 85, 'player');
-        decor.anchor.setTo(0.5, 0.5);
-        decor.height = 170;
-        decor.width = 128;
-        game.physics.enable(decor, Phaser.Physics.ARCADE);
-        decor.body.bounce.setTo(0.2, 0.2);
-        decor.body.collideWorldBounds = true;
+        filterPixelate7 = new PIXI.PixelateFilter();
+        filterPixelate7.size = {x: 7, y: 7};
+        filterPixelate3 = new PIXI.PixelateFilter();
+        filterPixelate3.size = {x: 3, y: 3};
 
-        var style = {font: '64px Helvetica', fontWeight: 'bold', fill: "#FFF", align: "center"};
-        decorHPText = game.add.text(decor.x - 64, decor.y - 170, decorHP, style);
+        this.spawnMonster();
+        decor.blendMode = PIXI.blendModes.ADD;
 
         game.physics.enable(player, Phaser.Physics.ARCADE);
         player.body.bounce.setTo(0.8, 0.5);
@@ -94,6 +84,10 @@ GameRoundState.prototype = {
         blood.angularDrag = 30;
         blood.gravity = -100;
 
+        style = {font: '42px Helvetica', fontWeight: 'bold', fill: "#BF0000", align: "center"};
+        deathMessage = game.add.text(player.x, player.y, "F#@k U!!", style);
+        deathMessage.alpha = 0.0;
+
         cursors = game.input.keyboard.createCursorKeys();
         jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.UP);
         fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
@@ -107,13 +101,12 @@ GameRoundState.prototype = {
         //game.world.setBounds(0, 0, game.world.width, game.world.height * 1.5);
         //game.camera.follow(player)
 
-        decor.blendMode = PIXI.blendModes.ADD;
         player.blendMode = PIXI.blendModes.ADD;
-        filter = new PIXI.PixelateFilter();
-        filter.size = {x: 7, y: 7};
-        decorHPText.filters = [filter];
+        deathMessage.filters = [filterPixelate3];
         /*player.filters = [filter];
         decor.filters = [filter];*/
+
+        flash = game.juicy.createScreenFlash('#ff0000');
     },
     update: function() {
         this.updatePlayers();
@@ -156,6 +149,7 @@ GameRoundState.prototype = {
             player.body.gravity.y = 1000;
         }
         if(jumpButton.isDown && (player.body.onFloor() || player.body.wasTouching.down) && game.time.now > jumpTimer) {
+            flash.flash();
             if(player.body.wasTouching.down)
                 player.body.velocity.y = -1000;
             else
@@ -174,7 +168,7 @@ GameRoundState.prototype = {
             readyForDoubleJump = false;
             doubleJumped = true;
             emitter.start(false, 2000, 20);
-            emitter.filters = [filter];
+            emitter.filters = [filterPixelate7];
             emitterLifeSpan = 30;
         }
 
@@ -203,7 +197,7 @@ GameRoundState.prototype = {
         }
 
         if(fireButton.isDown && game.time.now > shootTimer) {
-            shootTimer = game.time.now + 100;
+            shootTimer = game.time.now + 150;
             this.shootLaser();
         }
 
@@ -216,6 +210,32 @@ GameRoundState.prototype = {
         decorHPText.y = decor.y - 170;
         decorHPText.text = decorHP;
         decorHPText.tint = Phaser.Color.interpolateColor(0xFF0000, 0xFFFFFF, 50, decorHP);
+
+        deathMessage.x = player.x - 80;
+        deathMessage.y = player.y - 140;
+    },
+    spawnMonster: function() {
+        decorHP = 50;
+
+        decorShadow = game.add.sprite(game.world.centerX / 2, (game.world.centerY * 2) - 85, 'player');
+        decorShadow.anchor.setTo(0.5, 0.5);
+        decorShadow.height = 170;
+        decorShadow.width = 128;
+        decorShadow.tint = 0x000000;
+        decorShadow.alpha = 0.6;
+
+        decor = game.add.sprite(game.world.centerX / 2, (game.world.centerY * 2) - 85, 'player');
+        decor.anchor.setTo(0.5, 0.5);
+        decor.height = 170;
+        decor.width = 128;
+        game.physics.enable(decor, Phaser.Physics.ARCADE);
+        decor.body.bounce.setTo(0.2, 0.2);
+        decor.body.collideWorldBounds = true;
+
+        var style = {font: '64px Helvetica', fontWeight: 'bold', fill: "#FFF", align: "center"};
+        decorHPText = game.add.text(decor.x - 64, decor.y - 170, decorHP, style);
+
+        decorHPText.filters = [filterPixelate7];
     },
     decorTakesDamageFromGroundPound: function() {
         if(groundPounding && flying) {
@@ -242,28 +262,42 @@ GameRoundState.prototype = {
         decorHPText.destroy();
         var dieAnimation = game.add.tween(decor).to({alpha: 0.0}, 500, 'Linear').start();
         game.add.tween(decorShadow).to({alpha: 0.0}, 500, 'Linear').start();
-        dieAnimation.onComplete.add(function() { decor.destroy(); decorShadow.destroy(); blood.on = false; });
+        dieAnimation.onComplete.add(function() {
+            decor.destroy();
+            decorShadow.destroy();
+            decor.kill();
+            decorShadow.kill();
+            blood.on = false;
+            var deathMessageIn = game.add.tween(deathMessage).to({alpha: 1.0}, 1000, 'Elastic', true);
+            deathMessageIn.onComplete.add(function() {
+                game.add.tween(deathMessage).to({alpha: 0.0}, 500, 'Elastic', true);
+                self.spawnMonster();
+            });
+        });
     },
     shootLaser: function() {
         var posX = direction == 'right' ? player.x + 50 : player.x - 150;
         var laser = game.add.sprite(posX, player.y - 50, 'laser');
-        laser.width = 100;
-        laser.height = 40;
+        laser.width = 80;
+        laser.height = 50;
         laser.events.onOutOfBounds.add(this.destroyLaser, this);
         game.physics.enable(laser, Phaser.Physics.ARCADE);
         laser.checkWorldBounds = true;
-        laser.body.gravity.x = -1000;
         laser.body.gravity.y = -1000;
+        var randColor = Phaser.Color.getRandomColor(100, 255);
+        laser.tint = randColor;
         laser.blendMode = PIXI.blendModes.ADD;
 
         if(direction == 'right')
-            laser.body.velocity.x = 4000;
+            laser.body.velocity.x = 2000;
         if(direction == 'left')
-            laser.body.velocity.x = -4000;
+            laser.body.velocity.x = -2000;
         lasers.push(laser);
     },
     destroyLaser: function(laser) {
+        console.log('DESTROY');
         laser.kill();
+        laser.destroy();
     },
     kuzzleFlash: function(maxAlpha, duration) {
         maxAlpha = maxAlpha || 1;
