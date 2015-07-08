@@ -7,17 +7,17 @@ var app = {
 		window.onload = function() {
 			///kick and dirty ui logic !
 			var user_cabble = document.querySelector("#user_cabble");
-      var cab_cabble = document.querySelector("#cab_cabble");
+			var cab_cabble = document.querySelector("#cab_cabble");
 			user_cabble.addEventListener("click", function(event) {
-			 user_cabble.innerHTML = "Cabble is looking for your ride";
+				user_cabble.innerHTML = "Cabble is looking for your ride";
 				app.kuzzleController.setUserType("customer");
-        cab_cabble.innerHTML = "I'm looking for a customer";
+				cab_cabble.innerHTML = "I'm looking for a customer";
 			});
 
 			cab_cabble.addEventListener("click", function(event) {
 				cab_cabble.innerHTML = "Cabble is looking for a customer for you";
-				app.kuzzleController.setUserType("taxi");
-        user_cabble.innerHTML = "I need a ride";
+				app.kuzzleController.setUserType("cab");
+				user_cabble.innerHTML = "I need a ride";
 			});
 		}
 
@@ -146,29 +146,29 @@ var app = {
 		 */
 		refreshKuzzleFilter: function() {
 			var bound = app.gisController.getMapBounds();
-			var user  = app.userController.getUser();
+			var user = app.userController.getUser();
 
-			var filterUserType = user.whoami.type === 'taxi' ? 'customer' : 'taxi';
-			var filter =  {
-					and: [{
-						term: {
-							type: filterUserType
-						}
-					}, {
-						geoBoundingBox: {
-							position: {
-								top_left: {
-									lat: bound.neCorner.lat(),
-									lon: bound.swCorner.lng()
-								},
-								bottom_right: {
-									lat: bound.swCorner.lat(),
-									lon: bound.neCorner.lng()
-								}
+			var filterUserType = user.whoami.type === 'cab' ? 'customer' : 'cab';
+			var filter = {
+				and: [{
+					term: {
+						type: filterUserType
+					}
+				}, {
+					geoBoundingBox: {
+						position: {
+							top_left: {
+								lat: bound.neCorner.lat(),
+								lon: bound.swCorner.lng()
+							},
+							bottom_right: {
+								lat: bound.swCorner.lat(),
+								lon: bound.neCorner.lng()
 							}
 						}
-					}]
-				};
+					}
+				}]
+			};
 
 			if (positionsRoom) {
 				kuzzle.unsubscribe(positionsRoom);
@@ -179,12 +179,12 @@ var app = {
 				if (response.error) {
 					console.error(response.error);
 				}
-        console.dir("pos" );
-        console.dir(response );
+				console.dir("pos");
+				console.dir(response);
 				// TODO: display or update the received user
 			});
-      console.log("we subscribe to ");
-      console.log(positionsRoom);
+			console.log("we subscribe to ");
+			console.log(positionsRoom);
 		},
 		setUserType: function(userType) {
 			var refreshInterval;
@@ -200,7 +200,7 @@ var app = {
 					kuzzle.unsubscribe(customersRoom);
 					customersRoom = null;
 				}
-			} else if (userType === 'taxi') {
+			} else if (userType === 'cab') {
 				refreshInterval = 1000;
 
 				if (taxisRoom) {
@@ -209,11 +209,14 @@ var app = {
 				}
 			}
 
+			app.gisController.resetGis();
+
 			if (refreshFilterTimer) {
 				clearInterval(refreshFilterTimer);
 			}
 
-			var refreshFilterTimer = setInterval(function() {
+			refreshFilterTimer = setInterval(function() {
+				console.log("refresh inter " + userType);
 				this.refreshKuzzleFilter()
 			}.bind(this), refreshInterval);
 		}
