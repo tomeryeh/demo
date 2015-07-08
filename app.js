@@ -7,7 +7,9 @@ Game.prototype = {
 
         game.state.add('preload', PreloadState);
 
-        game.state.add('game-round', GameRoundState);
+        //game.state.add('game-round', GameRoundNoState);
+
+        game.state.add('game-round-no-monster', GameRoundNoMonsterState);
 
         /*game.state.add('main-intro', MainIntroState);
 

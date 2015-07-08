@@ -56,6 +56,6 @@ PreloadState.prototype = {
             }
         });
         //this.game.state.start('main-intro');
-        this.game.state.start('game-round');
+        this.game.state.start('game-round-no-monster');
     }
 };

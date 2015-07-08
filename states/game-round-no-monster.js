@@ -1,4 +1,5 @@
 var direction = 'right';
+var updateTimer = 0;
 var jumpTimer = 0;
 var shootTimer = 0;
 var lasers = [];
@@ -6,14 +7,61 @@ var readyForDoubleJump = false;
 var doubleJumped = false;
 var emitterLifeSpan = 0;
 var flying = false;
-var decorHP = 50;
 var groundPounding = false;
 var shadowOffset = new Phaser.Point(10, 8);
-function GameRoundState() {}
-GameRoundState.prototype = {
+var live = false;
+var updateRate = 1000;
+var shooted = false;
+var shootCoords = {};
+function GameRoundNoMonsterState() {}
+GameRoundNoMonsterState.prototype = {
     init: function(initData) {
+        self = this;
         this.initData = initData;
         console.log('Init data: ' + initData);
+
+        game.room = {
+            players: []
+        };
+        game.kuzzle = new Kuzzle('http://api.uat.kuzzle.io:7512');
+        var filters = {
+            "filter": {
+                "exists": {
+                    "field": "username"
+                }
+            }
+        };
+        game.kuzzle.search('kf-users', filters, function(response) {
+            console.log(response);
+            response.result.hits.hits.forEach(function(e) {
+                self.handleConnect(e._id, e._source);
+            });
+        });
+        game.player = {
+            username: "Sam " + Math.floor((Math.random() * 1000) + 1),
+            color: Phaser.Color.getRandomColor(30, 220),
+            hp: 100
+        };
+        game.kuzzle.create('kf-users', game.player, true, function(createData) {
+            game.player.id = createData.result._id;
+            game.kuzzle.create('kf-room-1', {pid: game.player.id}, true, function(updateData) {
+                game.player.updateId = updateData.result._id;
+                roomIdPlayers = game.kuzzle.subscribe('kf-users', {exists: {field: 'username'}}, function(dataPlayer) {
+                    if(dataPlayer.action == "create" && dataPlayer._id != game.player.id) {
+                        self.handleConnect(dataPlayer._id, dataPlayer.body);
+                    }
+                    if(dataPlayer.action == "delete") {
+                        self.handleDisconnect(dataPlayer);
+                    }
+                });
+                roomIdGameUpdates = game.kuzzle.subscribe('kf-room-1', {exists: {field: 'pid'}}, function(dataGameUpdate) {
+                    self.updateFromKuzzle(dataGameUpdate.body);
+                });
+                live = true;
+                console.log('Room ID players: ' + roomIdPlayers);
+                console.log('Room ID game updates: ' + roomIdGameUpdates);
+            });
+        });
     },
     preload: function() {
         //game.load.tilemap('level1', 'assets/games/starstruck/level1.json', null, Phaser.Tilemap.TILED_JSON);
@@ -34,9 +82,6 @@ GameRoundState.prototype = {
         musicGameRound = game.add.audio('music-game');
         if(game.hasMusic) musicGameRound.fadeIn();
 
-        game.gameData.players = [];
-        self = this;
-
         /* GAME LOGIC */
 
         game.stage.backgroundColor = 0x333333;
@@ -44,40 +89,18 @@ GameRoundState.prototype = {
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 1000;
 
-        playerShadow = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
-        playerShadow.anchor.setTo(0.5, 1.0);
-        playerShadow.height = 85;
-        playerShadow.width = 64;
-        playerShadow.tint = 0x000000;
-        playerShadow.alpha = 0.6;
-        player = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
-        player.anchor.setTo(0.5, 1.0);
-        player.height = 85;
-        player.width = 64;
+        player = self.addPlayer();
+        playerShadow = self.addPlayerShadow();
+        emitter = self.addPlayerEmitter();
 
         filterPixelate7 = new PIXI.PixelateFilter();
         filterPixelate7.size = {x: 7, y: 7};
         filterPixelate3 = new PIXI.PixelateFilter();
         filterPixelate3.size = {x: 3, y: 3};
 
-        this.spawnMonster();
-        decor.blendMode = PIXI.blendModes.ADD;
-
-        game.physics.enable(player, Phaser.Physics.ARCADE);
-        player.body.bounce.setTo(0.8, 0.5);
-        player.body.collideWorldBounds = true;
-
         //game.camera.follow(player);
 
-        emitter = game.add.emitter(game.world.centerX, game.world.centerY, 8);
-        emitter.makeParticles('smoke-particle');
-        emitter.setXSpeed(0, 0);
-        emitter.setYSpeed(0, 0);
-        emitter.setAlpha(1, 0, 3000);
-        emitter.setScale(0.2, 1.0, 0.2, 1.0, 3000, Phaser.Easing.Elastic.Out);
-        emitter.gravity = -800;
-
-        blood = game.add.emitter(decor.x, decor.y, 250);
+        blood = game.add.emitter(player.x, player.y, 250);
         blood.makeParticles('blood-particle', 0, 100, false, true);
         blood.setXSpeed(-100, 100);
         blood.setYSpeed(10, -500);
@@ -104,31 +127,105 @@ GameRoundState.prototype = {
         //game.world.setBounds(0, 0, game.world.width, game.world.height * 1.5);
         //game.camera.follow(player);
 
-        player.blendMode = PIXI.blendModes.ADD;
         deathMessage.filters = [filterPixelate3];
         filter = new PIXI.PixelateFilter();
         filter.size = {x: 6, y: 6};
-        decorHPText.filters = [filter];
         /*player.filters = [filter];
         decor.filters = [filter];*/
 
         flash = game.juicy.createScreenFlash('#ff0000');
     },
+    addPlayer: function() {
+        var p = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
+        p.anchor.setTo(0.5, 1.0);
+        p.height = 85;
+        p.width = 64;
+        game.physics.enable(p, Phaser.Physics.ARCADE);
+        p.body.bounce.setTo(0.8, 0.5);
+        p.body.collideWorldBounds = true;
+        p.blendMode = PIXI.blendModes.ADD;
+
+        return p;
+    },
+    addPlayerShadow: function() {
+        var ps = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
+        ps.anchor.setTo(0.5, 1.0);
+        ps.height = 85;
+        ps.width = 64;
+        ps.tint = 0x000000;
+        ps.alpha = 0.6;
+
+        return ps;
+    },
+    addPlayerEmitter: function() {
+        e = game.add.emitter(game.world.centerX, game.world.centerY, 8);
+        e.makeParticles('smoke-particle');
+        e.setXSpeed(0, 0);
+        e.setYSpeed(0, 0);
+        e.setAlpha(1, 0, 3000);
+        e.setScale(0.2, 1.0, 0.2, 1.0, 3000, Phaser.Easing.Elastic.Out);
+        e.gravity = -800;
+        e.start(false, 2000, 20);
+        e.on = false;
+
+        return e;
+    },
+    updateFromKuzzle: function(data) {
+        console.log(data);
+        game.room.players.forEach(function(e) {
+            if(e.id == data.pid) {
+                console.log('UPDATES FROM ' + data.pid);
+                e.sprite.x = data.x;
+                e.sprite.y = data.y;
+                e.sprite.body.velocity.x = data.vx;
+                e.sprite.body.velocity.y = data.vy;
+                e.emitter.on = data.emits;
+                if(e.shoot) {
+                    //e.shootLaser(e.shoot);
+                }
+            }
+        });
+    },
     update: function() {
         this.updatePlayers();
         game.physics.arcade.collide(blood, player);
+        if(game.time.now > updateTimer && live) {
+            console.log('Sending update');
+            updateTimer = game.time.now + updateRate;
+
+            game.kuzzle.update("kf-room-1", {
+                _id: game.player.updateId,
+                pid: game.player.id,
+                hp: game.player.hp,
+                x: player.x,
+                y: player.y,
+                vx: player.body.velocity.x,
+                vy: player.body.velocity.y,
+                emits: emitter.on,
+                shoot: shooted ? shootCoords : false
+            }, function(r) { console.log(r); });
+
+            if(shooted) shooted = false;
+        }
     },
     fullScreen: function() {
-        game.scale.startFullScreen();
+        //game.scale.startFullScreen();
+        live = false;
     },
     updatePlayers: function() {
         playerShadow.x = player.x + shadowOffset.x;
         playerShadow.y = player.y + shadowOffset.y;
-        decorShadow.x = decor.x + shadowOffset.x;
-        decorShadow.y = decor.y + shadowOffset.y;
 
-        blood.x = decor.x;
-        blood.y = decor.y;
+        game.room.players.forEach(function(e) {
+            e.shadow.x = e.sprite.x + shadowOffset.x;
+            e.shadow.y = e.sprite.y + shadowOffset.y;
+            e.emitter.emitX = e.sprite.x;
+            e.emitter.emitY = e.sprite.y;
+            e.emitter.filters = [filterPixelate7];
+        });
+
+        blood.x = player.x;
+        blood.y = player.y;
 
         emitter.emitX = player.x;
         emitter.emitY = player.y;
@@ -193,7 +290,6 @@ GameRoundState.prototype = {
             //game.juicy.jelly(player, 1.5, 100);
             this.kuzzleFlash(1, 2000);
             this.tweenTint(player, 0x333333, 0xFF11FF, 500);
-            this.tweenTint(decor, 0x333333, 0xFF11FF, 500);
         }
 
         if(cursors.down.isDown && !player.body.onFloor() && !player.body.wasTouching.down) {
@@ -205,85 +301,24 @@ GameRoundState.prototype = {
         }
 
         if(fireButton.isDown && game.time.now > shootTimer) {
-            shootTimer = game.time.now + 150;
+            shootTimer = game.time.now + 1500;
             this.shootLaser();
+            shooted = true;
+            shootCoords = {x: player.x, y: player.y};
         }
 
-        lasers.forEach(function(e) {
-            game.physics.arcade.collide(e, decor, self.decorTakesDamage, null, self);
+        lasers.forEach(function(l) {
+            game.room.players.forEach(function(p) {
+                game.physics.arcade.collide(l, p.sprite, self.handleCollisionBetweenLasersAndEnemies, null, self);
+            });
         });
-        game.physics.arcade.collide(player, decor, self.decorTakesDamageFromGroundPound, null, self);
-
-        decorHPText.x = decor.x - 64;
-        decorHPText.y = decor.y - 170;
-        decorHPText.text = decorHP;
-        decorHPText.tint = Phaser.Color.interpolateColor(0xFF0000, 0xFFFFFF, 50, decorHP);
+        game.room.players.forEach(function(p) {
+            game.physics.arcade.collide(player, p.sprite, self.handleCollisionBetweenPlayers, null, self);
+        });
 
         deathMessage.x = player.x - 80;
         deathMessage.y = player.y - 140;
         player.filters = [filter];
-        decor.filters = [filter];
-    },
-    spawnMonster: function() {
-        decorHP = 50;
-
-        decorShadow = game.add.sprite(game.world.centerX / 2, (game.world.centerY * 2) - 85, 'player');
-        decorShadow.anchor.setTo(0.5, 0.5);
-        decorShadow.height = 170;
-        decorShadow.width = 128;
-        decorShadow.tint = 0x000000;
-        decorShadow.alpha = 0.6;
-
-        decor = game.add.sprite(game.world.centerX / 2, (game.world.centerY * 2) - 85, 'player');
-        decor.anchor.setTo(0.5, 0.5);
-        decor.height = 170;
-        decor.width = 128;
-        game.physics.enable(decor, Phaser.Physics.ARCADE);
-        decor.body.bounce.setTo(0.2, 0.2);
-        decor.body.collideWorldBounds = true;
-
-        var style = {font: '64px Helvetica', fontWeight: 'bold', fill: "#FFF", align: "center"};
-        decorHPText = game.add.text(decor.x - 64, decor.y - 170, decorHP, style);
-
-        decorHPText.filters = [filterPixelate7];
-    },
-    decorTakesDamageFromGroundPound: function() {
-        if(groundPounding && flying) {
-            game.juicy.shake(30, 60);
-            flying = false;
-            decorHP -= 20;
-            this.tweenTint(decor, 0x333333, 0xFF11FF, 100);
-            if(decorHP <= 0) {
-                this.decorDies();
-            }
-        }
-    },
-    decorTakesDamage: function(l, d) {
-        l.destroy();
-        decorHP -= 1;
-        this.tweenTint(decor, 0x333333, 0xFF11FF, 100);
-        game.juicy.shake(20, 30);
-        if(decorHP <= 0) {
-            this.decorDies();
-        }
-    },
-    decorDies: function() {
-        blood.start(false, 1500, 2);
-        blood.filters = [filter];
-        decorHPText.destroy();
-        var dieAnimation = game.add.tween(decor).to({alpha: 0.0}, 500, 'Linear').start();
-        game.add.tween(decorShadow).to({alpha: 0.0}, 500, 'Linear').start();
-        dieAnimation.onComplete.add(function() {
-            decor.destroy();
-            decorShadow.destroy();
-            decor.kill();
-            decorShadow.kill();
-            blood.on = false;
-            var deathMessageIn = game.add.tween(deathMessage).to({alpha: 1.0}, 1000, 'Elastic', true);
-            deathMessageIn.onComplete.add(function() {
-                game.add.tween(deathMessage).to({alpha: 0.0}, 500, 'Elastic', true);
-            });
-        });
     },
     shootLaser: function() {
         var posX = direction == 'right' ? player.x + 50 : player.x - 150;
@@ -308,6 +343,12 @@ GameRoundState.prototype = {
         console.log('DESTROY');
         laser.kill();
         laser.destroy();
+    },
+    handleCollisionBetweenPlayers: function() {
+        console.log('collide!!!!!!!!');
+    },
+    handleCollisionBetweenLasersAndEnemies: function() {
+        console.log('laser collide!!!!!!!!!!!!');
     },
     kuzzleFlash: function(maxAlpha, duration) {
         maxAlpha = maxAlpha || 1;
@@ -342,19 +383,33 @@ GameRoundState.prototype = {
         // start the tween
         colorTween.start();
     },
-    handleConnect: function() {
-        self.lobbyDrawables.forEach(function(e) {
-            e.destroy();
-        });
-        self.lobbyDrawables = [];
-        self.drawLobby();
+    handleConnect: function(_id, p) {
+        console.log(_id);
+        console.log(p);
+        console.log('PLAYER CONNECTED: ' + p.username);
+        var newPlayer = {
+            id: _id,
+            username: p.username,
+            color: p.color,
+            sprite: this.addPlayer(),
+            shadow: this.addPlayerShadow(),
+            emitter: this.addPlayerEmitter(),
+            x: p.x,
+            y: p.y,
+            vx: p.vx,
+            vy: p.vy
+        };
+        //game.physics.arcade.collide(player, newPlayer.sprite, self.handleCollisionBetweenPlayers, null, self);
+        game.room.players.push(newPlayer);
     },
-    handleDisconnect: function() {
-        self.lobbyDrawables.forEach(function(e) {
-            e.destroy();
+    handleDisconnect: function(p) {
+        game.room.players.forEach(function(e, i) {
+            if(e.id == p._id) {
+                e.kill();
+                e.destroy();
+                game.room.players.splice(i, 1);
+            }
         });
-        self.lobbyDrawables = [];
-        self.drawLobby();
     },
     quitGame: function() {
         //lobbyGame.kuzzle.unsubscribe(game.gameData.player.roomId);
