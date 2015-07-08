@@ -16,14 +16,8 @@
 		var map;
 		var userMarker;
 		var userPosition;
-
 		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
-
-
 		var otherItemsMark= [];
-
-
-
 
 		function getIcon(userType) {
 			return "assets/img/" + (userType === "cab" ? "imagen-taxi.jpg" : "phone.png");
@@ -73,13 +67,13 @@
 			console.log(otherItemsMark);
 			
 			otherItemsMark.forEach(function(n){
-				console.log(n);
+			//	console.log(n);
 				var distCur = Math.pow(
 					userPosition.lat()-
 					n.position.lat(),2) +
 					 Math.pow(userPosition.lng()
 					-n.position.lng(),2);
-				console.log("distCur"  + distCur);
+				
 				if(distCur < nearestDist 
 					//&& nearestDist > 0.0001
 					){
@@ -88,13 +82,11 @@
 				}
 			}.bind(this));
 
-
-			console.log("nearest " + nearestDist);
-
+			console.log("distCur"  + Math.sqrt(nearestDist));
 
 			var contentString = '<div id="content"><div id="siteNotice"></div>' +
 				'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
-				'<div id="bodyContent"><p><b>it is ok for me  !</b></p>' +
+				'<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>' +
 				'<p>Tel : 06 77 86 66 54' + '</p>' +
 				'</div></div>';
 
@@ -102,7 +94,6 @@
 
 			if(nearestItem)
 				infowindow.open(map, nearestItem);
-
 		}
 
 		function CenterControl(controlDiv, map) {
