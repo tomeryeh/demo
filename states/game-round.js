@@ -21,6 +21,8 @@ GameRoundState.prototype = {
         game.load.image('smoke-particle', 'assets/sprites/game-round/smoke.png');
         game.load.image('blood-particle', 'assets/sprites/game-round/blood-particle.png');
         game.load.image('laser', 'assets/sprites/game-round/laser.png');
+        game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
+        game.time.advancedTiming = true;
         /*game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
         game.load.spritesheet('droid', 'assets/games/starstruck/droid.png', 32, 32);
         game.load.image('starSmall', 'assets/games/starstruck/star.png');
@@ -28,6 +30,7 @@ GameRoundState.prototype = {
         game.load.image('background', 'assets/games/starstruck/background2.png');*/
     },
     create: function() {
+        game.renderer.renderSession.roundPixels = true;
         musicGameRound = game.add.audio('music-game');
         if(game.hasMusic) musicGameRound.fadeIn();
 
@@ -70,16 +73,16 @@ GameRoundState.prototype = {
         emitter.makeParticles('smoke-particle');
         emitter.setXSpeed(0, 0);
         emitter.setYSpeed(0, 0);
-        emitter.setAlpha(1, 0, 2000);
-        emitter.setScale(0.2, 1.0, 0.2, 1.0, 2000, Phaser.Easing.Elastic.Out);
+        emitter.setAlpha(1, 0, 3000);
+        emitter.setScale(0.2, 1.0, 0.2, 1.0, 3000, Phaser.Easing.Elastic.Out);
         emitter.gravity = -800;
 
         blood = game.add.emitter(decor.x, decor.y, 250);
         blood.makeParticles('blood-particle', 0, 100, false, true);
         blood.setXSpeed(-100, 100);
         blood.setYSpeed(10, -500);
-        blood.setAlpha(1, 0.4, 2000);
-        blood.setScale(1.0, 2.0, 1.0, 2.0, 1000, Phaser.Easing.Quintic.Out);
+        blood.setAlpha(1, 0.4, 3000);
+        blood.setScale(1.0, 2.0, 1.0, 2.0, 2000, Phaser.Easing.Quintic.Out);
         blood.bounce.setTo(0.2, 0.2);
         blood.angularDrag = 30;
         blood.gravity = -100;
@@ -99,10 +102,13 @@ GameRoundState.prototype = {
         this.enterKey.onDown.add(this.fullScreen, this);
 
         //game.world.setBounds(0, 0, game.world.width, game.world.height * 1.5);
-        //game.camera.follow(player)
+        //game.camera.follow(player);
 
         player.blendMode = PIXI.blendModes.ADD;
         deathMessage.filters = [filterPixelate3];
+        filter = new PIXI.PixelateFilter();
+        filter.size = {x: 6, y: 6};
+        decorHPText.filters = [filter];
         /*player.filters = [filter];
         decor.filters = [filter];*/
 
@@ -137,12 +143,14 @@ GameRoundState.prototype = {
         if(player.body.velocity.x > 0) {
             direction = 'right';
             player.body.velocity.x = player.body.velocity.x - 5;
-            player.scale.x = 1;
+            game.add.tween(player.scale).to({x: 1}, 75, Phaser.Easing.Bounce.Out, true);
+            game.add.tween(playerShadow.scale).to({x: 1}, 75, Phaser.Easing.Bounce.Out, true);
         }
         if(player.body.velocity.x < 0) {
             direction = 'left';
             player.body.velocity.x = player.body.velocity.x + 5;
-            player.scale.x = -1;
+            game.add.tween(player.scale).to({x: -1}, 75, Phaser.Easing.Bounce.Out, true);
+            game.add.tween(playerShadow.scale).to({x: 1}, 75, Phaser.Easing.Bounce.Out, true);
         }
 
         if(player.body.onFloor()) {
@@ -236,6 +244,8 @@ GameRoundState.prototype = {
         decorHPText = game.add.text(decor.x - 64, decor.y - 170, decorHP, style);
 
         decorHPText.filters = [filterPixelate7];
+        player.filters = [filter];
+        decor.filters = [filter];
     },
     decorTakesDamageFromGroundPound: function() {
         if(groundPounding && flying) {
@@ -258,7 +268,8 @@ GameRoundState.prototype = {
         }
     },
     decorDies: function() {
-        blood.start(false, 1500, 20);
+        blood.start(false, 1500, 2);
+        blood.filters = [filter];
         decorHPText.destroy();
         var dieAnimation = game.add.tween(decor).to({alpha: 0.0}, 500, 'Linear').start();
         game.add.tween(decorShadow).to({alpha: 0.0}, 500, 'Linear').start();
@@ -352,5 +363,8 @@ GameRoundState.prototype = {
             musicGameRound.stop();
             lobbyGame.stateTransition.to('main-menu');
         //});
+    },
+    render: function() {
+        game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
     }
 };

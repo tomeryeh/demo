@@ -131,7 +131,7 @@ ConnectingState.prototype = {
             this.game.gameData.player = {'id':createData.result._id, 'name': kuzzleGame.name,color: randColor};
             roomId = kuzzleGame.kuzzle.subscribe('kf-user', {exists: {field: 'username'}}, function(data) {
                 console.log(data);
-                kuzzleGame.gameData.player.roomId = roomId;
+                game.gameData.player.roomId = roomId;
                 if(data.action == "create" && data._id != this.game.gameData.player.id) {
                     game.gameData.players.push({id: data._id, name: data.body.username, color: data.body.color});
                     var text = game.add.text(game.world.centerX, game.world.centerY, "- Awesome! -\nA new player joined:\n" + data.body.username);
