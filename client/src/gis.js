@@ -2,7 +2,7 @@
 
 (function() {
 
-	//the only global variable added to global scope
+	//the only global variable added to global scope from gis
 	window.gis = GisModule();
 
 	//wait until googlemap is loaded and so initialized our gis instance.
@@ -11,10 +11,14 @@
 	});
 
 	function GisModule() {
+
+		//////////////////privates attributes///////////////////////
 		var map;
 		var userMarker;
 		var userPosition;
 		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
+
+		//////////////////privates methodes///////////////////////
 
 		function generateRandomCabs() {
 			var arrayTaxiMarker = [];
@@ -43,133 +47,7 @@
 			//see https://developers.google.com/maps/documentation/javascript/markers
 		}
 
-		/**
-		 * - Gets the top-left and bottom-right corners coordinates from google maps
-		 * - Creates a kuzzle filter including geolocalization bounding box
-		 * - Unsubscribe from previous room if we were listening to one
-		 * - Subscribe to kuzzle with the new filter
-		 */
-		function refreshKuzzleFilter() {
-			var kuzzle = api.kuzzleController.getKuzzle();
-			var mapBounds = map.getBounds();
-			var swCorner = mapBounds.getSouthWest();
-			var neCorner = mapBounds.getNorthEast();
-
-			var user = app.userController.getUser();
-
-			var filterUserType = user.whoami.type === 'taxi' ? 'customer' : 'taxi';
-			var filter = {
-				filter: {
-					and: [{
-						term: {
-							type: filterUserType
-						}
-					}, {
-						geoBoundingBox: {
-							position: {
-								top_left: {
-									lat: neCorner.lat(),
-									lon: swCorner.lng()
-								},
-								bottom_right: {
-									lat: swCorner.lat(),
-									lon: neCorner.lng()
-								}
-							}
-						}
-					}]
-				}
-			};
-
-			if (positionsRoom) {
-				kuzzle.unsubscribe(positionsRoom);
-			}
-
-			console.dir(filter);
-			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(response) {
-				if (response.error) {
-					console.error(response.error);
-				}
-
-				// TODO: display or update the received user
-			});
-		}
-
-		function generateRandomCabs() {
-			var arrayTaxiMarker = [];
-			//You must recive an json with arrayTaxiMarker in it
-
-			//this is what we must get from a first call to Kuzzle :
-
-			//get random positions for taxi arrounf my position
-			for (var i = 0; i < 10; i++) {
-				arrayTaxiMarker.push(new google.maps.LatLng(userPosition.lat() + (Math.random() - 0.5) / 100, userPosition.lng() + (Math.random() - 0.5) / 100));
-			}
-
-			//2 add marker in map
-
-			for (var i = 0; i < arrayTaxiMarker.length; i++) {
-				var taxiMarker = new google.maps.Marker({
-					position: arrayTaxiMarker[i],
-					title: 'A taxi!',
-					icon: "assets/img/imagen-taxi.jpg"
-				});
-				taxiMarker.setMap(map);
-			}
-
-			//3 each time kuzzle found a change, update map
-			//see https://developers.google.com/maps/documentation/javascript/markers
-		}
-
-		/**
-		 * - Gets the top-left and bottom-right corners coordinates from google maps
-		 * - Creates a kuzzle filter including geolocalization bounding box
-		 * - Unsubscribe from previous room if we were listening to one
-		 * - Subscribe to kuzzle with the new filter
-		 */
-		function refreshKuzzleFilter() {
-			var
-				mapBounds = map.getBounds(),
-				swCorner = mapBounds.getSouthWest(),
-				neCorner = mapBounds.getNorthEast(),
-				filterUserType = whoami.type === 'taxi' ? 'customer' : 'taxi',
-				filter = {
-					filter: {
-						and: [{
-							term: {
-								type: filterUserType
-							}
-						}, {
-							geoBoundingBox: {
-								position: {
-									top_left: {
-										lat: neCorner.lat(),
-										lon: swCorner.lng()
-									},
-									bottom_right: {
-										lat: swCorner.lat(),
-										lon: neCorner.lng()
-									}
-								}
-							}
-						}]
-					}
-				};
-
-			if (positionsRoom) {
-				kuzzle.unsubscribe(positionsRoom);
-			}
-
-			console.dir(filter);
-			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(response) {
-				if (response.error) {
-					console.error(response.error);
-				}
-
-				// TODO: display or update the received user
-			});
-		}
-
+		//////////////////public methodes (i.e exposed) ///////////////////////
 		return {
 			initializeGis: function initializeGis() {
 				var mapOptions = {
@@ -200,6 +78,13 @@
 			},
 			getUserPosition: function() {
 				return userPosition;
+			},
+			getMapBounds: function() {
+				var mapBounds = map.getBounds();
+				return {
+					swCorner: mapBounds.getSouthWest(),
+					neCorner: mapBounds.getNorthEast()
+				};
 			}
 		};
 	};

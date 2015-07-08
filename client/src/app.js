@@ -4,6 +4,23 @@ var app = {
 	userController: {},
 	init: function() {
 
+		window.onload = function() {
+			///kick and dirty ui logic !
+			var user_cabble = document.querySelector("#user_cabble");
+      var cab_cabble = document.querySelector("#cab_cabble");
+			user_cabble.addEventListener("click", function(event) {
+			 user_cabble.innerHTML = "Cabble is looking for your ride";
+				app.kuzzleController.setUserType("customer");
+        cab_cabble.innerHTML = "I'm looking for a customer";
+			});
+
+			cab_cabble.addEventListener("click", function(event) {
+				cab_cabble.innerHTML = "Cabble is looking for a customer for you";
+				app.kuzzleController.setUserType("taxi");
+        user_cabble.innerHTML = "I need a ride";
+			});
+		}
+
 		//gis is already define because script is load in order
 		this.gisController.app = app;
 		//first try to found user info in local storage
@@ -14,8 +31,9 @@ var app = {
 };
 
 ////////////////////////user module/////////////////
-var userModule = (function UserModule(app) {
+(function UserModule(app) {
 
+	//////////////////privates attributes///////////////////////
 	var user = {
 		userId: false,
 		whoami: {
@@ -26,6 +44,7 @@ var userModule = (function UserModule(app) {
 
 	var app = app;
 
+	//////////////////privates methodes///////////////////////
 	/**
 	 * Create myself in Kuzzle or update my position in it.
 	 *
@@ -42,6 +61,8 @@ var userModule = (function UserModule(app) {
 			}
 		});
 	};
+
+	//////////////////public methodes (i.e exposed) ///////////////////////
 
 	app.userController = {
 		init: function() {
@@ -69,7 +90,7 @@ var userModule = (function UserModule(app) {
 			//console.log(user);
 			localforage.setItem('cable_user', JSON.stringify(user));
 		}
-	
+
 	}
 
 })(app);
@@ -77,44 +98,24 @@ var userModule = (function UserModule(app) {
 ////////////////////////kuzzle module/////////////////
 (function KuzzleModule(app) {
 
+	//////////////////(wanabee) static  privates attributes///////////////////////
+
 	var KUZZLE_URL = 'api.uat.kuzzle.io:7512';
 	var CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions';
 	var CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users';
 
+	//////////////////privates attributes///////////////////////
+	var kuzzle = new Kuzzle(KUZZLE_URL);
+	var refreshFilterTimer;
+	var customersRoom;
+	var positionsRoom;
+	var taxisRoom;
 	var app = app;
 
-	var kuzzle = new Kuzzle(KUZZLE_URL);
-
-	var customersRoom;
-	var taxisRoom;
-	var positionsRoom;
-	var refreshFilterTimer;
-
-	/**
-	 * Cabble initialization:
-	 *  - Connect to Kuzzle
-	 *  - Get the User ID from Local Storage. If it doesn't exist, create one with Kuzzle
-	 *
-	 */
+	//////////////////public methodes (i.e exposed) ///////////////////////
 
 	app.kuzzleController = {
 		init: function() {
-
-			window.onload = function() {
-				//your code
-				var user_cabble = document.querySelector("#user_cabble");
-				user_cabble.addEventListener("click", function(event) {
-					user_cabble.innerHTML = "Cabble is looking for your ride";
-
-					app.kuzzleController.setUserType("customer");
-				});
-
-				var cab_cabble = document.querySelector("#cab_cabble");
-				cab_cabble.addEventListener("click", function(event) {
-					cab_cabble.innerHTML = "Cabble is looking for a customer for you";
-					app.kuzzleController.setUserType("taxi");
-				});
-			}
 
 			// TODO: retrieve userId from localstorage
 			var user = app.userController.getUser();
@@ -137,37 +138,85 @@ var userModule = (function UserModule(app) {
 		getKuzzle: function(positions) {
 			return kuzzle;
 		},
-    setUserType: function (userType) {
-      var refreshInterval;
+		/**
+		 * - Gets the top-left and bottom-right corners coordinates from google maps
+		 * - Creates a kuzzle filter including geolocalization bounding box
+		 * - Unsubscribe from previous room if we were listening to one
+		 * - Subscribe to kuzzle with the new filter
+		 */
+		refreshKuzzleFilter: function() {
+			var bound = app.gisController.getMapBounds();
+			var user  = app.userController.getUser();
 
-      app.userController.getUser().whoami.type = userType;
-      app.userController.setUserLocally();
-      kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
+			var filterUserType = user.whoami.type === 'taxi' ? 'customer' : 'taxi';
+			var filter =  {
+					and: [{
+						term: {
+							type: filterUserType
+						}
+					}, {
+						geoBoundingBox: {
+							position: {
+								top_left: {
+									lat: bound.neCorner.lat(),
+									lon: bound.swCorner.lng()
+								},
+								bottom_right: {
+									lat: bound.swCorner.lat(),
+									lon: bound.neCorner.lng()
+								}
+							}
+						}
+					}]
+				};
 
-      if (userType === 'customer') {
-        refreshInterval = 60000;
+			if (positionsRoom) {
+				kuzzle.unsubscribe(positionsRoom);
+			}
 
-        if (customersRoom) {
-          kuzzle.unsubscribe(customersRoom);
-          customersRoom = null;
-        }
-      } else if (userType === 'taxi') {
-        refreshInterval = 10000;
+			//console.dir(filter);
+			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(response) {
+				if (response.error) {
+					console.error(response.error);
+				}
+        console.dir("pos" );
+        console.dir(response );
+				// TODO: display or update the received user
+			});
+      console.log("we subscribe to ");
+      console.log(positionsRoom);
+		},
+		setUserType: function(userType) {
+			var refreshInterval;
 
-        if (taxisRoom) {
-          kuzzle.unsubscribe(taxisRoom);
-          taxisRoom = null;
-        }
-      }
+			app.userController.getUser().whoami.type = userType;
+			app.userController.setUserLocally();
+			kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
 
-      if (refreshFilterTimer) {
-        clearInterval(refreshFilterTimer);
-      }
+			if (userType === 'customer') {
+				refreshInterval = 6000;
 
-      refreshFilterTimer = setInterval(function() {
-         app.gisController.refreshKuzzleFilter()
-      }, refreshInterval);
-    }
+				if (customersRoom) {
+					kuzzle.unsubscribe(customersRoom);
+					customersRoom = null;
+				}
+			} else if (userType === 'taxi') {
+				refreshInterval = 1000;
+
+				if (taxisRoom) {
+					kuzzle.unsubscribe(taxisRoom);
+					taxisRoom = null;
+				}
+			}
+
+			if (refreshFilterTimer) {
+				clearInterval(refreshFilterTimer);
+			}
+
+			var refreshFilterTimer = setInterval(function() {
+				this.refreshKuzzleFilter()
+			}.bind(this), refreshInterval);
+		}
 	};
 
 })(app);
