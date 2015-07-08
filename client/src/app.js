@@ -32,66 +32,25 @@ var userModule = (function UserModule(app) {
 	 */
 	function sendMyPosition() {
 
-		//console.log("send my position");
-
-		//console.log(user);
 		var userPosition = app.gisController.getUserPosition();
 		app.kuzzleController.setUserPosition({
 			userId: user.whoami._id,
 			type: user.whoami.type,
 			position: {
 				lat: userPosition.lat(),
-				lon: userPosition.lng(),
+				lon: userPosition.lng()
 			}
 		});
-	}
-
-	/**
-	 * Tell Kuzzle what type of user I am (a cab or a customer)
-	 *
-	 * @param userType
-	 */
-	function setUserType(userType) {
-		var refreshInterval;
-
-		whoami.type = userType;
-		kuzzle.update(CABBLE_COLLECTION_USERS, whoami);
-
-		if (userType === 'customer') {
-			refreshInterval = 60000;
-
-			if (customersRoom) {
-				kuzzle.unsubscribe(customersRoom);
-				customersRoom = null;
-			}
-		} else if (userType === 'taxi') {
-			refreshInterval = 10000;
-
-			if (taxisRoom) {
-				kuzzle.unsubscribe(taxisRoom);
-				taxisRoom = null;
-			}
-		}
-
-		if (refreshFilterTimer) {
-			clearInterval(refreshFilterTimer);
-		}
-
-		refreshFilterTimer = setInterval(function() {
-			refreshKuzzleFilter()
-		}, refreshInterval);
-	}
+	};
 
 	app.userController = {
 		init: function() {
 			this.getUserLocally(
 				function(value) {
 					if (value) {
-						user = JSON.parse(value);
+						var user = JSON.parse(value);
 						//console.dir("data from storage");
 						//console.dir(user);
-						console.dir(user);
-
 					}
 					setInterval(sendMyPosition.bind(this), 3000);
 				}
@@ -106,10 +65,11 @@ var userModule = (function UserModule(app) {
 			})
 		},
 		setUserLocally: function() {
-			console.log("saving user ");
+			//console.log("saving user ");
 			//console.log(user);
 			localforage.setItem('cable_user', JSON.stringify(user));
 		}
+	
 	}
 
 })(app);
@@ -140,6 +100,22 @@ var userModule = (function UserModule(app) {
 	app.kuzzleController = {
 		init: function() {
 
+			window.onload = function() {
+				//your code
+				var user_cabble = document.querySelector("#user_cabble");
+				user_cabble.addEventListener("click", function(event) {
+					user_cabble.innerHTML = "Cabble is looking for your ride";
+
+					app.kuzzleController.setUserType("customer");
+				});
+
+				var cab_cabble = document.querySelector("#cab_cabble");
+				cab_cabble.addEventListener("click", function(event) {
+					cab_cabble.innerHTML = "Cabble is looking for a customer for you";
+					app.kuzzleController.setUserType("taxi");
+				});
+			}
+
 			// TODO: retrieve userId from localstorage
 			var user = app.userController.getUser();
 
@@ -160,7 +136,38 @@ var userModule = (function UserModule(app) {
 		},
 		getKuzzle: function(positions) {
 			return kuzzle;
-		}
+		},
+    setUserType: function (userType) {
+      var refreshInterval;
+
+      app.userController.getUser().whoami.type = userType;
+      app.userController.setUserLocally();
+      kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
+
+      if (userType === 'customer') {
+        refreshInterval = 60000;
+
+        if (customersRoom) {
+          kuzzle.unsubscribe(customersRoom);
+          customersRoom = null;
+        }
+      } else if (userType === 'taxi') {
+        refreshInterval = 10000;
+
+        if (taxisRoom) {
+          kuzzle.unsubscribe(taxisRoom);
+          taxisRoom = null;
+        }
+      }
+
+      if (refreshFilterTimer) {
+        clearInterval(refreshFilterTimer);
+      }
+
+      refreshFilterTimer = setInterval(function() {
+         app.gisController.refreshKuzzleFilter()
+      }, refreshInterval);
+    }
 	};
 
 })(app);
