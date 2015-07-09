@@ -37,7 +37,7 @@ var app = {
 	var user = {
 		userId: false,
 		whoami: {
-			type: '',
+			type: 'customer',
 			_id: false
 		}
 	};

@@ -20,7 +20,7 @@
 		var otherItemsMark= [];
 
 		function getIcon(userType) {
-			return "assets/img/" + (userType === "cab" ? "imagen-taxi.jpg" : "phone.png");
+			return "assets/img/" + (userType === "cab" ? "imagen-taxi.jpg" : "meeple2.png");
 		}
 
 		//////////////////privates methodes///////////////////////
@@ -84,11 +84,27 @@
 
 			console.log("distCur"  + Math.sqrt(nearestDist));
 
-			var contentString = '<div id="content"><div id="siteNotice"></div>' +
+			var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+
+
+			var contentString = "";
+			if(userType === "customer"){
+				contentString = '<div id="content"><div id="siteNotice"></div>' +
 				'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
 				'<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>' +
 				'<p>Tel : 06 77 86 66 54' + '</p>' +
 				'</div></div>';
+
+			}
+			else {
+				contentString = '<div id="content"><div id="siteNotice"></div>' +
+				'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
+				'<div id="bodyContent"><p><b>I go to the Millenaires ! any cab ?</b></p>' +
+				'<p>Tel : 06 77 86 26 57' + '</p>' +
+				'</div></div>';
+			}
+
+		
 
 			var infowindow = new google.maps.InfoWindow({content: contentString});
 
