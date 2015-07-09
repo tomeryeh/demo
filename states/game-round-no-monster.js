@@ -17,8 +17,7 @@ function GameRoundNoMonsterState() {}
 GameRoundNoMonsterState.prototype = {
     init: function(initData) {
         self = this;
-        this.initData = initData;
-        console.log('Init data: ' + initData);
+        self.initData = initData;
 
         game.room = {
             players: []
@@ -32,15 +31,14 @@ GameRoundNoMonsterState.prototype = {
             }
         };
         game.kuzzle.search('kf-users', filters, function(response) {
-            console.log(response);
             response.result.hits.hits.forEach(function(e) {
                 self.handleConnect(e._id, e._source);
             });
         });
         game.player = {
-            username: "Sam " + Math.floor((Math.random() * 1000) + 1),
-            color: Phaser.Color.getRandomColor(30, 220),
-            hp: 100
+            username: "Sam-" + Math.floor((Math.random() * 1000) + 1),
+            color:    Phaser.Color.getRandomColor(30, 220),
+            hp:       100
         };
         game.kuzzle.create('kf-users', game.player, true, function(createData) {
             game.player.id = createData.result._id;
@@ -58,47 +56,35 @@ GameRoundNoMonsterState.prototype = {
                     self.updateFromKuzzle(dataGameUpdate.body);
                 });
                 live = true;
-                console.log('Room ID players: ' + roomIdPlayers);
-                console.log('Room ID game updates: ' + roomIdGameUpdates);
+                console.log('Live!');
             });
         });
     },
     preload: function() {
-        //game.load.tilemap('level1', 'assets/games/starstruck/level1.json', null, Phaser.Tilemap.TILED_JSON);
         game.load.image('player', 'assets/sprites/game-round/player.png');
         game.load.image('smoke-particle', 'assets/sprites/game-round/smoke.png');
         game.load.image('blood-particle', 'assets/sprites/game-round/blood-particle.png');
         game.load.image('laser', 'assets/sprites/game-round/laser.png');
-        game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
         game.time.advancedTiming = true;
-        /*game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
-        game.load.spritesheet('droid', 'assets/games/starstruck/droid.png', 32, 32);
-        game.load.image('starSmall', 'assets/games/starstruck/star.png');
-        game.load.image('starBig', 'assets/games/starstruck/star2.png');
-        game.load.image('background', 'assets/games/starstruck/background2.png');*/
     },
     create: function() {
-        game.renderer.renderSession.roundPixels = true;
         musicGameRound = game.add.audio('music-game');
         if(game.hasMusic) musicGameRound.fadeIn();
 
-        /* GAME LOGIC */
-
-        game.stage.backgroundColor = 0x333333;
+        game.renderer.renderSession.roundPixels = true;
+        game.stage.backgroundColor = 0x444444;
 
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 1000;
 
-        player = self.addPlayer();
+        player       = self.addPlayer();
         playerShadow = self.addPlayerShadow();
-        emitter = self.addPlayerEmitter();
+        emitter      = self.addPlayerEmitter();
 
-        filterPixelate7 = new PIXI.PixelateFilter();
-        filterPixelate7.size = {x: 7, y: 7};
-        filterPixelate3 = new PIXI.PixelateFilter();
+        filterPixelate6      = new PIXI.PixelateFilter();
+        filterPixelate6.size = {x: 6, y: 6};
+        filterPixelate3      = new PIXI.PixelateFilter();
         filterPixelate3.size = {x: 3, y: 3};
-
-        //game.camera.follow(player);
 
         blood = game.add.emitter(player.x, player.y, 250);
         blood.makeParticles('blood-particle', 0, 100, false, true);
@@ -110,60 +96,56 @@ GameRoundNoMonsterState.prototype = {
         blood.angularDrag = 30;
         blood.gravity = -100;
 
-        style = {font: '42px Helvetica', fontWeight: 'bold', fill: "#BF0000", align: "center"};
-        deathMessage = game.add.text(player.x, player.y, "F#@k U!!", style);
-        deathMessage.alpha = 0.0;
+        style                = {font: '42px Helvetica', fontWeight: 'bold', fill: "#BF0000", align: "center"};
+        deathMessage         = game.add.text(player.x, player.y, "F#@k U!!", style);
+        deathMessage.alpha   = 0.0;
+        deathMessage.filters = [filterPixelate3];
 
-        cursors = game.input.keyboard.createCursorKeys();
+        cursors    = game.input.keyboard.createCursorKeys();
         jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.UP);
         fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
-        /* END GAME LOGIC */
+        self.game.input.onDown.add(self.fullScreen, self);
 
-        this.game.input.onDown.add(this.fullScreen, this);
-        this.enterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-        this.enterKey.onDown.add(this.fullScreen, this);
-
-        //game.world.setBounds(0, 0, game.world.width, game.world.height * 1.5);
-        //game.camera.follow(player);
-
-        deathMessage.filters = [filterPixelate3];
-        filter = new PIXI.PixelateFilter();
-        filter.size = {x: 6, y: 6};
-        /*player.filters = [filter];
-        decor.filters = [filter];*/
-
-        flash = game.juicy.createScreenFlash('#ff0000');
+        self.enterKey      = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+        self.fullscreenKey = this.game.input.keyboard.addKey(Phaser.Keyboard.F);
+        self.quitKey       = this.game.input.keyboard.addKey(Phaser.Keyboard.Q);
+        self.enterKey.onDown.add(self.switchKuzzleSynch, self);
+        self.fullscreenKey.onDown.add(self.fullScreen, self);
+        self.quitKey.onDown.add(self.quitGame, self);
+    },
+    switchKuzzleSynch: function() {
+        live = !live;
     },
     addPlayer: function() {
         var p = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
+        game.physics.enable(p, Phaser.Physics.ARCADE);
+        p.blendMode = PIXI.blendModes.ADD;
+        p.body.collideWorldBounds = true;
+        p.body.bounce.setTo(0.8, 0.5);
         p.anchor.setTo(0.5, 1.0);
         p.height = 85;
         p.width = 64;
-        game.physics.enable(p, Phaser.Physics.ARCADE);
-        p.body.bounce.setTo(0.8, 0.5);
-        p.body.collideWorldBounds = true;
-        p.blendMode = PIXI.blendModes.ADD;
 
         return p;
     },
     addPlayerShadow: function() {
         var ps = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
         ps.anchor.setTo(0.5, 1.0);
-        ps.height = 85;
-        ps.width = 64;
         ps.tint = 0x000000;
         ps.alpha = 0.6;
+        ps.height = 85;
+        ps.width = 64;
 
         return ps;
     },
     addPlayerEmitter: function() {
         e = game.add.emitter(game.world.centerX, game.world.centerY, 8);
+        e.setScale(0.2, 1.0, 0.2, 1.0, 3000, Phaser.Easing.Elastic.Out);
         e.makeParticles('smoke-particle');
+        e.setAlpha(1, 0, 3000);
         e.setXSpeed(0, 0);
         e.setYSpeed(0, 0);
-        e.setAlpha(1, 0, 3000);
-        e.setScale(0.2, 1.0, 0.2, 1.0, 3000, Phaser.Easing.Elastic.Out);
         e.gravity = -800;
         e.start(false, 2000, 20);
         e.on = false;
@@ -171,10 +153,8 @@ GameRoundNoMonsterState.prototype = {
         return e;
     },
     updateFromKuzzle: function(data) {
-        console.log(data);
         game.room.players.forEach(function(e) {
             if(e.id == data.pid) {
-                console.log('UPDATES FROM ' + data.pid);
                 e.sprite.x = data.x;
                 e.sprite.y = data.y;
                 e.sprite.body.velocity.x = data.vx;
@@ -190,17 +170,16 @@ GameRoundNoMonsterState.prototype = {
         this.updatePlayers();
         game.physics.arcade.collide(blood, player);
         if(game.time.now > updateTimer && live) {
-            console.log('Sending update');
             updateTimer = game.time.now + updateRate;
 
             game.kuzzle.update("kf-room-1", {
-                _id: game.player.updateId,
-                pid: game.player.id,
-                hp: game.player.hp,
-                x: player.x,
-                y: player.y,
-                vx: player.body.velocity.x,
-                vy: player.body.velocity.y,
+                _id:   game.player.updateId,
+                pid:   game.player.id,
+                hp:    game.player.hp,
+                x:     player.x,
+                y:     player.y,
+                vx:    player.body.velocity.x,
+                vy:    player.body.velocity.y,
                 emits: emitter.on,
                 shoot: shooted ? shootCoords : false
             }, function(r) { console.log(r); });
@@ -209,20 +188,11 @@ GameRoundNoMonsterState.prototype = {
         }
     },
     fullScreen: function() {
-        //game.scale.startFullScreen();
-        live = false;
+        game.scale.startFullScreen();
     },
     updatePlayers: function() {
         playerShadow.x = player.x + shadowOffset.x;
         playerShadow.y = player.y + shadowOffset.y;
-
-        game.room.players.forEach(function(e) {
-            e.shadow.x = e.sprite.x + shadowOffset.x;
-            e.shadow.y = e.sprite.y + shadowOffset.y;
-            e.emitter.emitX = e.sprite.x;
-            e.emitter.emitY = e.sprite.y;
-            e.emitter.filters = [filterPixelate7];
-        });
 
         blood.x = player.x;
         blood.y = player.y;
@@ -230,13 +200,20 @@ GameRoundNoMonsterState.prototype = {
         emitter.emitX = player.x;
         emitter.emitY = player.y;
 
+        game.room.players.forEach(function(e) {
+            e.shadow.x = e.sprite.x + shadowOffset.x;
+            e.shadow.y = e.sprite.y + shadowOffset.y;
+            e.emitter.emitX = e.sprite.x;
+            e.emitter.emitY = e.sprite.y;
+            e.emitter.filters = [filterPixelate6];
+        });
+
         if (cursors.left.isDown) {
             player.body.velocity.x = -300;
         }
         if(cursors.right.isDown) {
             player.body.velocity.x = 300;
         }
-
         if(player.body.velocity.x > 0) {
             direction = 'right';
             player.body.velocity.x = player.body.velocity.x - 5;
@@ -249,12 +226,10 @@ GameRoundNoMonsterState.prototype = {
             game.add.tween(player.scale).to({x: -1}, 75, Phaser.Easing.Bounce.Out, true);
             game.add.tween(playerShadow.scale).to({x: 1}, 75, Phaser.Easing.Bounce.Out, true);
         }
-
         if(player.body.onFloor()) {
             player.body.gravity.y = 1000;
         }
         if(jumpButton.isDown && (player.body.onFloor() || player.body.wasTouching.down) && game.time.now > jumpTimer) {
-            flash.flash();
             if(player.body.wasTouching.down)
                 player.body.velocity.y = -1000;
             else
@@ -273,7 +248,7 @@ GameRoundNoMonsterState.prototype = {
             readyForDoubleJump = false;
             doubleJumped = true;
             emitter.start(false, 2000, 20);
-            emitter.filters = [filterPixelate7];
+            emitter.filters = [filterPixelate6];
             emitterLifeSpan = 30;
         }
 
@@ -288,7 +263,6 @@ GameRoundNoMonsterState.prototype = {
             flying = false;
             game.juicy.shake(30, 100);
             //game.juicy.jelly(player, 1.5, 100);
-            this.kuzzleFlash(1, 2000);
             this.tweenTint(player, 0x333333, 0xFF11FF, 500);
         }
 
@@ -318,19 +292,18 @@ GameRoundNoMonsterState.prototype = {
 
         deathMessage.x = player.x - 80;
         deathMessage.y = player.y - 140;
-        player.filters = [filter];
+        player.filters = [filterPixelate6];
     },
     shootLaser: function() {
         var posX = direction == 'right' ? player.x + 50 : player.x - 150;
         var laser = game.add.sprite(posX, player.y - 50, 'laser');
+        game.physics.enable(laser, Phaser.Physics.ARCADE);
+        laser.events.onOutOfBounds.add(self.destroyLaser, self);
         laser.width = 80;
         laser.height = 50;
-        laser.events.onOutOfBounds.add(this.destroyLaser, this);
-        game.physics.enable(laser, Phaser.Physics.ARCADE);
         laser.checkWorldBounds = true;
         laser.body.gravity.y = -1000;
-        var randColor = Phaser.Color.getRandomColor(100, 255);
-        laser.tint = randColor;
+        laser.tint = Phaser.Color.getRandomColor(100, 255);
         laser.blendMode = PIXI.blendModes.ADD;
 
         if(direction == 'right')
@@ -340,7 +313,6 @@ GameRoundNoMonsterState.prototype = {
         lasers.push(laser);
     },
     destroyLaser: function(laser) {
-        console.log('DESTROY');
         laser.kill();
         laser.destroy();
     },
@@ -350,23 +322,9 @@ GameRoundNoMonsterState.prototype = {
     handleCollisionBetweenLasersAndEnemies: function() {
         console.log('laser collide!!!!!!!!!!!!');
     },
-    kuzzleFlash: function(maxAlpha, duration) {
-        maxAlpha = maxAlpha || 1;
-        duration = duration || 100;
-        var flashTween = this.game.add.tween(self).to({alpha: maxAlpha}, duration, Phaser.Easing.Bounce.InOut, true, 0, 0, true);
-        flashTween.onComplete.add(function() {
-            self.alpha = 0;
-        }, this);
-    },
     tweenTint: function(obj, startColor, endColor, time) {
-        // create an object to tween with our step value at 0
         var colorBlend = {step: 0};
-
-        // create the tween on this object and tween its step property to 100
         colorTween = this.game.add.tween(colorBlend).to({step: 100}, time, 'Linear'/*, true, 0, -1*/);
-
-        // run the interpolateColor function every time the tween updates, feeding it the
-        // updated value of our tween each time, and set the result as our tint
         colorTween.onUpdateCallback(function() {
             obj.tint = Phaser.Color.interpolateColor(startColor, endColor, 100, colorBlend.step);
         });
@@ -374,19 +332,12 @@ GameRoundNoMonsterState.prototype = {
             obj.tint = 0xFFFFFF;
             self.game.stage.setBackgroundColor(0x444444);
         });
-
-        // set the object to the start color straight away
         obj.tint = startColor;
-
         self.game.stage.setBackgroundColor(0xFF0000);
 
-        // start the tween
         colorTween.start();
     },
     handleConnect: function(_id, p) {
-        console.log(_id);
-        console.log(p);
-        console.log('PLAYER CONNECTED: ' + p.username);
         var newPlayer = {
             id: _id,
             username: p.username,
@@ -399,7 +350,6 @@ GameRoundNoMonsterState.prototype = {
             vx: p.vx,
             vy: p.vy
         };
-        //game.physics.arcade.collide(player, newPlayer.sprite, self.handleCollisionBetweenPlayers, null, self);
         game.room.players.push(newPlayer);
     },
     handleDisconnect: function(p) {
@@ -412,11 +362,14 @@ GameRoundNoMonsterState.prototype = {
         });
     },
     quitGame: function() {
-        //lobbyGame.kuzzle.unsubscribe(game.gameData.player.roomId);
-        //lobbyGame.kuzzle.delete('kf-user', lobbyGame.gameData.player.id, function(response) {
-            musicGameRound.stop();
-            lobbyGame.stateTransition.to('main-menu');
-        //});
+        game.kuzzle.unsubscribe(roomIdPlayers);
+        game.kuzzle.unsubscribe(roomIdGameUpdates);
+        game.kuzzle.delete('kf-users', game.player.id, function() {
+            game.kuzzle.delete('kf-users', game.player.id, function() {
+                musicGameRound.stop();
+                game.stateTransition.to('main-menu');
+            });
+        });
     },
     render: function() {
         game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");

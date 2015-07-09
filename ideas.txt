@@ -1,1 +1,11 @@
+-- Resources --
 Arcade font generator: http://arcade.photonstorm.com/
+
+-- Ideas --
+[ ] Loader
+[ ] Achievements
+[ ] Konami code for Gandbox + visualizer in BG
+[ ] Scrollable menus
+[ ] Webcam + pixelize face
+[ ] Intro
+[ ] Tutorial
