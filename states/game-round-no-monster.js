@@ -9,6 +9,7 @@ var emitterLifeSpan = 0;
 var flying = false;
 var groundPounding = false;
 var shadowOffset = new Phaser.Point(10, 8);
+var defaultHp = 50;
 var live = false;
 var updateRate = 1000;
 var shooted = false;
@@ -152,6 +153,13 @@ GameRoundNoMonsterState.prototype = {
 
         return e;
     },
+    addPlayerHpMeter: function() {
+        var style = {font: '48px Helvetica', fontWeight: 'bold', fill: "#FFF", align: "center"};
+        t = game.add.text(game.world.centerX, game.world.centerY, defaultHp, style);
+        t.filters = [filterPixelate6];
+
+        return t;
+    },
     updateFromKuzzle: function(data) {
         game.room.players.forEach(function(e) {
             if(e.id == data.pid) {
@@ -201,11 +209,15 @@ GameRoundNoMonsterState.prototype = {
         emitter.emitY = player.y;
 
         game.room.players.forEach(function(e) {
-            e.shadow.x = e.sprite.x + shadowOffset.x;
-            e.shadow.y = e.sprite.y + shadowOffset.y;
-            e.emitter.emitX = e.sprite.x;
-            e.emitter.emitY = e.sprite.y;
+            var ex = e.sprite.x;
+            var ey = e.sprite.y;
+            e.shadow.x = ex + shadowOffset.x;
+            e.shadow.y = ey + shadowOffset.y;
+            e.emitter.emitX = ex;
+            e.emitter.emitY = ey;
             e.emitter.filters = [filterPixelate6];
+            e.hpMeter.x = ex + shadowOffset.x;
+            e.hpMeter.y = ey + shadowOffset.y;
         });
 
         if (cursors.left.isDown) {
@@ -342,9 +354,11 @@ GameRoundNoMonsterState.prototype = {
             id: _id,
             username: p.username,
             color: p.color,
+            hp: defaultHp,
             sprite: this.addPlayer(),
             shadow: this.addPlayerShadow(),
             emitter: this.addPlayerEmitter(),
+            hpMeter: this.addPlayerHpMeter(),
             x: p.x,
             y: p.y,
             vx: p.vx,
