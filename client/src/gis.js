@@ -17,7 +17,7 @@
 		var userMarker;
 		var userPosition;
 		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
-		var otherItemsMark= [];
+		var otherItemsMark = [];
 
 		function getIcon(userType) {
 			return "assets/img/" + (userType === "cab" ? "imagen-taxi.jpg" : "meeple2.png");
@@ -27,7 +27,7 @@
 
 		function generateRandomItems(type, nbRandomItems) {
 			var otherItemsCoord = [];
-			otherItemsMark= [];
+			otherItemsMark = [];
 			//You must recive an json with arrayTaxiMarker in it
 
 			//this is what we must get from a first call to Kuzzle :
@@ -69,14 +69,13 @@
 			otherItemsMark.forEach(function(n){
 			//	console.log(n);
 				var distCur = Math.pow(
-					userPosition.lat()-
-					n.position.lat(),2) +
-					 Math.pow(userPosition.lng()
-					-n.position.lng(),2);
-				
-				if(distCur < nearestDist 
+						userPosition.lat() -
+						n.position.lat(), 2) +
+					Math.pow(userPosition.lng() - n.position.lng(), 2);
+
+				if (distCur < nearestDist
 					//&& nearestDist > 0.0001
-					){
+				) {
 					nearestDist = distCur;
 					nearestItem = n;
 				}
@@ -88,27 +87,29 @@
 
 
 			var contentString = "";
-			if(userType === "customer"){
-				contentString = '<div id="content"><div id="siteNotice"></div>' +
-				'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
-				'<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>' +
-				'<p>Tel : 06 77 86 66 54' + '</p>' +
-				'</div></div>';
+			if (userType === "customer") {
+				contentString = '<div id="content_info_item"><div id="siteNotice"></div>' +
+					'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
+					'<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>' +
+					'<p>Tel : 06 77 86 66 54' + '</p>' +
+					'</div></div>';
 
+			} else {
+				contentString = '<div onload="myFunction()" id="content_info_item"><div id="siteNotice"></div>' +
+					'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
+					'<div id="bodyContent"><p><b>I go to the Millenaires ! any cab ?</b></p>' +
+					'<p>Tel : 06 77 86 26 57' + '</p>' +
+					'</div></div>';
 			}
-			else {
-				contentString = '<div id="content"><div id="siteNotice"></div>' +
-				'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
-				'<div id="bodyContent"><p><b>I go to the Millenaires ! any cab ?</b></p>' +
-				'<p>Tel : 06 77 86 26 57' + '</p>' +
-				'</div></div>';
-			}
 
-		
+			var infowindow = new google.maps.InfoWindow({
+				content: contentString
+			});
+			google.maps.event.addListener(infowindow, 'domready', function() {
+				document.querySelector("#content_info_item").parentNode.parentNode.parentNode.parentNode.style.opacity = 0.8;
+			});
 
-			var infowindow = new google.maps.InfoWindow({content: contentString});
-
-			if(nearestItem)
+			if (nearestItem)
 				infowindow.open(map, nearestItem);
 		}
 
@@ -135,7 +136,7 @@
 			controlText.style.paddingLeft = '5px';
 			controlText.style.paddingRight = '5px';
 			controlText.innerHTML = 'Cabble Menu';
-			controlUI.appendChild(controlText);
+			//	controlUI.appendChild(controlText);
 
 			// Setup the click event listeners: simply set the map to
 			// Chicago

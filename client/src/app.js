@@ -4,10 +4,9 @@ var app = {
 	userController: {},
 	init: function() {
 
+		
 		window.onload = function() {
 			///kick and dirty ui logic !
-
-      /*
 			var user_cabble = document.querySelector("#user_cabble");
 			var cab_cabble = document.querySelector("#cab_cabble");
 			user_cabble.addEventListener("click", function(event) {
@@ -21,9 +20,7 @@ var app = {
 				app.kuzzleController.setUserType("cab");
 				user_cabble.innerHTML = "I need a ride";
 			});
-      */
 		}
-
 
 		//gis is already define because script is load in order
 		this.gisController.app = app;
