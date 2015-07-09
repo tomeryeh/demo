@@ -21,7 +21,6 @@ GameRoundState.prototype = {
         game.load.image('smoke-particle', 'assets/sprites/game-round/smoke.png');
         game.load.image('blood-particle', 'assets/sprites/game-round/blood-particle.png');
         game.load.image('laser', 'assets/sprites/game-round/laser.png');
-        game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
         game.time.advancedTiming = true;
         /*game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
         game.load.spritesheet('droid', 'assets/games/starstruck/droid.png', 32, 32);
@@ -106,13 +105,9 @@ GameRoundState.prototype = {
 
         player.blendMode = PIXI.blendModes.ADD;
         deathMessage.filters = [filterPixelate3];
-        filter = new PIXI.PixelateFilter();
-        filter.size = {x: 6, y: 6};
-        decorHPText.filters = [filter];
+        //decorHPText.filters = [filter];
         /*player.filters = [filter];
         decor.filters = [filter];*/
-
-        flash = game.juicy.createScreenFlash('#ff0000');
     },
     update: function() {
         this.updatePlayers();
@@ -157,7 +152,6 @@ GameRoundState.prototype = {
             player.body.gravity.y = 1000;
         }
         if(jumpButton.isDown && (player.body.onFloor() || player.body.wasTouching.down) && game.time.now > jumpTimer) {
-            flash.flash();
             if(player.body.wasTouching.down)
                 player.body.velocity.y = -1000;
             else
@@ -221,8 +215,8 @@ GameRoundState.prototype = {
 
         deathMessage.x = player.x - 80;
         deathMessage.y = player.y - 140;
-        player.filters = [filter];
-        decor.filters = [filter];
+        player.filters = [filterPixelate3];
+        decor.filters = [filterPixelate3];
     },
     spawnMonster: function() {
         decorHP = 50;
@@ -269,7 +263,7 @@ GameRoundState.prototype = {
     },
     decorDies: function() {
         blood.start(false, 1500, 2);
-        blood.filters = [filter];
+        blood.filters = [filterPixelate3];
         decorHPText.destroy();
         var dieAnimation = game.add.tween(decor).to({alpha: 0.0}, 500, 'Linear').start();
         game.add.tween(decorShadow).to({alpha: 0.0}, 500, 'Linear').start();

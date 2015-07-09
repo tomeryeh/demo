@@ -11,7 +11,7 @@ var groundPounding = false;
 var shadowOffset = new Phaser.Point(10, 8);
 var defaultHp = 50;
 var live = false;
-var updateRate = 1000;
+var updateRate = 2000;
 var shooted = false;
 var shootCoords = {};
 function GameRoundNoMonsterState() {}
@@ -78,14 +78,14 @@ GameRoundNoMonsterState.prototype = {
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 1000;
 
-        player       = self.addPlayer();
-        playerShadow = self.addPlayerShadow();
-        emitter      = self.addPlayerEmitter();
-
         filterPixelate6      = new PIXI.PixelateFilter();
         filterPixelate6.size = {x: 6, y: 6};
         filterPixelate3      = new PIXI.PixelateFilter();
         filterPixelate3.size = {x: 3, y: 3};
+
+        playerShadow = self.addPlayerShadow();
+        player       = self.addPlayer();
+        emitter      = self.addPlayerEmitter();
 
         blood = game.add.emitter(player.x, player.y, 250);
         blood.makeParticles('blood-particle', 0, 100, false, true);
@@ -121,6 +121,7 @@ GameRoundNoMonsterState.prototype = {
     addPlayer: function() {
         var p = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
         game.physics.enable(p, Phaser.Physics.ARCADE);
+        p.filters = [filterPixelate6];
         p.blendMode = PIXI.blendModes.ADD;
         p.body.collideWorldBounds = true;
         p.body.bounce.setTo(0.8, 0.5);
@@ -143,6 +144,7 @@ GameRoundNoMonsterState.prototype = {
     addPlayerEmitter: function() {
         e = game.add.emitter(game.world.centerX, game.world.centerY, 8);
         e.setScale(0.2, 1.0, 0.2, 1.0, 3000, Phaser.Easing.Elastic.Out);
+        e.filters = [filterPixelate6];
         e.makeParticles('smoke-particle');
         e.setAlpha(1, 0, 3000);
         e.setXSpeed(0, 0);
@@ -181,13 +183,13 @@ GameRoundNoMonsterState.prototype = {
             updateTimer = game.time.now + updateRate;
 
             game.kuzzle.update("kf-room-1", {
-                _id:   game.player.updateId,
-                pid:   game.player.id,
-                hp:    game.player.hp,
-                x:     player.x,
-                y:     player.y,
-                vx:    player.body.velocity.x,
-                vy:    player.body.velocity.y,
+                _id  : game.player.updateId,
+                pid  : game.player.id,
+                hp   : game.player.hp,
+                x    : player.x,
+                y    : player.y,
+                vx   : player.body.velocity.x,
+                vy   : player.body.velocity.y,
                 emits: emitter.on,
                 shoot: shooted ? shootCoords : false
             }, function(r) { console.log(r); });
@@ -213,11 +215,12 @@ GameRoundNoMonsterState.prototype = {
             var ey = e.sprite.y;
             e.shadow.x = ex + shadowOffset.x;
             e.shadow.y = ey + shadowOffset.y;
-            e.emitter.emitX = ex;
-            e.emitter.emitY = ey;
-            e.emitter.filters = [filterPixelate6];
-            e.hpMeter.x = ex + shadowOffset.x;
-            e.hpMeter.y = ey + shadowOffset.y;
+            if(e.emits) {
+                e.emitter.emitX = ex;
+                e.emitter.emitY = ey;
+            }
+            /*e.hpMeter.x = ex + shadowOffset.x;
+            e.hpMeter.y = ey + shadowOffset.y;*/
         });
 
         if (cursors.left.isDown) {
@@ -260,7 +263,6 @@ GameRoundNoMonsterState.prototype = {
             readyForDoubleJump = false;
             doubleJumped = true;
             emitter.start(false, 2000, 20);
-            emitter.filters = [filterPixelate6];
             emitterLifeSpan = 30;
         }
 
@@ -304,7 +306,6 @@ GameRoundNoMonsterState.prototype = {
 
         deathMessage.x = player.x - 80;
         deathMessage.y = player.y - 140;
-        player.filters = [filterPixelate6];
     },
     shootLaser: function() {
         var posX = direction == 'right' ? player.x + 50 : player.x - 150;
@@ -351,19 +352,20 @@ GameRoundNoMonsterState.prototype = {
     },
     handleConnect: function(_id, p) {
         var newPlayer = {
-            id: _id,
-            username: p.username,
-            color: p.color,
-            hp: defaultHp,
-            sprite: this.addPlayer(),
-            shadow: this.addPlayerShadow(),
-            emitter: this.addPlayerEmitter(),
-            hpMeter: this.addPlayerHpMeter(),
-            x: p.x,
-            y: p.y,
-            vx: p.vx,
-            vy: p.vy
+            id       : _id,
+            username : p.username,
+            color    : p.color,
+            hp       : defaultHp,
+            shadow   : this.addPlayerShadow(),
+            sprite   : this.addPlayer(),
+            emitter  : this.addPlayerEmitter(),
+            //hpMeter: this.addPlayerHpMeter(),
+            x        : p.x,
+            y        : p.y,
+            vx       : p.vx,
+            vy       : p.vy
         };
+        newPlayer.sprite.tint = newPlayer.color;
         game.room.players.push(newPlayer);
     },
     handleDisconnect: function(p) {
