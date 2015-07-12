@@ -5,6 +5,7 @@ module.exports = function(grunt) {
 	return {
 		files: [
 			"client/src/**/*.{js,html,json}",
+			"client/lib/**/*.{js,html,json}",
 			"client/*.{js,html}",
 			"Gruntfile.js",
 			"grunt/*.js",
