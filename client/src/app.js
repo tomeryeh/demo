@@ -93,13 +93,13 @@ var app = {
 
 	app.userController = {
 		init: function() {
-			console.log("user controller creation");
+			console.log("user controller creation...");
 			return new Promise(
 				function(resolve, reject) {
 					app.userController.getUserLocally().then(function(value) {
 						if (value)
 							user = value;
-						console.log("user controller ended");
+						console.log("...user controller ended");
 						setInterval(sendMyPosition.bind(app.kuzzleController), 3000);
 						resolve();
 
@@ -157,13 +157,11 @@ var app = {
 	app.kuzzleController = {
 		init: function() {
 
-			console.log("kuzzle controller creation");
+			console.log("kuzzle controller creation...");
 			return new Promise(
 				function(resolve, reject) {
 					// TODO: retrieve userId from localstorage
 					var user = app.userController.getUser();
-					console.log("user for kuzzle creation");
-					console.log(user);
 
 					if (!user.userId) {
 						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(response) {
@@ -178,7 +176,7 @@ var app = {
 							}
 						});
 					}
-					console.log("kuzzle controller ended");
+					console.log("...kuzzle controller ended");
 					resolve();
 				});
 		},
@@ -236,17 +234,17 @@ var app = {
 				if (message.error) {
 					console.error(message.error);
 				}
-				console.log("we got position  ");
-				console.log(message);
+				//console.log("we got position  ");
+				//console.log(message);
 				if (message.action == "create") {
 					var userPosition = message.data.body.position;
 					var userType = message.data.body.type;
-
-					app.gisController.addPositions([userPosition], userType);
+					var userId = message.data.body.userId;
+					app.gisController.addPositions(userPosition, userType, userId);
 				}
 			});
-			console.log("we subscribe to ");
-			console.log(positionsRoom);
+			//console.log("we subscribe to ");
+			//console.log(positionsRoom);
 		},
 
 		setUserType: function(userType) {
@@ -255,25 +253,27 @@ var app = {
 			var refreshInterval;
 
 			app.userController.getUser().whoami.type = userType;
-			app.userController.setUserLocally();
-			kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
+			//return;
+			app.userController.setUserLocally().then(function() {
+				kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
 
-			if (userType === 'customer') {
-				refreshInterval = 6000;
-			} else if (userType === 'taxi') {
-				refreshInterval = 1000;
-			}
+				if (userType === 'customer') {
+					refreshInterval = 6000;
+				} else if (userType === 'taxi') {
+					refreshInterval = 1000;
+				}
 
-			app.gisController.resetAllMarks();
+				//app.gisController.resetAllMarks();
 
-			if (refreshFilterTimer) {
-				clearInterval(refreshFilterTimer);
-			}
+				if (refreshFilterTimer) {
+					clearInterval(refreshFilterTimer);
+				}
 
-			refreshFilterTimer = setInterval(function() {
-				console.log("refresh inter " + userType);
-				this.refreshKuzzleFilter()
-			}.bind(this), refreshInterval);
+				refreshFilterTimer = setInterval(function() {
+					//console.log("refresh inter " + userType);
+					app.kuzzleController.refreshKuzzleFilter()
+				}.bind(this), refreshInterval);
+			});
 		},
 
 		listenToRidesProposals: function() {

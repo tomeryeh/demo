@@ -15,8 +15,9 @@
 		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
+		var assocIdToOtherItemsMark = {};
+
 		function getIcon(userType) {
-			console.error("hola get icon " + userType);
 			var image = "unknown.jpg";
 			if (userType === "taxi")
 				image = "imagen-taxi.jpg";
@@ -203,7 +204,7 @@
 						infowindow.open(map, userMarker);
 					} else {
 						console.log("we have a type " + userType);
-						//app.kuzzleController.setUserType(userType);
+						app.kuzzleController.setUserType(userType);
 						resolve();
 					}
 				}
@@ -214,6 +215,8 @@
 		return {
 			resetAllMarks: function() {
 
+				console.log("reset all marks ...");
+
 				return new Promise(
 					function(resolve, reject) {
 						var resolver = Promise.pending();
@@ -223,15 +226,21 @@
 							}
 						);
 
+						assocIdToOtherItemsMark = {};
+
 						if (userMarker)
 							userMarker.setMap(null);
 
 						if (navigator.geolocation) {
 							browserSupportFlag = true;
 							navigator.geolocation.getCurrentPosition(function(position) {
-								createUserMark(position).then(resolve);
+								createUserMark(position).then(function() {
+									console.log("...reset all marks ended");
+									resolve();
+								});
 							}, function() {
 								map.setCenter(defaultCoord);
+								console.log("...reset all marks ended");
 								resolve();
 							});
 						}
@@ -239,20 +248,21 @@
 				);
 			},
 
-			addPositions: function(positions, type) {
-				positions.forEach(function(position) {
+			addPositions: function(position, type, user_id) {
+				if(assocIdToOtherItemsMark.user_id)
+					return;
 
-					var gmapPos = new google.maps.LatLng(position.lat, position.lon);
-					var otherMarker = new google.maps.Marker({
-						position: gmapPos,
-						icon: getIcon(type),
-						animation: google.maps.Animation.DROP
-					});
-
-					otherMarker.setMap(map);
-					otherItemsMark.push(otherMarker);
+				var gmapPos = new google.maps.LatLng(position.lat, position.lon);
+				var otherMarker = new google.maps.Marker({
+					position: gmapPos,
+					icon: getIcon(type),
+					animation: google.maps.Animation.DROP
 				});
 
+				otherMarker.setMap(map);
+				otherItemsMark.push(otherMarker);
+				assocIdToOtherItemsMark.user_id = otherMarker;
+				getBestCandidate();
 			},
 			getUserPosition: function() {
 				return userPosition;
@@ -266,9 +276,7 @@
 			},
 			init: function() {
 
-				console.log("gis controller creation");
-				//this.app = app;
-				//var resolverG = Promise.pending();
+				console.log("gis controller creation...");
 				return new Promise(
 					function(resolve, reject) {
 						google.maps.event.addDomListener(window, 'load', function() {
@@ -287,10 +295,8 @@
 
 							centerControlDiv.index = 1;
 							map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
-							console.log("gis controller ended");
-
+							console.log("...gis controller ended");
 							resolve();
-							//resolverG.resolve();
 						})
 					})
 			}
