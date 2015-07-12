@@ -182,7 +182,7 @@
 			},
 			init: function() {
 
-				console.log("create gis ");
+				console.log("gis controller creation");
 				//this.app = app;
 				//var resolverG = Promise.pending();
 				return new Promise(
@@ -203,7 +203,7 @@
 
 							centerControlDiv.index = 1;
 							map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
-							console.log("ending gis ");
+							console.log("gis controller ended");
 
 							resolve();
 							//resolverG.resolve();

@@ -83,14 +83,12 @@ var app = {
 
 	app.userController = {
 		init: function() {
-			console.log("create user ");
+			console.log("user controller creation");
 			return new Promise(
 				function(resolve, reject) {
 					app.userController.getUserLocally().then(function(value) {
-						if (value)
-							user = JSON.parse(value);
-
-						console.log(" user created ");
+						user = value;
+						console.log("user controller ended");
 						resolve();
 						//setInterval(sendMyPosition.bind(this), 3000);
 					});
@@ -106,8 +104,8 @@ var app = {
 					localforage.getItem('cable_user')
 						.then(function(value) {
 							console.log("user found loca");
-							console.log(value);
-							resolve(value);
+							console.log(JSON.parse(value));
+							resolve(JSON.parse(value));
 						});
 				});
 
@@ -149,11 +147,13 @@ var app = {
 	app.kuzzleController = {
 		init: function() {
 
-			console.log("create Kuzzle");
+			console.log("kuzzle controller creation");
 			return new Promise(
 				function(resolve, reject) {
 					// TODO: retrieve userId from localstorage
 					var user = app.userController.getUser();
+					console.log("user for kuzzle creation");
+					console.log(user);
 
 					if (!user.userId) {
 						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(response) {
@@ -167,7 +167,7 @@ var app = {
 								app.userController.getUser().userId = response.result._id;
 								app.userController.getUser().whoami._id = response.result._id;
 								app.userController.setUserLocally().then(resolve);
-								console.log("Kuzzle created ");
+								console.log("kuzzle controller ended");
 							}
 						});
 					}
