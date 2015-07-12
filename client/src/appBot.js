@@ -3,29 +3,26 @@ var app = {
 	kuzzleController: {},
 	userController: {},
 
-	/*
-		initUI: function() {
-			window.addEventListener('load', function() {
-				///kick and dirty ui logic !
-				var user_cabble = document.querySelector("#user_cabble");
-				var cab_cabble = document.querySelector("#cab_cabble");
+	initUI: function() {
+		window.addEventListener('load', function() {
+			///kick and dirty ui logic !
+			var user_cabble = document.querySelector("#user_cabble");
+			var cab_cabble = document.querySelector("#cab_cabble");
 
-				user_cabble.addEventListener("click", function(event) {
-					user_cabble.innerHTML = "Cabble is looking for your ride";
-					app.kuzzleController.setUserType("customer");
-					cab_cabble.innerHTML = "I'm looking for a customer";
-				});
-
-				cab_cabble.addEventListener("click", function() {
-					cab_cabble.innerHTML = "Cabble is looking for a customer for you";
-					app.kuzzleController.setUserType("taxi");
-					user_cabble.innerHTML = "I need a ride";
-				});
-
+			user_cabble.addEventListener("click", function(event) {
+				user_cabble.innerHTML = "Cabble is looking for your ride";
+				app.kuzzleController.setUserType("customer");
+				cab_cabble.innerHTML = "I'm looking for a customer";
 			});
-		},
 
-		*/
+			cab_cabble.addEventListener("click", function() {
+				cab_cabble.innerHTML = "Cabble is looking for a customer for you";
+				app.kuzzleController.setUserType("taxi");
+				user_cabble.innerHTML = "I need a ride";
+			});
+
+		});
+	},
 	init: function() {
 
 		//this.initUI();
@@ -33,14 +30,10 @@ var app = {
 		this.gisController.app = app;
 		this.userController.app = app;
 		this.kuzzleController.app = app;
-
-		this.gisController.init() //create the map with nothing on it
-			.then(app.userController.init) //user from local storage init
-			.then(app.gisController.resetAllMarks) //from the user location info init the map with the user mark
-			.then(app.kuzzleController.init) //kuzzle init
+		this.gisController.init()
+			.then(app.kuzzleController.initBot) //kuzzle init
 			.then(
 				function() {
-					console.log("Cabble initialised ! ");
 					//default type user (must be remove and change by modal dialog)
 					//this.kuzzleController.setUserType("customer");
 				}.bind(app)
@@ -74,11 +67,6 @@ var app = {
 	 */
 	function sendMyPosition() {
 		var userPosition = app.gisController.getUserPosition();
-		if (!userPosition) {
-			console.log("no position for user");
-			return;
-		}
-
 		app.kuzzleController.setUserPosition({
 			userId: user.whoami._id,
 			type: user.whoami.type,
@@ -87,7 +75,7 @@ var app = {
 				lon: userPosition.lng()
 			}
 		});
-	};
+	}
 
 	//////////////////public methods (i.e exposed) ///////////////////////
 
@@ -97,12 +85,10 @@ var app = {
 			return new Promise(
 				function(resolve, reject) {
 					app.userController.getUserLocally().then(function(value) {
-						if (value)
-							user = value;
+						user = value;
 						console.log("user controller ended");
-						setInterval(sendMyPosition.bind(app.kuzzleController), 3000);
 						resolve();
-
+						//setInterval(sendMyPosition.bind(this), 3000);
 					});
 				});
 		},
@@ -115,6 +101,8 @@ var app = {
 					var resolver = Promise.pending();
 					localforage.getItem('cable_user')
 						.then(function(value) {
+							console.log("user found loca");
+							console.log(JSON.parse(value));
 							resolve(JSON.parse(value));
 						});
 				});
@@ -128,9 +116,7 @@ var app = {
 				});
 			return resolver.promise;
 		}
-
 	}
-
 })(app);
 
 ////////////////////////kuzzle module/////////////////
@@ -139,7 +125,7 @@ var app = {
 	//////////////////(wanabee) static  privates attributes///////////////////////
 
 	var
-		KUZZLE_URL = 'http://localhost:8081',
+		KUZZLE_URL = 'api.uat.kuzzle.io:7512',
 		CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions',
 		CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users',
 		CABBLE_COLLECTION_RIDES = 'coding-challenge-cabble-rides';
@@ -156,17 +142,19 @@ var app = {
 
 	app.kuzzleController = {
 		init: function() {
-
-			console.log("kuzzle controller creation");
 			return new Promise(
 				function(resolve, reject) {
 					// TODO: retrieve userId from localstorage
 					var user = app.userController.getUser();
-					console.log("user for kuzzle creation");
 					console.log(user);
 
 					if (!user.userId) {
-						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(response) {
+
+						console.log("user for kuzzle creation");
+						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, false, function(response) {
+
+							console.log("response ");
+							console.log(response);
 							if (response.error) {
 								console.error(response.error);
 								reject();
@@ -178,11 +166,23 @@ var app = {
 							}
 						});
 					}
-					console.log("kuzzle controller ended");
-					resolve();
 				});
 		},
+		initBot: function() {
 
+			return new Promise(
+				function(resolve, reject) {
+					// TODO: retrieve userId from localstorage
+					var user = app.userController.getUser();
+					if (!user.userId) {
+						kuzzle.subscribe(CABBLE_COLLECTION_USERS, {}, function(message) {
+							console.log("meess");
+							console.log(message);
+						})
+					}
+				}
+			)
+		},
 		setUserPosition: function(positions) {
 			kuzzle.create(CABBLE_COLLECTION_POSITIONS, positions, false);
 		},
@@ -236,22 +236,13 @@ var app = {
 				if (message.error) {
 					console.error(message.error);
 				}
-				console.log("we got position  ");
-				console.log(message);
-				if (message.action == "create") {
-					var userPosition = message.data.body.position;
-					var userType = message.data.body.type;
-
-					app.gisController.addPositions([userPosition], userType);
-				}
+				// TODO: display or update the received user
 			});
 			console.log("we subscribe to ");
 			console.log(positionsRoom);
 		},
 
 		setUserType: function(userType) {
-
-			console.log("set user type " + userType);
 			var refreshInterval;
 
 			app.userController.getUser().whoami.type = userType;

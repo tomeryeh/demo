@@ -16,7 +16,14 @@
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
 		function getIcon(userType) {
-			return "assets/img/" + (userType === "taxi" ? "imagen-taxi.jpg" : "meeple2.png");
+			console.error("hola get icon " + userType);
+			var image = "unknown.jpg";
+			if (userType === "taxi")
+				image = "imagen-taxi.jpg";
+			if (userType === "customer")
+				image = "meeple2.png";
+
+			return "assets/img/" + image;
 		}
 
 		//////////////////privates methodes///////////////////////
@@ -117,46 +124,123 @@
 			});
 		}
 
+		function createUserMark(position) {
+			return new Promise(
+				function(resolve, reject) {
+					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+					userPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+					map.setCenter(userPosition);
+
+					userMarker = new google.maps.Marker({
+						position: userPosition,
+						title: 'You!',
+						icon: getIcon(userType)
+					});
+
+					userMarker.setMap(map);
+
+					var contentString = "";
+
+					var customerText = "I need a ride";
+					var taxiText = "I'm looking for a customer";
+
+					if (userType) {
+						if (userType === "taxi") {
+							taxiText = "Cabble is looking for a customer for you";
+						}
+
+						if (userType === "customer") {
+							customerText = "Cabble is looking for a taxi";
+						}
+					}
+
+					var contentString = "Hello from Cabble ! what can i do for you ?";
+					contentString += '<div class="btn-group btn-group-justified" role="group" aria-label="...">';
+					contentString = '<div class="btn-group" role="group">';
+					contentString = '<button id="user_cabble" type="button" class="btn btn-default">' + customerText + '</button>';
+					contentString += '</div>';
+
+					contentString += '<div class="btn-group" role="group">'
+					contentString += '<button id="cab_cabble"  type="button" class="btn btn-default">' + taxiText + '</button>';
+					contentString += '</div>'
+					contentString += '</div>';
+
+					var infowindow = new google.maps.InfoWindow({
+						content: contentString
+					});
+
+					google.maps.event.addListener(infowindow, 'domready', function() {
+						///kick and dirty ui logic !
+						var user_cabble = document.querySelector("#user_cabble");
+						var cab_cabble = document.querySelector("#cab_cabble");
+						user_cabble.addEventListener("click", function(event) {
+							user_cabble.innerHTML = "Cabble is looking for your ride";
+							app.kuzzleController.setUserType("customer");
+							cab_cabble.innerHTML = "I'm looking for a customer";
+							resolve();
+						});
+
+						cab_cabble.addEventListener("click", function() {
+							cab_cabble.innerHTML = "Cabble is looking for a customer for you";
+							app.kuzzleController.setUserType("taxi");
+							user_cabble.innerHTML = "I need a ride";
+							resolve();
+						});
+
+					});
+
+					var visible = !userType;
+
+					google.maps.event.addListener(userMarker, 'click', function() {
+						if (visible)
+							infowindow.close(map, userMarker);
+						else
+							infowindow.open(map, userMarker);
+						visible = !visible;
+					});
+
+					if (!userType) {
+						infowindow.open(map, userMarker);
+					} else {
+						console.log("we have a type " + userType);
+						//app.kuzzleController.setUserType(userType);
+						resolve();
+					}
+				}
+			);
+		};
+
 		//////////////////public methodes (i.e exposed) ///////////////////////
 		return {
 			resetAllMarks: function() {
-				var resolver = Promise.pending();
-				otherItemsMark.forEach(
-					function(marker) {
-						marker.setMap(null);
+
+				return new Promise(
+					function(resolve, reject) {
+						var resolver = Promise.pending();
+						otherItemsMark.forEach(
+							function(marker) {
+								marker.setMap(null);
+							}
+						);
+
+						if (userMarker)
+							userMarker.setMap(null);
+
+						if (navigator.geolocation) {
+							browserSupportFlag = true;
+							navigator.geolocation.getCurrentPosition(function(position) {
+								createUserMark(position).then(resolve);
+							}, function() {
+								map.setCenter(defaultCoord);
+								resolve();
+							});
+						}
 					}
 				);
-
-				if (userMarker)
-					userMarker.setMap(null);
-
-				if (navigator.geolocation) {
-					browserSupportFlag = true;
-					navigator.geolocation.getCurrentPosition(function(position) {
-						var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-						userPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-						map.setCenter(userPosition);
-
-						userMarker = new google.maps.Marker({
-							position: userPosition,
-							title: 'You!',
-							icon: getIcon(userType)
-						});
-						userMarker.setMap(map);
-						resolver.resolve();
-
-					}, function() {
-						map.setCenter(defaultCoord);
-						resolver.resolve();
-					});
-				}
-				return resolver.promise;
 			},
 
 			addPositions: function(positions, type) {
 				positions.forEach(function(position) {
-					console.log("type" + type);
-					//console.dir(position);
 
 					var gmapPos = new google.maps.LatLng(position.lat, position.lon);
 					var otherMarker = new google.maps.Marker({
