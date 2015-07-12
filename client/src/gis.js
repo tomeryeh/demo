@@ -5,19 +5,15 @@
 	//the only global variable added to global scope from gis
 	window.gis = GisModule();
 
-	//wait until googlemap is loaded and so initialized our gis instance.
-	google.maps.event.addDomListener(window, 'load', function() {
-		window.gis.resetGis();
-	});
-
 	function GisModule() {
 
 		//////////////////privates attributes///////////////////////
 		var map;
 		var userMarker;
 		var userPosition;
+
 		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
-		var otherItemsMark = [];
+		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
 		function getIcon(userType) {
 			return "assets/img/" + (userType === "cab" ? "imagen-taxi.jpg" : "meeple2.png");
@@ -39,35 +35,14 @@
 				otherItemsCoord.push(new google.maps.LatLng(userPosition.lat() + (Math.random() - 0.5) / 100, userPosition.lng() + (Math.random() - 0.5) / 100));
 			}
 
-			//2 add marker in map
-
-			for (var i = 0; i < otherItemsCoord.length; i++) {
-				var otherMarker = new google.maps.Marker({
-					position: otherItemsCoord[i],
-					//title: 'A cab!',
-					icon: getIcon(type),
-					animation: google.maps.Animation.DROP
-				});
-
-				otherMarker.setMap(map);
-				otherItemsMark.push(otherMarker);
-			}
-
-			//console.log(map.getMarkers());
-
-			//3 each time kuzzle found a change, update map
-			//see https://developers.google.com/maps/documentation/javascript/markers
-		}
+		};
 
 		function getBestCandidate() {
 
-
 			var nearestDist = 99999;
 			var nearestItem = null;
-			console.log(otherItemsMark);
-			
-			otherItemsMark.forEach(function(n){
-			//	console.log(n);
+
+			otherItemsMark.forEach(function(n) {
 				var distCur = Math.pow(
 						userPosition.lat() -
 						n.position.lat(), 2) +
@@ -81,24 +56,23 @@
 				}
 			}.bind(this));
 
-			console.log("distCur"  + Math.sqrt(nearestDist));
+			//console.log("distCur" + Math.sqrt(nearestDist));
 
 			var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-
 
 			var contentString = "";
 			if (userType === "customer") {
 				contentString = '<div id="content_info_item"><div id="siteNotice"></div>' +
 					'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
 					'<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>' +
-					'<p>Tel : 06 77 86 66 54' + '</p>' +
+					'<p><a href="tel:[phone number]"><span class="bottom">Call us now</span></a></p>' +
 					'</div></div>';
 
 			} else {
 				contentString = '<div onload="myFunction()" id="content_info_item"><div id="siteNotice"></div>' +
-					'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
+					'<h1 id="firstHeading" class="firstHeading">I need a ride ! </h1>' +
 					'<div id="bodyContent"><p><b>I go to the Millenaires ! any cab ?</b></p>' +
-					'<p>Tel : 06 77 86 26 57' + '</p>' +
+					'<p><a href="tel:[phone number]"><span class="bottom">Call me now</span></a></p>' +
 					'</div></div>';
 			}
 
@@ -138,38 +112,28 @@
 			controlText.innerHTML = 'Cabble Menu';
 			//	controlUI.appendChild(controlText);
 
-			// Setup the click event listeners: simply set the map to
-			// Chicago
 			google.maps.event.addDomListener(controlUI, 'click', function() {
 				//map.setCenter(chicago)
-				console.log("click on menu");
 			});
 		}
 
 		//////////////////public methodes (i.e exposed) ///////////////////////
 		return {
-			resetGis: function resetGis() {
-				var mapOptions = {
-					zoom: 16,
-					panControl: false,
-					zoomControl: false,
-					streetViewControl: false,
-					scaleControl: false
-				};
+			resetAllMarks: function() {
+				var resolver = Promise.pending();
+				otherItemsMark.forEach(
+					function(marker) {
+						marker.setMap(null);
+					}
+				);
 
-				map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-
-				var centerControlDiv = document.createElement('div');
-				var centerControl = new CenterControl(centerControlDiv, map);
-
-				centerControlDiv.index = 1;
-				map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
-
-				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+				if (userMarker)
+					userMarker.setMap(null);
 
 				if (navigator.geolocation) {
 					browserSupportFlag = true;
 					navigator.geolocation.getCurrentPosition(function(position) {
+						var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 						userPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 						map.setCenter(userPosition);
 
@@ -179,15 +143,32 @@
 							icon: getIcon(userType)
 						});
 						userMarker.setMap(map);
-						generateRandomItems(userType === "cab" ? "customer" : "cab");
-						getBestCandidate();
+						resolver.resolve();
 
 					}, function() {
 						map.setCenter(defaultCoord);
+						resolver.resolve();
 					});
-				} else {
-					map.setCenter(defaultCoord);
 				}
+				return resolver.promise;
+			},
+
+			addPositions: function(positions, type) {
+				positions.forEach(function(position) {
+					console.log("type" + type);
+					//console.dir(position);
+
+					var gmapPos = new google.maps.LatLng(position.lat, position.lon);
+					var otherMarker = new google.maps.Marker({
+						position: gmapPos,
+						icon: getIcon(type),
+						animation: google.maps.Animation.DROP
+					});
+
+					otherMarker.setMap(map);
+					otherItemsMark.push(otherMarker);
+				});
+
 			},
 			getUserPosition: function() {
 				return userPosition;
@@ -198,6 +179,36 @@
 					swCorner: mapBounds.getSouthWest(),
 					neCorner: mapBounds.getNorthEast()
 				};
+			},
+			init: function() {
+
+				console.log("create gis ");
+				//this.app = app;
+				//var resolverG = Promise.pending();
+				return new Promise(
+					function(resolve, reject) {
+						google.maps.event.addDomListener(window, 'load', function() {
+							var mapOptions = {
+								zoom: 16,
+								panControl: false,
+								zoomControl: false,
+								streetViewControl: false,
+								scaleControl: false
+							};
+
+							map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+
+							var centerControlDiv = document.createElement('div');
+							var centerControl = new CenterControl(centerControlDiv, map);
+
+							centerControlDiv.index = 1;
+							map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
+							console.log("ending gis ");
+
+							resolve();
+							//resolverG.resolve();
+						})
+					})
 			}
 		};
 	};

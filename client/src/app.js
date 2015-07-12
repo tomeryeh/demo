@@ -2,13 +2,13 @@ var app = {
 	gisController: gis,
 	kuzzleController: {},
 	userController: {},
-	init: function() {
 
-		
-		window.onload = function() {
+	initUI: function() {
+		window.addEventListener('load', function() {
 			///kick and dirty ui logic !
 			var user_cabble = document.querySelector("#user_cabble");
 			var cab_cabble = document.querySelector("#cab_cabble");
+
 			user_cabble.addEventListener("click", function(event) {
 				user_cabble.innerHTML = "Cabble is looking for your ride";
 				app.kuzzleController.setUserType("customer");
@@ -20,14 +20,28 @@ var app = {
 				app.kuzzleController.setUserType("cab");
 				user_cabble.innerHTML = "I need a ride";
 			});
-		}
+		});
+	},
+	init: function() {
+		//setTimeout(function(){
+		this.initUI();
+		//}.bind(this),0);
 
-		//gis is already define because script is load in order
 		this.gisController.app = app;
-		//first try to found user info in local storage
-		this.userController.init();
-		//init Kuzzle with possibiliy existing user
-		this.kuzzleController.init();
+
+		this.gisController.init()
+			.then(app.userController.init) //user from local storage init
+			.then(app.kuzzleController.init) //kuzzle init
+			.then(
+				function() {
+					//default type user (must be reomve and change by modal dialog)
+					//this.kuzzleController.setUserType("customer");
+				}.bind(app)
+			).
+		catch(function(e) {
+			console.error("ERRRRRRRROR " + e);
+		});
+
 	}
 };
 
@@ -38,8 +52,8 @@ var app = {
 	var user = {
 		userId: false,
 		whoami: {
-			type: 'customer',
-			_id: false
+			type: 'customer'
+
 		}
 	};
 
@@ -67,29 +81,41 @@ var app = {
 
 	app.userController = {
 		init: function() {
-			this.getUserLocally(
-				function(value) {
-					if (value) {
-						var user = JSON.parse(value);
-						//console.dir("data from storage");
-						//console.dir(user);
-					}
-					setInterval(sendMyPosition.bind(this), 3000);
-				}
-				.bind(this));
+			console.log("create user ");
+			return new Promise(
+				function(resolve, reject) {
+					app.userController.getUserLocally().then(function(value) {
+						if (value)
+							user = JSON.parse(value);
+
+						resolve();
+						//setInterval(sendMyPosition.bind(this), 3000);
+					});
+				})
 		},
 		getUser: function() {
 			return user;
 		},
-		getUserLocally: function(callBack) {
-			localforage.getItem('cable_user', function(err, value) {
-				callBack(value);
-			})
+		getUserLocally: function() {
+			return new Promise(
+				function(resolve, reject) {
+					var resolver = Promise.pending();
+					localforage.getItem('cable_user')
+						.then(function(value) {
+							console.log("user found loca");
+							console.log(value);
+							resolve(value);
+						});
+				});
+
 		},
 		setUserLocally: function() {
-			//console.log("saving user ");
-			//console.log(user);
-			localforage.setItem('cable_user', JSON.stringify(user));
+			var resolver = Promise.pending();
+			localforage.setItem('cable_user', JSON.stringify(user))
+				.then(function() {
+					resolver.resolve();
+				});
+			return resolver.promise;;
 		}
 
 	}
@@ -118,20 +144,44 @@ var app = {
 	app.kuzzleController = {
 		init: function() {
 
-			// TODO: retrieve userId from localstorage
 			var user = app.userController.getUser();
 
-			if (!user.userId) {
-				user.userId = kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(response) {
-					if (response.error) {
-						console.error(response.error);
-					} else {
-						app.userController.getUser().userId = response.result._id;
-						app.userController.getUser().whoami._id = response.result._id;
-						app.userController.setUserLocally();
-					}
+			kuzzle.create(CABBLE_COLLECTION_USERS, "cab", true, function(response) {
+
+				alert(response);
+				if (response.error) {
+					console.error(response.error);
+				} else {
+					whoami._id = userId;
+				}
+			});
+
+			console.log("create kuzlzle ");
+
+			return new Promise(
+				function(resolve, reject) {
+					// TODO: retrieve userId from localstorage
+					var user = app.userController.getUser();
+					if (!user.userId) {
+
+						console.log("init user in kuzzle   ");
+						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, false, function(response) {
+							console.log("caaaaaaaalllll ok in socker reuqet");
+							if (response.error) {
+								console.log("error in socker reuqet");
+							} else {
+								console.log("ok  in socker reuqet");
+								app.userController.getUser().userId = response.result._id;
+								app.userController.getUser().whoami._id = response.result._id;
+								app.userController.setUserLocally().then(function() {
+									console.log("ending kuzzle ");
+									//
+								});
+							}
+						});
+						resolve();
+					};
 				});
-			}
 		},
 		setUserPosition: function(positions) {
 			kuzzle.create(CABBLE_COLLECTION_POSITIONS, positions, false);
@@ -175,19 +225,26 @@ var app = {
 				kuzzle.unsubscribe(positionsRoom);
 			}
 
-			//console.dir(filter);
 			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(response) {
 				if (response.error) {
-					console.error(response.error);
+					console.error("error error error " + response.error);
 				}
-				console.dir("pos");
-				console.dir(response);
+				if (response.action === "create") {
+					var other = response.body;
+					console.log("create action ");
+					console.dir(response);
+					app.gisController.addPositions([other.position], response.body.type);
+				} else {
+					console.log("recive  ");
+					console.dir(response);
+
+				}
 				// TODO: display or update the received user
 			});
-			console.log("we subscribe to ");
-			console.log(positionsRoom);
 		},
 		setUserType: function(userType) {
+			//if (app.userController.getUser().whoami.type === userType)
+			//	return;
 			var refreshInterval;
 
 			app.userController.getUser().whoami.type = userType;
@@ -210,16 +267,17 @@ var app = {
 				}
 			}
 
-			app.gisController.resetGis();
+			app.gisController.resetAllMarks().then(function() {
 
-			if (refreshFilterTimer) {
-				clearInterval(refreshFilterTimer);
-			}
+				if (refreshFilterTimer)
+					clearInterval(refreshFilterTimer);
 
-			refreshFilterTimer = setInterval(function() {
-				console.log("refresh inter " + userType);
-				this.refreshKuzzleFilter()
-			}.bind(this), refreshInterval);
+				this.refreshKuzzleFilter();
+
+				refreshFilterTimer = setInterval(function() {
+					this.refreshKuzzleFilter();
+				}.bind(this), refreshInterval);
+			}.bind(this));
 		}
 	};
 
