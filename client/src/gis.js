@@ -16,7 +16,7 @@
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
 		function getIcon(userType) {
-			return "assets/img/" + (userType === "cab" ? "imagen-taxi.jpg" : "meeple2.png");
+			return "assets/img/" + (userType === "taxi" ? "imagen-taxi.jpg" : "meeple2.png");
 		}
 
 		//////////////////privates methodes///////////////////////
