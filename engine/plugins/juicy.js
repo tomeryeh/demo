@@ -314,7 +314,8 @@ Phaser.Plugin.Juicy.Trail.prototype.redrawSegments = function(offsetX, offsetY) 
 Phaser.Plugin.Juicy.prototype.shake = function (duration, strength) {
     this._shakeWorldTime = duration || 20;
     this._shakeWorldMax = strength || 20;
-    this.game.world.setBounds(this._boundsCache.x - this._shakeWorldMax, this._boundsCache.y - this._shakeWorldMax, this._boundsCache.width + this._shakeWorldMax, this._boundsCache.height + this._shakeWorldMax);
+    //game.world.setBounds(this._boundsCache.x - this._shakeWorldMax, this._boundsCache.y - this._shakeWorldMax, /*this._boundsCache.width*/640 + this._shakeWorldMax, /*this._boundsCache.height*/360 + this._shakeWorldMax);
+    game.world.setBounds(0 - this._shakeWorldMax, 0 - this._shakeWorldMax, /*this._boundsCache.width*/2400 + this._shakeWorldMax, /*this._boundsCache.height*/800 + this._shakeWorldMax);
 };
 
 
@@ -415,14 +416,15 @@ Phaser.Plugin.Juicy.prototype.update = function () {
     // Screen Shake
     if(this._shakeWorldTime > 0) {
         var magnitude = (this._shakeWorldTime / this._shakeWorldMax) * this._shakeWorldMax;
-        var x = this.game.rnd.integerInRange(-magnitude, magnitude);
-        var y = this.game.rnd.integerInRange(-magnitude, magnitude);
+        var x = game.rnd.integerInRange(-magnitude, magnitude);
+        var y = game.rnd.integerInRange(-magnitude, magnitude);
 
-        this.game.camera.x = x;
-        this.game.camera.y = y;
+        game.camera.x = game.camera.x + x;
+        game.camera.y = game.camera.y + y;
         this._shakeWorldTime--;
         if(this._shakeWorldTime <= 0) {
-            this.game.world.setBounds(this._boundsCache.x, this._boundsCache.x, this._boundsCache.width, this._boundsCache.height);
+            //this.game.world.setBounds(this._boundsCache.x, this._boundsCache.x, /*this._boundsCache.width, this._boundsCache.height*/640, 360);
+            this.game.world.setBounds(0, 0, /*this._boundsCache.width, this._boundsCache.height*/2400, 800);
         }
     }
 

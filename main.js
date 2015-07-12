@@ -1,10 +1,10 @@
 game = new Game();
 game.start();
-game.gameData = {};
+game.room = {};
 
 function getPlayerById(id) {
     var player = null;
-    game.gameData.players.forEach(function(e, i) {
+    game.room.players.forEach(function(e, i) {
         if(e.id == id) player = e;
     });
     return player;

@@ -129,7 +129,8 @@ MainMenuState.prototype = {
         }
     },
     selectOnlineGame: function() {
-        this.game.stateTransition.to('connecting');
+        //this.game.stateTransition.to('connecting');
+        this.game.stateTransition.to('game-round-no-monster');
     },
     selectOptions: function() {
         this.game.stateTransition.to('options');
