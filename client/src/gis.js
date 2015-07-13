@@ -252,6 +252,8 @@
 				if (assocIdToOtherItemsMark.user_id)
 					return;
 
+				var contentString;
+
 				var gmapPos = new google.maps.LatLng(position.lat, position.lon);
 				var otherMarker = new google.maps.Marker({
 					position: gmapPos,
@@ -261,48 +263,41 @@
 
 				otherMarker.setMap(map);
 
-				var customerText = "customertext";
-				var taxiText = "taxitext";
+				var proposeText = '<p><a class="propose_cabble" ><span class="bottom">Ask for a ride</span></a></p>';
+				var cancelText = '<p><a class="cancel_cabble" ><span class="bottom">Cancel</span></a></p>';
 
-				var contentString = "Hello from Cabble ! what can i do for you ?";
-				contentString += '<div class="btn-group btn-group-justified" role="group" aria-label="...">';
-				contentString += '<div class="btn-group" role="group">';
-				contentString += '<button id="user_cabble" type="button" class="btn btn-default">' + customerText + '</button>';
-				contentString += '</div>';
+				contentString = '<div id="content_info_item"><div id="siteNotice"></div>';
+				contentString += '<h1 id="firstHeading" class="firstHeading">I am available ! </h1>';
+				contentString += proposeText;
+				contentString += cancelText;
+				contentString += '<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>';
 
-				contentString += '<div class="btn-group" role="group">'
-				contentString += '<button id="cab_cabble"  type="button" class="btn btn-default">' + taxiText + '</button>';
-				contentString += '</div>'
-				contentString += '</div>';
+				var contentInfoNode = document.createElement('div');
+				contentInfoNode.innerHTML = contentString;
 
 				var infowindow = new google.maps.InfoWindow({
-					content: contentString
+					content: contentInfoNode
 				});
 
-				google.maps.event.addListener(infowindow, 'domready', function() {
-					///kick and dirty ui logic !
-					var user_cabble = document.querySelector("#user_cabble");
-					var cab_cabble = document.querySelector("#cab_cabble");
-					user_cabble.addEventListener("click", function(event) {
-						user_cabble.innerHTML = "Cabble is looking for your ride";
-						app.kuzzleController.setUserType("customer");
-						cab_cabble.innerHTML = "I'm looking for a customer";
-						resolve();
+				google.maps.event.addListener(infowindow, 'domready', function(toto) {
+					var propose_cabble = contentInfoNode.querySelector(".propose_cabble");
+					var cancel_cabble = contentInfoNode.querySelector(".cancel_cabble");
+					propose_cabble.addEventListener("click", function(event) {
+						console.log("proposed ");
 					});
 
-					cab_cabble.addEventListener("click", function() {
-						cab_cabble.innerHTML = "Cabble is looking for a customer for you";
-						app.kuzzleController.setUserType("taxi");
-						user_cabble.innerHTML = "I need a ride";
-						resolve();
+					cancel_cabble.addEventListener("click", function() {
+						toggleVisible();
+						otherMarker.setMap(null);
+						//unview user
 					});
-
 				});
 
 				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
-				(function() {
+				
 					var visible = (type === userType);
+					var visible = true;
 					toggleVisible();
 
 					function toggleVisible() {
@@ -320,7 +315,7 @@
 						visible = !visible;
 					});
 
-				})();
+				
 
 				otherItemsMark.push(otherMarker);
 				assocIdToOtherItemsMark.user_id = otherMarker;
