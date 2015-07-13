@@ -28,6 +28,9 @@ var app = {
 		*/
 	init: function() {
 
+		//simulate taxi and customer not in the same position, and moving
+		app.simulate = false;
+
 		//this.initUI();
 
 		//everybody know app
@@ -43,6 +46,8 @@ var app = {
 			.then(app.kuzzleController.init) //kuzzle listen to our app
 			.then(
 				function() {
+					if (app.simulate)
+						setInterval(app.gisController.moveSlowly, 10000);
 					console.log("##############Cabble initialisation ENDED !#######################");
 					//default type user (must be remove and change by modal dialog)
 					//this.kuzzleController.setUserType("customer");
@@ -177,6 +182,7 @@ var app = {
 								app.userController.getUser().userId = response.result._id;
 								app.userController.getUser().whoami._id = response.result._id;
 								app.userController.setUserLocally().then(resolve);
+								app.userController.listenToRidesProposals();
 								console.log("kuzzle controller ended");
 							}
 						});
@@ -223,7 +229,12 @@ var app = {
 				};
 
 			// If a ride has been accepted, we only want to subscribe to the other person position
-			if (ride && ride.status.indexOf('accepted') !== -1) {
+			if (ride)
+			{
+				console.log("ride");
+				console.log(ride);
+			}
+			if (ride && ride.status &&ride.status.indexOf('accepted') !== -1) {
 				filter.and.push({
 					term: {
 						_id: user.whoami.type === 'taxi' ? ride.customer : ride.taxi
