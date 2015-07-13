@@ -3,14 +3,14 @@
     <ng-form name="eventForm">
         <div class="form-group">
             <label for="event-name">Event name</label>
-            <input type="text" id="event-name" class="form-control" ng-model="newEvent.name" placeholder="Name"/>
+            <input type="text" id="event-name" class="form-control" ng-model="newEvent.name" placeholder="Name" required/>
         </div>
         <label>Dates</label>
         <ng-form ng-repeat="date in newEvent.dates" name="dateFieldForm">
             <div class="row form-group" ng-if="date.active">
                 <div class="col-md-11">
                     <div class="input-group date" date-time-picker>
-                        <input type="text" id="date-{{ $index }}" class="form-control" ng-model="date.value" placeholder="Date"/>
+                        <input type="text" id="date-{{ $index }}" class="form-control" ng-model="date.value" placeholder="Date" required/>
                         <span class="input-group-addon">
                             <span class="glyphicon glyphicon-calendar"></span>
                         </span>
@@ -30,7 +30,7 @@
             </button>
         </div>
         <div class="form-group">
-            <button type="submit" class="btn btn-success" ng-click="addEvent()">
+            <button type="submit" ng-disabled="!eventForm.$valid" class="btn btn-success" ng-click="addEvent()">
                 <span class="glyphicon glyphicon-ok"></span>
                 Create
             </button>
