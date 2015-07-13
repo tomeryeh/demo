@@ -71,16 +71,16 @@
 			var contentString = "";
 			if (userType === "customer") {
 				contentString = '<div id="content_info_item"><div id="siteNotice"></div>' +
-					'<h1 id="firstHeading" class="firstHeading">Available ! </h1>' +
+					'<h1 id="firstHeading" class="firstHeading">I am available ! </h1>' +
 					'<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>' +
 					'<p><a href="tel:[phone number]"><span class="bottom">Call us now</span></a></p>' +
 					'</div></div>';
 
 			} else {
-				contentString = '<div onload="myFunction()" id="content_info_item"><div id="siteNotice"></div>' +
+				contentString = '<div id="content_info_item"><div id="siteNotice"></div>' +
 					'<h1 id="firstHeading" class="firstHeading">I need a ride ! </h1>' +
-					'<div id="bodyContent"><p><b>I go to the Millenaires ! any cab ?</b></p>' +
-					'<p><a href="tel:[phone number]"><span class="bottom">Call me now</span></a></p>' +
+					'<p><a href="tel:[phone number]"><span class="bottom">Yes, i pick you up !</span></a></p>' +
+					'<p><a href="tel:[phone number]"><span class="bottom">No, Sorry.</span></a></p>' +
 					'</div></div>';
 			}
 
@@ -203,7 +203,7 @@
 					if (!userType) {
 						infowindow.open(map, userMarker);
 					} else {
-						console.log("we have a type " + userType);
+						//console.log("we have a type " + userType);
 						app.kuzzleController.setUserType(userType);
 						resolve();
 					}
@@ -249,7 +249,7 @@
 			},
 
 			addPositions: function(position, type, user_id) {
-				if(assocIdToOtherItemsMark.user_id)
+				if (assocIdToOtherItemsMark.user_id)
 					return;
 
 				var gmapPos = new google.maps.LatLng(position.lat, position.lon);
@@ -260,9 +260,48 @@
 				});
 
 				otherMarker.setMap(map);
+
+				/*
+								var contentString = "toto";
+
+									var infowindow = new google.maps.InfoWindow({
+										content: contentString
+									});
+
+									google.maps.event.addListener(infowindow, 'domready', function() {
+										///kick and dirty ui logic !
+										var user_cabble = document.querySelector("#user_cabble");
+										var cab_cabble = document.querySelector("#cab_cabble");
+										user_cabble.addEventListener("click", function(event) {
+											user_cabble.innerHTML = "Cabble is looking for your ride";
+											app.kuzzleController.setUserType("customer");
+											cab_cabble.innerHTML = "I'm looking for a customer";
+											resolve();
+										});
+
+										cab_cabble.addEventListener("click", function() {
+											cab_cabble.innerHTML = "Cabble is looking for a customer for you";
+											app.kuzzleController.setUserType("taxi");
+											user_cabble.innerHTML = "I need a ride";
+											resolve();
+										});
+
+									});
+
+									var visible = !userType;
+
+									google.maps.event.addListener(otherMarker, 'click', function() {
+										if (visible)
+											infowindow.close(map, otherMarker);
+										else
+											infowindow.open(map, otherMarker);
+										visible = !visible;
+									});
+				*/
+
 				otherItemsMark.push(otherMarker);
 				assocIdToOtherItemsMark.user_id = otherMarker;
-				getBestCandidate();
+				//getBestCandidate();
 			},
 			getUserPosition: function() {
 				return userPosition;

@@ -30,23 +30,27 @@ var app = {
 
 		//this.initUI();
 
+		//everybody know app
 		this.gisController.app = app;
 		this.userController.app = app;
 		this.kuzzleController.app = app;
 
+		console.log("##############Cabble initialisation START !#######################");
+
 		this.gisController.init() //create the map with nothing on it
-			.then(app.userController.init) //user from local storage init
-			.then(app.gisController.resetAllMarks) //from the user location info init the map with the user mark
-			.then(app.kuzzleController.init) //kuzzle init
+			.then(app.userController.init) //get user info from local storage
+			.then(app.gisController.resetAllMarks) //get the GPS user location add the user marker with position and type  (show "?" icon" if no type)
+			.then(app.kuzzleController.init) //kuzzle listen to our app
 			.then(
 				function() {
-					console.log("Cabble initialised ! ");
+					console.log("##############Cabble initialisation ENDED !#######################");
 					//default type user (must be remove and change by modal dialog)
 					//this.kuzzleController.setUserType("customer");
 				}.bind(app)
 			).
 		catch(function(e) {
-			console.error("ERRRRRRRROR " + e);
+			console.error("ERRRRRRRROR during Cabble initialisation ");
+			console.error(e);
 		});
 
 	}
@@ -139,6 +143,7 @@ var app = {
 	//////////////////(wanabee) static  privates attributes///////////////////////
 
 	var
+	//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
 		KUZZLE_URL = 'http://localhost:8081',
 		CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions',
 		CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users',
@@ -237,9 +242,12 @@ var app = {
 				//console.log("we got position  ");
 				//console.log(message);
 				if (message.action == "create") {
-					var userPosition = message.data.body.position;
-					var userType = message.data.body.type;
-					var userId = message.data.body.userId;
+					var data = message.data;
+					if (!data)
+						data = message;
+					var userPosition = data.body.position;
+					var userType = data.body.type;
+					var userId = data.body.userId;
 					app.gisController.addPositions(userPosition, userType, userId);
 				}
 			});
@@ -249,7 +257,7 @@ var app = {
 
 		setUserType: function(userType) {
 
-			console.log("set user type " + userType);
+			//console.log("set user type " + userType);
 			var refreshInterval;
 
 			app.userController.getUser().whoami.type = userType;
