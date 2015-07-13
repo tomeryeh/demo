@@ -82,9 +82,9 @@ ConnectingState.prototype = {
         menuItem[1]['sprite'].anchor.setTo(0.5, -2.5);
         this.game.add.tween(menuItem[1]['sprite']).from({x: 1200}, 1200, Phaser.Easing.Quintic.Out).delay(200).start();
 
-        this.game.kuzzle = new Kuzzle('http://api.uat.kuzzle.io:7512');
+        kuzzle = new Kuzzle(this.game.kuzzleUrl);
         kuzzleGame = this.game;
-        kuzzleGame.name = "testMobile";
+        kuzzleGame.name = "KF-";
 
         this.keyDown = this.game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         this.keyDown.onDown.add(this.updateMenu, this);
@@ -122,19 +122,19 @@ ConnectingState.prototype = {
     },
     goToLobby: function() {
         musicConnecting.stop();
-        this.game.stateTransition.to('lobby', {playerName: kuzzleGame.name});
+        this.game.stateTransition.to('lobby', true, false, {player: game.player});
     },
     test: function() {
         var randColor = Phaser.Color.getRandomColor(30, 220);
-        kuzzleGame.kuzzle.create("kf-user", {username: kuzzleGame.name, color: randColor}, true, function(createData) {
+        kuzzle.create("kf-users", {username: kuzzleGame.name, color: randColor}, true, function(createData) {
             connectText.setText("Connecting to Kuzzle..\nOK!");
-            this.game.gameData.player = {'id':createData.result._id, 'name': kuzzleGame.name,color: randColor};
-            roomId = kuzzleGame.kuzzle.subscribe('kf-user', {exists: {field: 'username'}}, function(data) {
+            game.player = {id: createData.result._id, username: kuzzleGame.name, color: randColor};
+            roomId = kuzzle.subscribe('kf-users', {exists: {field: 'username'}}, function(data) {
                 console.log(data);
-                game.gameData.player.roomId = roomId;
-                if(data.action == "create" && data._id != this.game.gameData.player.id) {
-                    game.gameData.players.push({id: data._id, name: data.body.username, color: data.body.color});
-                    var text = game.add.text(game.world.centerX, game.world.centerY, "- Awesome! -\nA new player joined:\n" + data.body.username);
+                game.player.roomId = roomId;
+                if(data.result.action == "create" && data.result._id != game.player.id) {
+                    game.room.players.push({id: data.result._id, name: data.result._source.username, color: data.result._source.color});
+                    var text = game.add.text(game.world.centerX, game.world.centerY, "- Awesome! -\nA new player joined:\n" + data.result._source.username);
                     text.font = 'Arial';
                     text.fontWeight = 'bold';
                     text.fontSize = 48;
@@ -151,23 +151,23 @@ ConnectingState.prototype = {
                         self.handleConnect();
                     }
                 }
-                if(data.action == "delete") {
-                    var deletedPlayer = getPlayerById(data._id);
+                if(data.result.action == "delete") {
+                    var deletedPlayer = getPlayerById(data.result._id);
                     console.log('deleted player:');
                     console.log(deletedPlayer);
-                    var deletedUsername = deletedPlayer.name;
+                    var deletedUsername = deletedPlayer.username;
                     var text = game.add.text(game.world.centerX, game.world.centerY, "- Awww.. :( -\nA player left:\n" + deletedUsername);
                     var index = -1;
-                    game.gameData.players.forEach(function(e, i) {
-                       if(e.id == data._id) {
+                    game.room.players.forEach(function(e, i) {
+                       if(e.id == data.result._id) {
                            index = i;
                        }
                     });
                     if(index != -1) {
-                        game.gameData.players.splice(index, 1);
+                        game.room.players.splice(index, 1);
                     }
                     console.log('player left:');
-                    console.log(game.gameData.players);
+                    console.log(game.room.players);
                     text.font = 'Arial';
                     text.fontWeight = 'bold';
                     text.fontSize = 48;

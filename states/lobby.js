@@ -2,14 +2,15 @@ function LobbyState() {}
 LobbyState.prototype = {
     init: function(initData) {
         this.initData = initData;
-        console.log('Init data: ' + initData);
     },
     create: function() {
         musicLobby = game.add.audio('music-lobby');
         if(game.hasMusic) musicLobby.fadeIn();
 
-        /*this.game.kuzzle = new Kuzzle('http://api.uat.kuzzle.io:7512');
-        kuzzleGame = this.game;*/
+        game.player = this.initData.player;
+
+        //kuzzle = new Kuzzle(game.kuzzleUrl);
+        kuzzleGame = this.game;
 
         var filters = {
             "filter": {
@@ -20,17 +21,17 @@ LobbyState.prototype = {
         };
 
         lobbyGame = game;
-        game.gameData.players = [];
+        game.room.players = [];
         self = this;
 
         self.lobbyDrawables = [];
 
-        lobbyGame.kuzzle.search('kf-user', filters, function(response) {
+        kuzzle.search('kf-users', filters, function(response) {
             console.log(response);
             response.result.hits.hits.forEach(function(e, i) {
-                lobbyGame.gameData.players.push({
+                lobbyGame.room.players.push({
                     id: e._id,
-                    name: e._source.username,
+                    username: e._source.username,
                     color: e._source.color
                 });
             });
@@ -44,7 +45,7 @@ LobbyState.prototype = {
     drawLobby: function() {
         var yCoord = -68;
         var delay = 0;
-        game.gameData.players.forEach(function(e, i) {
+        game.room.players.forEach(function(e, i) {
             var graphics = game.add.graphics();
             graphics.alpha = 0;
             graphics.lineStyle(5, e.color, 1);
@@ -66,7 +67,7 @@ LobbyState.prototype = {
 
             var color = Phaser.Color.getWebRGB(0x000000);
             var style = {font: "28px Helvetica", fill: color, align: "center"};
-            var text = game.add.text(game.world.centerX, game.world.centerY, e.name, style);
+            var text = game.add.text(game.world.centerX, game.world.centerY, e.username, style);
             text.x = xCoord + 10;
             text.y = yCoord + 20;
             text.alpha = 0;
@@ -76,19 +77,23 @@ LobbyState.prototype = {
             self.lobbyDrawables.push(graphics);
             self.lobbyDrawables.push(text);
 
-            if(e.id == game.gameData.player.id) {
+            if(e.id == game.player.id) {
                 self.tweenTint(graphics, e.color, 0xFFFFFF, 500);
                 self.tweenTint(text, e.color, 0xFFFFFF, 500);
             }
 
             delay += 100;
         });
-        if(game.gameData.players.length >= 4) {
+        if(game.room.players.length >= 3) {
             self.countDown();
         }
     },
     countDown: function() {
-
+        initData = {
+            player: game.player,
+            players: game.room.players
+        };
+        game.stateTransition.to('game-round-no-monster', true, false, initData);
     },
     tweenTint: function(obj, startColor, endColor, time) {
         // create an object to tween with our step value at 0
@@ -124,8 +129,8 @@ LobbyState.prototype = {
         self.drawLobby();
     },
     quitGame: function() {
-        lobbyGame.kuzzle.unsubscribe(game.gameData.player.roomId);
-        lobbyGame.kuzzle.delete('kf-user', lobbyGame.gameData.player.id, function(response) {
+        kuzzle.unsubscribe(game.gameData.player.roomId);
+        kuzzle.delete('kf-user', lobbyGame.gameData.player.id, function(response) {
             musicLobby.stop();
             lobbyGame.stateTransition.to('main-menu');
         });

@@ -14,7 +14,7 @@ var defaultHp = 50;
 var laserDamage = 5;
 var groundPoundDamage = 50;
 var live = false;
-var updateRate = 2000;
+var updateRate = 200;
 var shooted = false;
 var shootCoords = {};
 var hasDamaged = [];
@@ -23,46 +23,24 @@ GameRoundNoMonsterState.prototype = {
     init: function(initData) {
         self = this;
         self.initData = initData;
-
-        game.room = {
+        game.player = initData.player;
+        playersToConnect = initData.players;
+        room = {
             players: []
         };
-        game.kuzzle = new Kuzzle('http://api.uat.kuzzle.io:7512');
-        var filters = {
-            "filter": {
-                "exists": {
-                    "field": "username"
-                }
+        roomIdPlayers = kuzzle.subscribe('kf-users', {"exists": {"field": "username"}}, function (dataPlayer) {
+            console.log('New player');
+            if (dataPlayer.result.action == "create" && dataPlayer.result._id != game.player.id) {
+                self.handleConnect(dataPlayer.result._id, dataPlayer.result._source);
             }
-        };
-        game.kuzzle.search('kf-users', filters, function(response) {
-            response.result.hits.hits.forEach(function(e) {
-                self.handleConnect(e._id, e._source);
-            });
+            if (dataPlayer.result.action == "delete") {
+                self.handleDisconnect(dataPlayer.result._source);
+            }
         });
-        game.player = {
-            "username": "Sam-" + Math.floor((Math.random() * 1000) + 1),
-            "color"   : Phaser.Color.getRandomColor(30, 220),
-            "hp"      : 100
-        };
-        game.kuzzle.create('kf-users', game.player, true, function(createData) {
-            game.player.id = createData.result._id;
-            game.kuzzle.create('kf-room-1', {pid: game.player.id}, true, function(updateData) {
-                game.player.updateId = updateData.result._id;
-                roomIdPlayers = game.kuzzle.subscribe('kf-users', {exists: {field: 'username'}}, function(dataPlayer) {
-                    if(dataPlayer.action == "create" && dataPlayer._id != game.player.id) {
-                        self.handleConnect(dataPlayer._id, dataPlayer.body);
-                    }
-                    if(dataPlayer.action == "delete") {
-                        self.handleDisconnect(dataPlayer);
-                    }
-                });
-                roomIdGameUpdates = game.kuzzle.subscribe('kf-room-1', {exists: {field: 'username'}}, function(dataGameUpdate) {
-                    self.updateFromKuzzle(dataGameUpdate.body);
-                });
-                live = true;
-                console.log('Live!');
-            });
+        roomIdGameUpdates = kuzzle.subscribe('kf-room-1', {"term": {"roomId": "room1"}}, function (dataGameUpdate) {
+            if (dataGameUpdate.data.body.pid != game.player.id) {
+                self.updateFromKuzzle(dataGameUpdate.data.body);
+            }
         });
     },
     preload: function() {
@@ -75,8 +53,8 @@ GameRoundNoMonsterState.prototype = {
         game.load.tilemap('city-map', 'assets/maps/city.csv', null, Phaser.Tilemap.CSV);
         game.load.image('tiles-city', 'assets/sprites/game-round/tiles-city.png');
 
-        game.load.tilemap('mario-map', 'assets/maps/mario.csv', null, Phaser.Tilemap.CSV);
-        game.load.image('tiles-mario', 'assets/sprites/game-round/tiles-mario.png');
+        /*game.load.tilemap('mario-map', 'assets/maps/mario.csv', null, Phaser.Tilemap.CSV);
+        game.load.image('tiles-mario', 'assets/sprites/game-round/tiles-mario.png');*/
 
         game.load.bitmapFont('font', 'assets/fonts/font.png', 'assets/fonts/font.fnt');
 
@@ -89,6 +67,11 @@ GameRoundNoMonsterState.prototype = {
         musicGameRound = game.add.audio('music-game');
         if(game.hasMusic) musicGameRound.fadeIn();
 
+        filterPixelate6      = new PIXI.PixelateFilter();
+        filterPixelate6.size = {x: 6, y: 6};
+        filterPixelate3      = new PIXI.PixelateFilter();
+        filterPixelate3.size = {x: 3, y: 3};
+
         game.world.setBounds(0, 0, 400, 200);
         background = game.add.sprite(game.world.centerX, game.world.centerY, 'city');
 
@@ -98,11 +81,6 @@ GameRoundNoMonsterState.prototype = {
 
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 1000;
-
-        filterPixelate6      = new PIXI.PixelateFilter();
-        filterPixelate6.size = {x: 6, y: 6};
-        filterPixelate3      = new PIXI.PixelateFilter();
-        filterPixelate3.size = {x: 3, y: 3};
 
         playerShadow = self.addPlayerShadow();
         player       = self.addPlayer(game.player.id);
@@ -120,12 +98,18 @@ GameRoundNoMonsterState.prototype = {
         layer = map.createLayer(0);
         layer.resizeWorld();
 
-        style                = {font: '42px Helvetica', fontWeight: 'bold', fill: "#BF0000", align: "center"};
+        //style                = {font: '42px Helvetica', fontWeight: 'bold', fill: "#BF0000", align: "center"};
         //deathMessage         = game.add.text(player.x, player.y, "F#@k U!!", style);
-        deathMessage         = game.add.bitmapText(10, 100, 'font', 'Awesome :-D', 48);
+        deathMessage         = game.add.bitmapText(10, 100, 'font', 'Monster Kill', 48);
         deathMessage.alpha   = 0.0;
         deathMessage.filters = [filterPixelate3];
         deathMessage.anchor.setTo(0.5, 0.5);
+
+        gameOverMessage = game.add.bitmapText(300, 150, 'font', 'Game Over', 28);
+        gameOverMessage.alpha   = 0.0;
+        gameOverMessage.filters = [filterPixelate3];
+        gameOverMessage.anchor.setTo(0.5, 0.5);
+        gameOverMessage.fixedToCamera = true;
 
         cursors    = game.input.keyboard.createCursorKeys();
         jumpButton = game.input.keyboard.addKey(Phaser.Keyboard.UP);
@@ -139,6 +123,12 @@ GameRoundNoMonsterState.prototype = {
         self.enterKey.onDown.add(self.switchKuzzleSynch, self);
         self.fullscreenKey.onDown.add(self.fullScreen, self);
         self.quitKey.onDown.add(self.quitGame, self);
+
+        playersToConnect.forEach(function(p) {
+            if (p.id != game.player.id) {
+                self.handleConnect(p);
+            }
+        });
     },
     switchKuzzleSynch: function() {
         live = !live;
@@ -158,9 +148,8 @@ GameRoundNoMonsterState.prototype = {
         //p.width = 64;
         p.width = 42;
         p.id = id;
-        p.animations.add('idle');
-        p.animations.play('idle', 2, true);
-        p.smoothed = false;
+        //p.animations.add('idle');
+        //p.animations.play('idle', 2, true);
         //p.scale.set(1.5);
 
         return p;
@@ -218,7 +207,7 @@ GameRoundNoMonsterState.prototype = {
     },
     updateFromKuzzle: function(data) {
         console.log('UPDATE FROM KUZZLE');
-        game.room.players.forEach(function(e) {
+        room.players.forEach(function(e) {
             if(e.id == data.pid) {
                 e.sprite.x = data.x;
                 e.sprite.y = data.y;
@@ -226,11 +215,28 @@ GameRoundNoMonsterState.prototype = {
                 e.sprite.body.velocity.y = data.vy;
                 e.emitter.on = data.emits;
                 if(data.damaged.length > 0) {
-                    e.damaged.forEach(function(d) {
-                        self.playerTakesDamage(getPlayerById(d.id), d.dmg);
+                    console.log(data.damaged);
+                    data.damaged.forEach(function(d) {
+                        if(d.id == game.player.id) {
+                            self.iTakeDamage(e, d.dmg);
+                        } else {
+                            self.playerTakesDamage(getPlayerById(d.id), d.dmg);
+                        }
                     });
                 }
+                if(data.shoot) {
+                    self.spawnLaser(e);
+                }
+                e.going = e.sprite.body.velocity.x == 0 ? 'nowhere' : e.sprite.body.velocity.x > 0 ? 'right' : 'left';
+                if(typeof e.wasGoing != "undefined") {
+                    e.changedDirection = e.going != e.wasGoing;
+                } else {
+                    e.wasGoing = 'right';
+                }
+                if(e.going != 'nowhere')
+                    e.wasGoing = e.going;
             }
+
         });
     },
     mapCollide: function() {
@@ -251,20 +257,21 @@ GameRoundNoMonsterState.prototype = {
         this.updatePlayers();
 
         if(game.time.now > updateTimer && live) {
-            console.log('Update');
             updateTimer = game.time.now + updateRate;
-            game.kuzzle.update("kf-room-1", {
-                _id    : game.player.updateId,
-                pid    : game.player.id,
-                hp     : game.player.hp,
-                x      : player.x,
-                y      : player.y,
-                vx     : player.body.velocity.x,
-                vy     : player.body.velocity.y,
-                emits  : emitter.on,
-                shoot  : shooted ? shootCoords : false,
-                damaged: hasDamaged
-            }, function(r) { console.log(r); });
+            kuzzle.create("kf-room-1", {
+                //_id      : game.player.updateId,
+                roomId   : "room1",
+                pid      : game.player.id,
+                username : game.player.username,
+                hp       : game.player.hp,
+                x        : player.x,
+                y        : player.y,
+                vx       : player.body.velocity.x,
+                vy       : player.body.velocity.y,
+                emits    : emitter.on,
+                shoot    : shooted ? shootCoords : false,
+                damaged  : hasDamaged
+            }, false, function(r) { /*console.log(r);*/ });
             if(hasDamaged.length > 0) {
                 hasDamaged = [];
             }
@@ -293,26 +300,45 @@ GameRoundNoMonsterState.prototype = {
         deathMessage.x = player.x + 60;
         deathMessage.y = player.y - 100;
 
-        game.room.players.forEach(function(p) {
+        room.players.forEach(function(p) {
             var px = p.sprite.x;
             var py = p.sprite.y;
             p.shadow.x   = px + shadowOffset.x;
             p.shadow.y   = py + shadowOffset.y;
             p.hpMeter.x  = px + shadowOffset.x - (p.sprite.width + 20);
             p.hpMeter.y  = py + shadowOffset.y - (p.sprite.height + 40);
-            p.tag.x      = px + (p.sprite.width - 93);
-            p.tag.y      = py + (p.sprite.height - 200);
+            p.tag.x      = px - (p.sprite.width - 35);
+            p.tag.y      = py - (p.sprite.height + 30);
             p.blood.x    = px;
             p.blood.y    = py;
             if(p.hp <= 0) {
                 game.physics.arcade.collide(player, p.blood);
-                game.room.players.forEach(function(pb) {
+                room.players.forEach(function(pb) {
                     game.physics.arcade.collide(pb, p.blood);
                 });
             }
-            if(p.emits) {
-                p.emitter.emitX = px;
-                p.emitter.emitY = py;
+            p.emitter.emitX = px;
+            p.emitter.emitY = py;
+            if(typeof p.going != "undefined") {
+                if(p.going == 'right') {
+                    p.sprite.loadTexture('pierre-run', 0, false);
+                    p.sprite.animations.add('run');
+                    p.sprite.animations.play('run', 3, true);
+                    game.add.tween(p.sprite.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+                    game.add.tween(p.shadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+                    p.changedDirection = false;
+                } else if(p.going == 'left') {
+                    p.sprite.loadTexture('pierre-run', 0, false);
+                    p.sprite.animations.add('run');
+                    p.sprite.animations.play('run', 3, true);
+                    game.add.tween(p.sprite.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
+                    game.add.tween(p.shadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+                    p.changedDirection = false;
+                } else {
+                    p.sprite.loadTexture('pierre-idle', 0, false);
+                    p.sprite.animations.add('idle');
+                    p.sprite.animations.play('idle', 2, true);
+                }
             }
             game.physics.arcade.collide(p.sprite, layer);
         });
@@ -323,22 +349,25 @@ GameRoundNoMonsterState.prototype = {
         if(cursors.right.isDown) {
             player.body.velocity.x = 300;
         }
-        if(player.body.velocity.x > 0) {
+        if(player.body.velocity.x < 5.0 && player.body.velocity.x > -5.0) {
+            player.body.velocity.x = 0.0;
+        }
+        if(player.body.velocity.x > 0.0) {
             player.loadTexture('pierre-run', 0, false);
             player.animations.add('run');
             player.animations.play('run', 3, true);
             direction = 'right';
-            player.body.velocity.x = player.body.velocity.x - 5;
-            game.add.tween(player.scale).to({x: 1}, 75, Phaser.Easing.Bounce.Out, true);
-            game.add.tween(playerShadow.scale).to({x: 1}, 75, Phaser.Easing.Bounce.Out, true);
-        } else if(player.body.velocity.x < 0) {
+            player.body.velocity.x = player.body.velocity.x - 5.0;
+            game.add.tween(player.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+            game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+        } else if(player.body.velocity.x < 0.0) {
             player.loadTexture('pierre-run', 0, false);
             player.animations.add('run');
             player.animations.play('run', 3, true);
             direction = 'left';
-            player.body.velocity.x = player.body.velocity.x + 5;
-            game.add.tween(player.scale).to({x: -1}, 75, Phaser.Easing.Bounce.Out, true);
-            game.add.tween(playerShadow.scale).to({x: 1}, 75, Phaser.Easing.Bounce.Out, true);
+            player.body.velocity.x = player.body.velocity.x + 5.0;
+            game.add.tween(player.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
+            game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
         } else {
             player.loadTexture('pierre-idle', 0, false);
             player.animations.add('idle');
@@ -394,12 +423,10 @@ GameRoundNoMonsterState.prototype = {
         if(fireButton.isDown && game.time.now > shootTimer) {
             shootTimer = game.time.now + shootRecover;
             this.shootLaser();
-            shooted = true;
-            shootCoords = {x: player.x, y: player.y};
         }
 
         lasers.forEach(function(l, i) {
-            game.room.players.forEach(function(p) {
+            room.players.forEach(function(p) {
                 if(!l.touched){
                     game.physics.arcade.overlap(l, p.sprite, function (l, p) {
                         l.touched = true;
@@ -413,13 +440,15 @@ GameRoundNoMonsterState.prototype = {
                 }
             });
         });
-        game.room.players.forEach(function(p) {
-            game.physics.arcade.collide(player, p.sprite, self.handleCollisionBetweenPlayers, null, self);
+        room.players.forEach(function(p) {
+            if(p.id != game.player.id) {
+                game.physics.arcade.collide(player, p.sprite, self.handleCollisionBetweenPlayers, null, self);
+            }
         });
     },
     shootLaser: function() {
-        var posX = direction == 'right' ? player.x + 50 : player.x - 150;
-        var laser = game.add.sprite(posX, player.y - 50, 'laser');
+        var posX = direction == 'right' ? player.x : player.x - 80;
+        var laser = game.add.sprite(posX, player.y - 80, 'laser');
         game.physics.enable(laser, Phaser.Physics.ARCADE);
         laser.events.onOutOfBounds.add(self.destroyLaser, self);
         laser.width = 80;
@@ -429,11 +458,41 @@ GameRoundNoMonsterState.prototype = {
         laser.tint = Phaser.Color.getRandomColor(100, 255);
         laser.blendMode = PIXI.blendModes.ADD;
         laser.touched = false;
+        laser.owner = game.player.id;
+        shooted = true;
+        shootCoords = {x: posX, y: player.y - 50};
 
         if(direction == 'right')
             laser.body.velocity.x = 1200;
         if(direction == 'left')
             laser.body.velocity.x = -1200;
+        lasers.push(laser);
+    },
+    spawnLaser: function(owner) {
+        var vx = 1200;
+        var posX = 0;
+        if(owner.going == 'right') {
+            posX = owner.sprite.x;
+            vx = 1200;
+        } else if(owner.going == 'left') {
+            posX = owner.sprite.x - 80;
+            vx = -1200;
+        } else {
+            posX = (owner.wasGoing == 'right' ? owner.sprite.x : owner.sprite.x - 80);
+            vx = (owner.wasGoing == 'right' ? 1200 : -1200);
+        }
+        var laser = game.add.sprite(posX, owner.sprite.y - 80, 'laser');
+        game.physics.enable(laser, Phaser.Physics.ARCADE);
+        laser.events.onOutOfBounds.add(self.destroyLaser, self);
+        laser.width = 80;
+        laser.height = 50;
+        laser.checkWorldBounds = true;
+        laser.body.gravity.y = -1000;
+        laser.tint = Phaser.Color.getRandomColor(100, 255);
+        laser.blendMode = PIXI.blendModes.ADD;
+        laser.touched = false;
+        laser.owner = owner.id;
+        laser.body.velocity.x = vx;
         lasers.push(laser);
     },
     destroyLaser: function(laser) {
@@ -445,27 +504,20 @@ GameRoundNoMonsterState.prototype = {
             enemy = getPlayerById(e.id);
             game.juicy.shake(30, 60);
             flying = false;
-            enemy.hp -= groundPoundDamage;
+            /*enemy.hp -= groundPoundDamage;
             enemy.hpMeter.text = enemy.hp;
             enemy.hpMeter.tint = Phaser.Color.interpolateColor(0xFF0000, 0xFFFFFF, defaultHp, enemy.hp);
-            this.tweenTint(e, 0x333333, 0xFF11FF, 100);
+            this.tweenTint(enemy.sprite, 0x333333, 0xFF11FF, 100);*/
             hasDamaged.push({id: enemy.id, dmg: groundPoundDamage});
-            if(enemy.hp <= 0) {
-                self.playerDies(enemy);
-            }
+            self.playerTakesDamage(enemy, groundPoundDamage);
         }
     },
     handleCollisionBetweenLasersAndEnemies: function(l, p) {
-        p.body.velocity.x = l.body.velocity.x / 10;
-        game.room.players.forEach(function(e) {
-            if(e.id == p.id) {
-                hasDamaged.push({id: e.id, dmg: laserDamage});
-                self.playerTakesDamage(e, laserDamage);
-            }
-        })
+        hasDamaged.push({id: p.id, dmg: laserDamage});
+        self.playerTakesDamage(getPlayerById(p.id), laserDamage);
     },
     playerTakesDamage: function(p, dmg) {
-        self.tweenTint(p, 0x333333, 0xFF11FF, 100);
+        self.tweenTint(p.sprite, 0x333333, 0xFF11FF, 100);
         p.blood.start(false, 100, 100);
         p.blood.on = false;
         p.hp -= dmg;
@@ -473,6 +525,17 @@ GameRoundNoMonsterState.prototype = {
         p.hpMeter.tint = Phaser.Color.interpolateColor(0xFF0000, 0xFFFFFF, defaultHp, p.hp);
         if(p.hp <= 0) {
             self.playerDies(p);
+        }
+    },
+    iTakeDamage: function(enemy, dmg) {
+        self.tweenTint(player, 0x333333, 0xFF11FF, 100);
+        blood.start(false, 100, 100);
+        blood.on = false;
+        game.player.hp -= dmg;
+        hpMeter.text = game.player.hp;
+        hpMeter.tint = Phaser.Color.interpolateColor(0xFF0000, 0xFFFFFF, defaultHp, game.player.hp);
+        if(game.player.hp <= 0) {
+            self.iDie(enemy);
         }
     },
     playerDies: function(p) {
@@ -483,10 +546,11 @@ GameRoundNoMonsterState.prototype = {
         var dieAnimation = game.add.tween(p.sprite).to({alpha: 0.0}, 500, 'Linear').start();
         game.add.tween(p.shadow).to({alpha: 0.0}, 500, 'Linear').start();
         dieAnimation.onComplete.add(function() {
-            p.sprite.destroy();
+            //p.sprite.body.destroy();
+            //p.sprite.destroy();
             p.shadow.destroy();
             p.blood.on = false;
-            var messages = ["Monster Kill", "Yeaaaaahhh!!", "Stay down!!", "Awesome :D", "Niiiiice!!", "Time to\nKick ass!", "Eat dirt!"];
+            var messages = ["Monster Kill", "Yeaaaaahhh!!", "Stay down!!", "Awesome :D", "Niiiiice!!", "Time to\nKick ass!"];
             deathMessage.text = messages[Math.floor(Math.random() * messages.length)];
             game.add.tween(deathMessage.scale).to({x: 2.0, y: 2.0}, 1500, 'Elastic', true);
             game.add.tween(deathMessage).to({angle: 350.0}, 1500, 'Elastic', true);
@@ -495,6 +559,27 @@ GameRoundNoMonsterState.prototype = {
                 game.add.tween(deathMessage).to({alpha: 0.0}, 500, 'Elastic', true);
             });
         });
+    },
+    iDie: function(enemy) {
+        console.log('YOU DIED!! ' + enemy.username + ' KILLED YOU xD');
+        blood.start(false, 1500, 2);
+        blood.filters = [filterPixelate3];
+        hpMeter.destroy();
+        tag.destroy();
+        var dieAnimation = game.add.tween(player).to({alpha: 0.0}, 500, 'Linear').start();
+        game.add.tween(playerShadow).to({alpha: 0.0}, 500, 'Linear').start();
+        dieAnimation.onComplete.add(function() {
+            //player.body.destroy();
+            //player.destroy();
+            playerShadow.destroy();
+            blood.on = false;
+            var messages = ["You have been detroyed\nby" + enemy.username + "\nGame Over!"];
+            gameOverMessage.text = messages[Math.floor(Math.random() * messages.length)];
+            game.add.tween(gameOverMessage.scale).to({x: 2.0, y: 2.0}, 1500, 'Elastic', true);
+            game.add.tween(gameOverMessage).to({angle: 350.0}, 1500, 'Elastic', true);
+            deathMessageIn = game.add.tween(gameOverMessage).to({alpha: 1.0}, 1500, Phaser.Easing.Exponential.Out, true);
+        });
+        //game.camera.follow(enemy.sprite);
     },
     tweenTint: function(obj, startColor, endColor, time) {
         var colorBlend = {step: 0};
@@ -515,14 +600,15 @@ GameRoundNoMonsterState.prototype = {
 
         colorTween.start();
     },
-    handleConnect: function(_id, p) {
+    handleConnect: function(p) {
+        console.log('Player connected: ' + p.username);
         var newPlayer = {
-            id      : _id,
+            id      : p.id,
             username: p.username,
             color   : p.color,
             hp      : defaultHp,
             shadow  : this.addPlayerShadow(),
-            sprite  : this.addPlayer(_id),
+            sprite  : this.addPlayer(p.id),
             emitter : this.addPlayerEmitter(),
             hpMeter : this.addPlayerHPMeter(),
             tag     : this.addPlayerTag(p.username),
@@ -532,25 +618,26 @@ GameRoundNoMonsterState.prototype = {
             vx      : p.vx,
             vy      : p.vy
         };
-        newPlayer.sprite.tint = newPlayer.color;
-        game.room.players.push(newPlayer);
+        //newPlayer.sprite.tint = newPlayer.color;
+        room.players.push(newPlayer);
     },
     handleDisconnect: function(p) {
-        game.room.players.forEach(function(e, i) {
+        console.log('Player disconnected: ' + p.username);
+        room.players.forEach(function(e, i) {
             if(e.id == p._id) {
                 e.kill();
                 e.destroy();
-                game.room.players.splice(i, 1);
+                room.players.splice(i, 1);
             }
         });
     },
     quitGame: function() {
-        game.kuzzle.unsubscribe(roomIdPlayers);
-        game.kuzzle.unsubscribe(roomIdGameUpdates);
-        game.kuzzle.delete('kf-users', game.player.id, function() {
-            game.kuzzle.delete('kf-users', game.player.id, function() {
+        kuzzle.unsubscribe(roomIdPlayers);
+        kuzzle.unsubscribe(roomIdGameUpdates);
+        kuzzle.delete('kf-users', game.player.id, function() {
+            kuzzle.delete('kf-users', game.player.id, function() {
                 musicGameRound.stop();
-                game.stateTransition.to('main-menu');
+                game.stateTransition.to('main-intro');
             });
         });
     },

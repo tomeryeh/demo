@@ -37,9 +37,6 @@ PreloadState.prototype = {
 
         // Credits
         this.game.load.image('pixi-js', 'assets/sprites/credits/pixi-js.png');
-
-        // load all game assets
-        // images, sprites, atlases, audio etc..
     },
     create: function() {
         this.game.stateTransition = this.game.plugins.add(Phaser.Plugin.StateTransition);
@@ -55,8 +52,9 @@ PreloadState.prototype = {
                 }
             }
         });
-        //this.game.state.start('main-intro');
-        this.game.state.start('game-round-no-monster');
+        this.game.state.start('main-intro');
+        //this.game.state.start('game-round-no-monster');
         //this.game.state.start('game-round');
+        //this.game.state.start('game-init');
     }
 };

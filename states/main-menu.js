@@ -43,10 +43,10 @@ MainMenuState.prototype = {
             "}"
         ];
         filter = new Phaser.Filter(this.game, null, fragmentSrc);
-        filter.setResolution(640, 360);
+        filter.setResolution(game.width, game.height);
         sprite = this.game.add.sprite();
-        sprite.width = 640;
-        sprite.height = 360;
+        sprite.width = game.width;
+        sprite.height = game.height;
         sprite.filters = [filter];
 
         musicMainMenu = this.game.add.audio('music-main-menu');
@@ -129,8 +129,8 @@ MainMenuState.prototype = {
         }
     },
     selectOnlineGame: function() {
-        //this.game.stateTransition.to('connecting');
-        this.game.stateTransition.to('game-round-no-monster');
+        this.game.stateTransition.to('connecting');
+        //this.game.stateTransition.to('game-round-no-monster');
     },
     selectOptions: function() {
         this.game.stateTransition.to('options');

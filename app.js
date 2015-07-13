@@ -1,11 +1,13 @@
 function Game() {}
 Game.prototype = {
     start: function() {
-        game = new Phaser.Game(640, 360, Phaser.AUTO, 'kuzzle-fighters');
+        game = new Phaser.Game(640, 360, Phaser.WEBGL, 'kuzzle-fighters');
 
         game.state.add('boot', BootState);
 
         game.state.add('preload', PreloadState);
+
+        game.state.add('game-init', GameInitState);
 
         game.state.add('game-round', GameRoundState);
 
