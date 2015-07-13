@@ -46,7 +46,7 @@ var app = {
 					console.log("##############Cabble initialisation ENDED !#######################");
 					//default type user (must be remove and change by modal dialog)
 					//this.kuzzleController.setUserType("customer");
-				}.bind(app)
+				}
 			).
 		catch(function(e) {
 			console.error("ERRRRRRRROR during Cabble initialisation ");
