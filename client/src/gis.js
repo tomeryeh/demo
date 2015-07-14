@@ -190,7 +190,7 @@
 						user_cabble.addEventListener("click", function(event) {
 							cab_cabble.innerHTML = "I'm looking for a customer";
 							user_cabble.innerHTML = "Cabble is looking for your ride";
-							userMarker.setIcon (getIcon("customer"));
+							userMarker.setIcon(getIcon("customer"));
 							app.kuzzleController.setUserType("customer");
 							resolve();
 						});
@@ -198,11 +198,20 @@
 						cab_cabble.addEventListener("click", function() {
 							cab_cabble.innerHTML = "Cabble is looking for a customer for you";
 							user_cabble.innerHTML = "I need a ride";
-							userMarker.setIcon (getIcon("taxi"));
+							userMarker.setIcon(getIcon("taxi"));
 							app.kuzzleController.setUserType("taxi");
 							resolve();
 						});
 
+					});
+
+
+					// 3 seconds after the center of the map has changed, pan back to the
+					// marker.
+					google.maps.event.addListener(map, 'center_changed', function() {
+						window.setTimeout(function() {
+							map.panTo(userMarker.getPosition());
+						}, 3000);
 					});
 
 					var visible = !userType;
