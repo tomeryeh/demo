@@ -259,7 +259,7 @@ var app = {
 					var userPosition = data.body.position;
 					var userType = data.body.type;
 					var userId = data.body.userId;
-					app.gisController.addPositions(userPosition, userType, userId);
+					app.gisController.addPosition(userPosition, userType, userId);
 				}
 			});
 			//console.log("we subscribe to ");
