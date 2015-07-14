@@ -275,7 +275,7 @@
 				);
 			},
 
-			addPosition: function(position, type, user_id) {
+			addPosition: function(position, type, id) {
 
 				var contentString;
 				var otherMarker;
@@ -291,8 +291,8 @@
 				};
 
 				//update 
-				if (assocIdToOtherItemsMark.user_id) {
-					otherMarker = assocIdToOtherItemsMark.user_id;
+				if (assocIdToOtherItemsMark[id]) {
+					otherMarker = assocIdToOtherItemsMark[id];
 					otherMarker.position = gmapPos;
 					infowindow = otherMarker.infowindow;
 				}
@@ -325,8 +325,8 @@
 					google.maps.event.addListener(infowindow, 'domready', function() {
 						var propose_cabble = contentInfoNode.querySelector(".propose_cabble");
 						propose_cabble.addEventListener("click", function(event) {
-							console.log("proposed " + user_id);
-							app.kuzzleController.sendRideProposal(user_id);
+							console.log("proposed " + id);
+							app.kuzzleController.sendRideProposal(id);
 						});
 
 						var cancel_cabble = contentInfoNode.querySelector(".cancel_cabble");
@@ -354,7 +354,7 @@
 					});
 
 					otherItemsMark.push(otherMarker);
-					assocIdToOtherItemsMark.user_id = otherMarker;
+					assocIdToOtherItemsMark[id] = otherMarker;
 				}
 
 				//getBestCandidate();
@@ -402,6 +402,50 @@
 							resolve();
 						})
 					})
+			},
+			showPopupRideProposal: function(source, target) {
+
+				console.log("must porpose ao popup from " + source + " tot " + target);
+
+				console.dir(assocIdToOtherItemsMark);
+
+				var markerSource = assocIdToOtherItemsMark[source];
+
+				console.dir("founded");
+				console.dir(markerSource);
+
+				var acceptText = '<p><a class="accept_cabble" ><span class="bottom">Yes, pick me up!</span></a></p>';
+				var declineText = '<p><a class="decline_cabble" ><span class="bottom">No, thak you.</span></a></p>';
+
+				contentString = '<div id="content_info_item"><div id="siteNotice"></div>';
+				contentString += '<h1 id="firstHeading" class="firstHeading">You have a ride proposition</h1>';
+				contentString += acceptText;
+				contentString += declineText;
+				//contentString += '<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>';
+
+				var contentInfoNode = document.createElement('div');
+				contentInfoNode.innerHTML = contentString;
+				var rideinfowindow = new google.maps.InfoWindow({
+					content: contentInfoNode
+				});
+
+				rideinfowindow.open(map, markerSource);
+
+				return new Promise(
+					function(resolve, reject) {
+
+						google.maps.event.addListener(rideinfowindow, 'domready', function() {
+							var propose_cabble = contentInfoNode.querySelector(".accept_cabble");
+							propose_cabble.addEventListener("click", function(event) {
+								resolve("accept");
+							});
+
+							var cancel_cabble = contentInfoNode.querySelector(".decline_cabble");
+							cancel_cabble.addEventListener("click", function() {
+								resolve("refused");
+							});
+						});
+					});
 			}
 		};
 	};

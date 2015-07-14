@@ -69,9 +69,8 @@ var app = {
 		userId: null,
 		whoami: {
 			type: '',
-
+			available: true
 		},
-		available: true
 	};
 
 	var app = app;
@@ -181,12 +180,20 @@ var app = {
 							} else {
 								app.userController.getUser().userId = response.result._id;
 								app.userController.getUser().whoami._id = response.result._id;
-								app.userController.setUserLocally().then(resolve);
-								app.userController.listenToRidesProposals();
-								console.log("kuzzle controller ended");
+								app.userController.setUserLocally().then(
+									function() {
+										app.kuzzleController.listenToRidesProposals();
+										console.log("...kuzzle controller ended");
+										resolve();
+									}
+								);
+
+								console.log("cannot save user  locally");
 							}
 						});
 					}
+
+					app.kuzzleController.listenToRidesProposals();
 					console.log("...kuzzle controller ended");
 					resolve();
 				});
@@ -229,12 +236,11 @@ var app = {
 				};
 
 			// If a ride has been accepted, we only want to subscribe to the other person position
-			if (ride)
-			{
+			if (ride) {
 				console.log("ride");
 				console.log(ride);
 			}
-			if (ride && ride.status &&ride.status.indexOf('accepted') !== -1) {
+			if (ride && ride.status && ride.status.indexOf('accepted') !== -1) {
 				filter.and.push({
 					term: {
 						_id: user.whoami.type === 'taxi' ? ride.customer : ride.taxi
@@ -260,7 +266,12 @@ var app = {
 					var userType = data.body.type;
 					var userId = data.body.userId;
 					app.gisController.addPosition(userPosition, userType, userId);
+				} else {
+					console.log("we got a strange message ");
+					console.log(message);
+
 				}
+
 			});
 			//console.log("we subscribe to ");
 			//console.log(positionsRoom);
@@ -323,32 +334,64 @@ var app = {
 				kuzzle.unsubscribe(ridesRoom);
 			}
 
+			console.log("filter for ride prop");
+			console.log(filter);
+
 			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(message) {
+				console.log("recive prop");
+				console.log(message);
 				if (message.error) {
 					console.error(message.error);
 					return false;
 				}
 
-				this.manageRideProposal(message.result);
+				app.kuzzleController.manageRideProposal(message.result);
 			});
 		},
 
 		manageRideProposal: function(rideProposal) {
-			if (rideProposal.status.indexOf('proposed_by') !== -1) {
-				/*
-				 Automatically decline a ride if I'm not available
-				 Should only happen if a ride is proposed to me before I had the chance to notify kuzzle
-				 about my availability change
-				 */
-				if (!app.userController.getUser().whoami.available) {
+
+			var rideInfo = rideProposal._source;
+
+			console.log(rideInfo);
+			if (!rideInfo) {
+				console.log("no ride info");
+				return;
+			}
+
+			if (!rideInfo.status) {
+				console.log("no status info");
+				return;
+			}
+
+			if (rideInfo && rideInfo.status.indexOf('proposed_by') !== -1) {
+				if (!app.userController.getUser().whoami.available === undefined && !app.userController.getUser().whoami.available) {
 					this.declineRideProposal(rideProposal._id);
+					return;
 				} else {
-					// TODO: got a ride proposal => implement accept/cancel UI actions
-					// Use acceptRideProposal or declineRideProposal when needed
+					var proposedByTaxy = (rideInfo.status === "proposed_by_taxi");
+					//
+
+					//if(userType == "customer" ){}
+					//var userId = app.userController.getUser().whoami._id;
+					var target = proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
+					var source = !proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
+
+					app.gisController.showPopupRideProposal(source, target).then(function(response) {
+						//if()
+						if (response === "accept") {
+							app.kuzzleController.acceptRideProposal(rideProposal);
+							return;
+						}
+						if (response === "decline") {
+							app.kuzzleController.declineRideProposal(rideProposal);
+							return;
+						}
+					});
 				}
-			} else if (rideProposal.status.indexOf('refused_by') !== -1) {
+			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
 				// TODO: ride declined
-			} else if (rideProposal.status.indexOf('accepted_by') !== -1) {
+			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				// TODO: ride accepted
 			}
 		},
@@ -410,11 +453,13 @@ var app = {
 					}]
 				};
 
-			listProposal.and[0].term[myUserType] = app.userController.getUser().whoami._id;
+			listProposal.and[0].term[myUserType] = app.userController.getUser().whoami.type;
 
 			app.userController.getUser().whoami.available = false;
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
-			ride = rideProposal;
+			console.log("ride accepted !");
+
+			return;
 
 			/*
 			At this point, we have 1 accepted ride proposal, and possibly multiple
@@ -423,14 +468,16 @@ var app = {
 			 */
 			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(searchResult) {
 				if (searchResult.error) {
-					console.log(new Error(error));
+					console.log(new Error(searchResult.error));
 					return false;
 				}
+				console.log("searresult ");
+				console.log(searchResult);
 
-				searchResult.result.hits.hits.forEach(function(element) {
-					// element is not a ride document, but it contains the _id element we need to decline the ride
-					this.declineRideProposal(element);
-				});
+				//searchResult.result.hits.hits.forEach(function(element) {
+				//	// element is not a ride document, but it contains the _id element we need to decline the ride
+				//	this.declineRideProposal(element);
+				//});
 			});
 		},
 
