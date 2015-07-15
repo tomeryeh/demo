@@ -1,32 +1,25 @@
-# taxiroom
+# Cabble
+
+##Description
+Cabble is a life-changing web application for both taxis and their customers.
+
+With Cabble, taxis can easily find customers, without paying booking companies fees. This money saving allow them to improve their level of service up to those of others private transportation companies.
+
+Cabble eases customers life as well: they can now hail a taxi with their fingertip.
+
+Stay tuned! Upcoming versions of Cabble will also include social functionalities like the possibility for customers to rate their taxis, to comment their ride, to share their trip to their favorite social network, and more!
 
 
-#install server dependencie with npm
+##How to install Cabble
 
-npm update 
+### Server
+```bash
+npm update
+```
 
-#install client dependencies with bower 
-npm install -g bower 
-
+### Client
+```bash
+npm install -g bower
 cd client
-
 bower update
-
-
-#launch server 127.0.0.1:8000
-
-cd ..
-
-node server/sever.js
-
-
-launch watch/livereload mode :
-grunt  (or grunt watch)
-
-
-auto indent js and html files :
-grunt jsbeautifier
-
-
-
-
+```
