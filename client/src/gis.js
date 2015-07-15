@@ -353,7 +353,7 @@
 				//update 
 				if (assocIdToOtherItemsMark[id]) {
 					otherMarker = assocIdToOtherItemsMark[id];
-					otherMarker.position = gmapPos;
+					otherMarker.setPosition(gmapPos);
 					infowindow = otherMarker.infowindow;
 				}
 				//creation
