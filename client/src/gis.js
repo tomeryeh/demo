@@ -12,6 +12,8 @@
 		var userMarker;
 		var userPosition;
 
+		var controlUI;
+
 		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
@@ -100,7 +102,7 @@
 		function CenterControl(controlDiv, map) {
 
 			// Set CSS for the control border
-			var controlUI = document.createElement('div');
+			controlUI = document.createElement('div');
 			controlUI.style.backgroundColor = '#fff';
 			controlUI.style.border = '2px solid #fff';
 			controlUI.style.borderRadius = '3px';
@@ -119,10 +121,14 @@
 			controlText.style.lineHeight = '38px';
 			controlText.style.paddingLeft = '5px';
 			controlText.style.paddingRight = '5px';
-			controlText.innerHTML = 'Cabble Menu';
-			//	controlUI.appendChild(controlText);
+			controlText.innerHTML = 'End the ride';
+
+			controlUI.style.display = "none";
+			controlUI.appendChild(controlText);
 
 			google.maps.event.addDomListener(controlUI, 'click', function() {
+				app.kuzzleController.finishRide();
+				controlUI.style.display = "none";
 				//map.setCenter(chicago)
 			});
 		}
@@ -153,16 +159,24 @@
 
 					var contentString = "";
 
-					var customerText = "I need a ride";
-					var taxiText = "I'm looking for a customer";
+					var taxiSearchText = "looking for a customer...";
+					var customerSearchText = "looking for a taxi...";
+
+					var wanabeCustomerTextForTaxi = "No ! I need a ride";
+					var wanabeTaxiForCustomer = "No ! i'm looking for a customer";
+
+					var leftText;
+					var rightText;
 
 					if (userType) {
 						if (userType === "taxi") {
-							taxiText = "Cabble is looking for a customer for you";
+							leftText = wanabeCustomerTextForTaxi;
+							rightText = taxiSearchText;
 						}
 
 						if (userType === "customer") {
-							customerText = "Cabble is looking for a taxi";
+							leftText = customerSearchText;
+							rightText = wanabeTaxiForCustomer;
 						}
 					}
 
@@ -171,11 +185,11 @@
 					var contentString = "Hello from Cabble ! what can i do for you ?";
 					contentString += '<div class="btn-group btn-group-justified" role="group" aria-label="...">';
 					contentString = '<div class="btn-group" role="group">';
-					contentString = '<button id="user_cabble" type="button" class="btn btn-default">' + customerText + '</button>';
+					contentString = '<button id="left_cabble" type="button" class="btn btn-default">' + leftText + '</button>';
 					contentString += '</div>';
 
 					contentString += '<div class="btn-group" role="group">'
-					contentString += '<button id="cab_cabble"  type="button" class="btn btn-default">' + taxiText + '</button>';
+					contentString += '<button id="right_cabble"  type="button" class="btn btn-default">' + rightText + '</button>';
 					contentString += '</div>'
 					contentString += '</div>';
 
@@ -184,27 +198,37 @@
 					});
 
 					google.maps.event.addListener(infowindow, 'domready', function() {
+
 						///kick and dirty ui logic !
-						var user_cabble = document.querySelector("#user_cabble");
-						var cab_cabble = document.querySelector("#cab_cabble");
-						user_cabble.addEventListener("click", function(event) {
-							cab_cabble.innerHTML = "I'm looking for a customer";
-							user_cabble.innerHTML = "Cabble is looking for your ride";
+						var left_cabble = document.querySelector("#left_cabble");
+						var right_cabble = document.querySelector("#right_cabble");
+
+						right_cabble.disabled = (userType == "taxi");
+						left_cabble.disabled = !(userType == "taxi");
+
+						left_cabble.addEventListener("click", function(event) {
 							userMarker.setIcon(getIcon("customer"));
 							app.kuzzleController.setUserType("customer");
+							left_cabble.innerHTML = customerSearchText;
+							right_cabble.innerHTML = wanabeTaxiForCustomer;
+							right_cabble.disabled = false;
+							left_cabble.disabled = true;
+
 							resolve();
 						});
 
-						cab_cabble.addEventListener("click", function() {
-							cab_cabble.innerHTML = "Cabble is looking for a customer for you";
-							user_cabble.innerHTML = "I need a ride";
+						right_cabble.addEventListener("click", function() {
 							userMarker.setIcon(getIcon("taxi"));
 							app.kuzzleController.setUserType("taxi");
+							left_cabble.innerHTML = wanabeCustomerTextForTaxi
+							right_cabble.innerHTML = taxiSearchText;
+							right_cabble.disabled = true;
+							left_cabble.disabled = false;
+
 							resolve();
 						});
 
 					});
-
 
 					// 3 seconds after the center of the map has changed, pan back to the
 					// marker.
@@ -325,7 +349,7 @@
 					google.maps.event.addListener(infowindow, 'domready', function() {
 						var propose_cabble = contentInfoNode.querySelector(".propose_cabble");
 						propose_cabble.addEventListener("click", function(event) {
-							console.log("proposed " + id);
+							console.log("proposed to " + id);
 							app.kuzzleController.sendRideProposal(id);
 						});
 
@@ -403,22 +427,36 @@
 						})
 					})
 			},
+
+			showCenterControl: function() {
+				controlUI.style.display = "";
+
+			},
 			showPopupRideProposal: function(source, target) {
 
-				console.log("must porpose ao popup from " + source + " tot " + target);
-
-				console.dir(assocIdToOtherItemsMark);
+				console.log("we got a rpoposale from gis");
 
 				var markerSource = assocIdToOtherItemsMark[source];
+				if (!markerSource) {
+					console.log("a ride with a ghost" + source);
+					return;
+				}
+				markerSource.setAnimation(google.maps.Animation.BOUNCE);
 
-				console.dir("founded");
-				console.dir(markerSource);
+				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
+				var titleText = 'You have a ride proposition from this taxi';
 				var acceptText = '<p><a class="accept_cabble" ><span class="bottom">Yes, pick me up!</span></a></p>';
-				var declineText = '<p><a class="decline_cabble" ><span class="bottom">No, thak you.</span></a></p>';
+				var declineText = '<p><a class="decline_cabble" ><span class="bottom">No, thank you.</span></a></p>';
+
+				if (userType === "taxi") {
+					titleText = 'You have a ride proposition from this customer';
+					acceptText = '<p><a class="accept_cabble" ><span class="bottom">Yes, I pick you up!</span></a></p>';
+					declineText = '<p><a class="decline_cabble" ><span class="bottom">No, sorry.</span></a></p>';
+				}
 
 				contentString = '<div id="content_info_item"><div id="siteNotice"></div>';
-				contentString += '<h1 id="firstHeading" class="firstHeading">You have a ride proposition</h1>';
+				contentString += '<h1 id="firstHeading" class="firstHeading">' + titleText + '</h1>';
 				contentString += acceptText;
 				contentString += declineText;
 				//contentString += '<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>';
@@ -431,17 +469,26 @@
 
 				rideinfowindow.open(map, markerSource);
 
+				google.maps.event.addListener(rideinfowindow, 'closeclick', function() {
+					markerSource.setAnimation(null);
+				});
+
 				return new Promise(
 					function(resolve, reject) {
 
 						google.maps.event.addListener(rideinfowindow, 'domready', function() {
 							var propose_cabble = contentInfoNode.querySelector(".accept_cabble");
+							var cancel_cabble = contentInfoNode.querySelector(".decline_cabble");
+
 							propose_cabble.addEventListener("click", function(event) {
+								rideinfowindow.close(map, markerSource);
+								markerSource.setAnimation(null);
 								resolve("accept");
 							});
 
-							var cancel_cabble = contentInfoNode.querySelector(".decline_cabble");
 							cancel_cabble.addEventListener("click", function() {
+								rideinfowindow.close(map, markerSource);
+								markerSource.setAnimation(null);
 								resolve("refused");
 							});
 						});

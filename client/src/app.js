@@ -159,7 +159,7 @@ var app = {
 		refreshFilterTimer,
 		positionsRoom,
 		ridesRoom,
-		ride;
+		currentRide;
 
 	//////////////////public methodes (i.e exposed) ///////////////////////
 
@@ -235,15 +235,15 @@ var app = {
 					}]
 				};
 
-			// If a ride has been accepted, we only want to subscribe to the other person position
-			if (ride) {
-				console.log("ride");
-				console.log(ride);
+			// If a currentRide has been accepted, we only want to subscribe to the other person position
+			if (currentRide) {
+				//	console.log("ride");
+				//	console.log(currentRide);
 			}
-			if (ride && ride.status && ride.status.indexOf('accepted') !== -1) {
+			if (currentRide && currentRide.status && currentRide.status.indexOf('accepted') !== -1) {
 				filter.and.push({
 					term: {
-						_id: user.whoami.type === 'taxi' ? ride.customer : ride.taxi
+						_id: user.whoami.type === 'taxi' ? currentRide.customer : currentRide.taxi
 					}
 				});
 			}
@@ -338,12 +338,15 @@ var app = {
 			console.log(filter);
 
 			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(message) {
-				console.log("recive prop");
-				console.log(message);
+				//console.log("recive prop");
+				//console.log(message);
 				if (message.error) {
 					console.error(message.error);
 					return false;
 				}
+
+				console.log("recie a ride ");
+				console.log(message);
 
 				app.kuzzleController.manageRideProposal(message.result);
 			});
@@ -390,8 +393,11 @@ var app = {
 					});
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
+				currentRide = null;
 				// TODO: ride declined
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
+				currentRide = rideProposal;
+				app.gisController.showCenterControl();
 				// TODO: ride accepted
 			}
 		},
@@ -402,6 +408,8 @@ var app = {
 		 * @param userId User Id of the *OTHER* person we wish to contact
 		 */
 		sendRideProposal: function(userId) {
+
+			console.log("send ride porposal");
 			var
 				rideProposal = {},
 				myUserType = app.userController.getUser().whoami.type;
@@ -414,8 +422,8 @@ var app = {
 			 foolproof check: cleanly decline the previous proposal if somehow a user manages to
 			  create another ride while still in the middle of a ride transaction
 			*/
-			if (ride) {
-				this.declineRideProposal(ride._id);
+			if (currentRide) {
+				this.declineRideProposal(currentRide._id);
 			}
 
 			kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, function(response) {
@@ -423,8 +431,9 @@ var app = {
 					console.error(response.error);
 					return false;
 				}
-
-				ride = response.result;
+				//console.log("response from sending ");
+				//console.log(response);
+				currentRide = response.result;
 			});
 		},
 
@@ -458,7 +467,8 @@ var app = {
 			app.userController.getUser().whoami.available = false;
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
 			console.log("ride accepted !");
-
+			currentRide = rideProposal;
+			app.gisController.showCenterControl();
 			return;
 
 			/*
@@ -498,13 +508,18 @@ var app = {
 		 * ride conclusion
 		 */
 		finishRide: function() {
+			if (!currentRide) {
+				console.log("no curent ride");
+				return;
+			}
+
 			var finishedRide = {
-				_id: ride._id,
+				_id: currentRide._id,
 				status: 'completed'
 			};
 
 			app.userController.getUser().whoami.available = true;
-			ride = null;
+			currentRide = null;
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
 		}
