@@ -12,13 +12,13 @@ BootState.prototype = {
         this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
         this.game.isFullScreen = false;
 
-        this.game.kuzzleUrl = 'http://localhost:8081';
+        this.game.kuzzleUrl = 'http://192.168.0.36:8081';
         //this.game.kuzzleUrl = 'http://api.uat.kuzzle.io:7512';
 
-        this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+        /*this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.scale.pageAlignHorizontally = true;
         this.scale.pageAlignVertically = true;
-        this.scale.forceOrientation(true);
+        this.scale.forceOrientation(true);*/
 
         this.stage.disableVisibilityChange = true;
 

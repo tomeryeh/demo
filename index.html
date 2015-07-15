@@ -5,6 +5,18 @@
 
         <title>Kuzzle Fighters</title>
 
+        <style>
+            body {
+                background-color: #000000;
+            }
+            #container {
+                width: 100%;
+            }
+            #kuzzle-fighters {
+                margin: 0 auto;
+            }
+        </style>
+
         <script src="engine/phaser.min.js"></script>
         <script src="engine/plugins/phaser-state-transition-plugin.min.js"></script>
         <script src="engine/plugins/juicy.js"></script>
@@ -20,6 +32,7 @@
         <script src="states/game-init.js"></script>
         <script src="states/game-round.js"></script>
         <script src="states/game-round-no-monster.js"></script>
+        <script src="states/game-end.js"></script>
 
         <script src="app.js"></script>
         <script src="main.js"></script>
@@ -29,6 +42,8 @@
         <script src="kuzzle.js"></script>
     </head>
     <body>
-        <div id="kuzzle-fighters"></div>
+        <div id="container">
+            <div id="kuzzle-fighters"></div>
+        </div>
     </body>
 </html>

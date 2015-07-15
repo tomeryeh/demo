@@ -2,8 +2,8 @@ function PreloadState() {}
 PreloadState.prototype = {
     preload: function() {
         // Global
-        this.game.load.script('blurX', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/BlurX.js');
-        this.game.load.script('blurY', 'https://cdn.rawgit.com/photonstorm/phaser/master/filters/BlurY.js');
+        this.game.load.script('blurX', 'engine/filters/BlurX.js');
+        this.game.load.script('blurY', 'engine/filters/BlurY.js');
         this.game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
         this.game.load.image('kuzzle', 'assets/sprites/kuzzle.png');
 
@@ -34,6 +34,8 @@ PreloadState.prototype = {
         this.game.load.image('options-menu-sounds-unselected', 'assets/sprites/options/sounds-orange.png');
         this.game.load.image('options-menu-back-selected', 'assets/sprites/options/back-yellow.png');
         this.game.load.image('options-menu-back-unselected', 'assets/sprites/options/back-orange.png');
+        this.game.load.image('go-selected', 'assets/sprites/options/go-yellow.png');
+        this.game.load.image('go-unselected', 'assets/sprites/options/go-orange.png');
 
         // Credits
         this.game.load.image('pixi-js', 'assets/sprites/credits/pixi-js.png');

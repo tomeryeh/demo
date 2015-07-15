@@ -25,7 +25,7 @@ Game.prototype = {
 
         game.state.add('lobby', LobbyState);
 
-        //game.state.add('level', LevelState);
+        game.state.add('game-end', GameEndState);
 
         game.state.start('boot');
     }
