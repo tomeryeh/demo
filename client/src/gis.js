@@ -17,6 +17,8 @@
 		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
+		var currentWindowClose = null;
+
 		var assocIdToOtherItemsMark = {};
 
 		var bias; //a bias from long and lat to simulated differnt positions.
@@ -95,8 +97,16 @@
 				document.querySelector("#content_info_item").parentNode.parentNode.parentNode.parentNode.style.opacity = 0.8;
 			});
 
-			if (nearestItem)
+			if (nearestItem) {
+
+				if (currentWindowClose)
+					currentWindowClose();
 				infowindow.open(map, nearestItem);
+
+				currentWindowClose = function() {
+					infowindow.close(map, nearestItem);
+				}
+			}
 		}
 
 		function CenterControl(controlDiv, map) {
@@ -241,15 +251,31 @@
 					var visible = !userType;
 
 					google.maps.event.addListener(userMarker, 'click', function() {
-						if (visible)
-							infowindow.close(map, userMarker);
-						else
+						if (visible) {
+							if (currentWindowClose)
+								currentWindowClose();
+							//infowindow.close(map, userMarker);
+							//currentWindowOpen = null;
+						} else {
+							if (currentWindowClose)
+								currentWindowClose();
 							infowindow.open(map, userMarker);
+
+							currentWindowClose = function() {
+								infowindow.close(map, userMarker)
+							};
+						}
 						visible = !visible;
 					});
 
 					if (!userType) {
+						if (currentWindowClose)
+							currentWindowClose();
 						infowindow.open(map, userMarker);
+
+						currentWindowClose = function() {
+							infowindow.close(map, userMarker)
+						};
 					} else {
 						//console.log("we have a type " + userType);
 						app.kuzzleController.setUserType(userType);
@@ -307,10 +333,20 @@
 				var gmapPos = new google.maps.LatLng(position.lat, position.lon);
 
 				function toggleVisible() {
-					if (visible)
-						infowindow.close(map, otherMarker);
-					else
+					if (visible) {
+						if (currentWindowClose)
+							currentWindowClose();
+					}
+					//infowindow.close(map, otherMarker);
+					else {
+						if (currentWindowClose)
+							currentWindowClose();
 						infowindow.open(map, otherMarker);
+
+						currentWindowClose = function() {
+							infowindow.close(map, userMarker)
+						};
+					}
 					visible = !visible;
 				};
 
@@ -467,7 +503,13 @@
 					content: contentInfoNode
 				});
 
+				if (currentWindowClose)
+					currentWindowClose();
 				rideinfowindow.open(map, markerSource);
+
+				currentWindowClose = function() {
+					rideinfowindow.close(map, markerSource);
+				}
 
 				google.maps.event.addListener(rideinfowindow, 'closeclick', function() {
 					markerSource.setAnimation(null);

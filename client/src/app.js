@@ -373,15 +373,10 @@ var app = {
 					return;
 				} else {
 					var proposedByTaxy = (rideInfo.status === "proposed_by_taxi");
-					//
-
-					//if(userType == "customer" ){}
-					//var userId = app.userController.getUser().whoami._id;
 					var target = proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 					var source = !proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 
 					app.gisController.showPopupRideProposal(source, target).then(function(response) {
-						//if()
 						if (response === "accept") {
 							app.kuzzleController.acceptRideProposal(rideProposal);
 							return;
