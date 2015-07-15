@@ -288,9 +288,9 @@ var app = {
 				kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
 
 				if (userType === 'customer') {
-					refreshInterval = 6000;
+					refreshInterval = 60000;
 				} else if (userType === 'taxi') {
-					refreshInterval = 1000;
+					refreshInterval = 10000;
 				}
 
 				//app.gisController.resetAllMarks();
@@ -298,6 +298,7 @@ var app = {
 				if (refreshFilterTimer) {
 					clearInterval(refreshFilterTimer);
 				}
+				app.kuzzleController.refreshKuzzleFilter();
 
 				refreshFilterTimer = setInterval(function() {
 					//console.log("refresh inter " + userType);
