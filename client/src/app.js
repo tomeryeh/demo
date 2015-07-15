@@ -447,34 +447,40 @@ var app = {
 					_id: rideProposal._id,
 					status: 'accepted_by_' + myUserType
 				},
+				// All rides, except this one, proposed by others and involving me
 				listProposal = {
-					and: [{
-						term: {
-							status: 'proposed_by_' + (myUserType === 'taxi' ? 'customer' : 'taxi')
-						}
-					}, {
-						not: {
+					filter: {
+						and: [{
 							term: {
-								_id: rideProposal._id
+								status: 'proposed_by_' + (myUserType === 'taxi' ? 'customer' : 'taxi')
 							}
-						}
-					}]
+						}, {
+							not: {
+								ids: {
+									values: [rideProposal._id]
+								}
+							}
+						}]
+					}
+				},
+				userSubFilter = {
+					term: {}
 				};
 
-			listProposal.and[0].term[myUserType] = app.userController.getUser().whoami.type;
+			userSubFilter.term[myUserType] = app.userController.getUser().whoami._id;
+			listProposal.filter.and.push(userSubFilter);
 
 			app.userController.getUser().whoami.available = false;
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
-			console.log("ride accepted !");
 			currentRide = rideProposal;
 			app.gisController.showCenterControl();
-			return;
 
 			/*
 			At this point, we have 1 accepted ride proposal, and possibly multiple
 			ride proposed in the meantime.
 			So here we list these potential proposals and gracefully decline these
 			 */
+			console.log('=== LISTPROPOSAL FILTER:', listProposal);
 			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(searchResult) {
 				if (searchResult.error) {
 					console.log(new Error(searchResult.error));
@@ -483,10 +489,10 @@ var app = {
 				console.log("searresult ");
 				console.log(searchResult);
 
-				//searchResult.result.hits.hits.forEach(function(element) {
-				//	// element is not a ride document, but it contains the _id element we need to decline the ride
-				//	this.declineRideProposal(element);
-				//});
+				searchResult.result.hits.hits.forEach(function(element) {
+					// element is not a ride document, but it contains the _id element we need to decline the ride
+					app.kuzzleController.declineRideProposal(element);
+				});
 			});
 		},
 

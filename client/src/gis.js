@@ -188,8 +188,7 @@
 							leftText = customerSearchText;
 							rightText = wanabeTaxiForCustomer;
 						}
-					}
-					else {
+					} else {
 						leftText = "i need a ride";
 						rightText = "i'm looking of ra customer";
 					}
@@ -218,11 +217,10 @@
 						var right_cabble = document.querySelector("#right_cabble");
 
 						var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-						if(!userType){
+						if (!userType) {
 							right_cabble.disabled = false;
 							left_cabble.disabled = false;
-						}
-						else {
+						} else {
 							right_cabble.disabled = (userType == "taxi");
 							left_cabble.disabled = !(userType == "taxi");
 						}
@@ -398,7 +396,7 @@
 						propose_cabble.addEventListener("click", function(event) {
 							console.log("proposed to " + id);
 							//we are not already sending a request to this taxi/customer
-							if(!contentInfoNode.querySelector(".propose_cabble .loader")){
+							if (!contentInfoNode.querySelector(".propose_cabble .loader")) {
 								var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
 								propose_cabble.innerHTML = propose_cabble.innerHTML + loaderText;
 								app.kuzzleController.sendRideProposal(id);
@@ -447,7 +445,7 @@
 			},
 			moveSlowly: function() {
 				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-				if(userType !== "taxi")
+				if (userType !== "taxi")
 					return;
 				userPosition = new google.maps.LatLng(userMarker.position.lat() - -(Math.random() - 0.5) / 1000, userMarker.position.lng() - -(Math.random() - 0.5) / 1000);
 				userMarker.position = userPosition;
