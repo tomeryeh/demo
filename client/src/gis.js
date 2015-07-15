@@ -397,7 +397,12 @@
 						var propose_cabble = contentInfoNode.querySelector(".propose_cabble");
 						propose_cabble.addEventListener("click", function(event) {
 							console.log("proposed to " + id);
-							app.kuzzleController.sendRideProposal(id);
+							//we are not already sending a request to this taxi/customer
+							if(!contentInfoNode.querySelector(".propose_cabble .loader")){
+								var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
+								propose_cabble.innerHTML = propose_cabble.innerHTML + loaderText;
+								app.kuzzleController.sendRideProposal(id);
+							}
 						});
 
 						var cancel_cabble = contentInfoNode.querySelector(".cancel_cabble");
