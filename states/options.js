@@ -48,7 +48,8 @@ OptionsState.prototype = {
         sprite.height = 360;
 
         musicOptions = this.game.add.audio('music-options');
-        if(this.game.hasMusic) musicOptions.fadeIn();
+        musicOptions.loop = true;
+        if(this.game.hasMusic) musicOptions.play();
 
         var kuzzle = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'kuzzle');
         kuzzle.anchor.setTo(0.5, 1.25);
@@ -56,6 +57,13 @@ OptionsState.prototype = {
         var blurX = this.game.add.filter('BlurX');
         var blurY = this.game.add.filter('BlurY');
         kuzzle.filters = [blurX, blurY];
+
+        filterPixelate3      = new PIXI.PixelateFilter();
+        filterPixelate3.size = {x: 3, y: 3};
+        var tournament = game.add.bitmapText(425, 150, 'font', 'Tournament!!', 56);
+        tournament.filters = [filterPixelate3, blurX, blurY];
+        tournament.anchor.setTo(0.5, 0.5);
+        this.game.add.tween(tournament.scale).to({ x: 0.92, y: 0.92}, 980, Phaser.Easing.Elastic.Out, true, 0, -1);
 
         sprite.filters = [filter, blurX, blurY];
 

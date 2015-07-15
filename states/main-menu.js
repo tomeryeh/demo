@@ -50,11 +50,19 @@ MainMenuState.prototype = {
         sprite.filters = [filter];
 
         musicMainMenu = this.game.add.audio('music-main-menu');
+        musicMainMenu.loop = true;
         if(this.game.hasMusic) musicMainMenu.play();
 
         var kuzzle = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'kuzzle');
         kuzzle.anchor.setTo(0.5, 1.25);
         this.game.add.tween(kuzzle.scale).to({ x: 1.18, y: 1.18}, 440, Phaser.Easing.Elastic.Out, true, 0, -1);
+
+        filterPixelate3      = new PIXI.PixelateFilter();
+        filterPixelate3.size = {x: 3, y: 3};
+        var tournament = game.add.bitmapText(425, 150, 'font', 'Tournament!!', 56);
+        tournament.filters = [filterPixelate3];
+        tournament.anchor.setTo(0.5, 0.5);
+        this.game.add.tween(tournament.scale).to({ x: 1.4, y: 1.4}, 440, Phaser.Easing.Elastic.Out, true, 0, -1);
 
         menuItem = [
             {

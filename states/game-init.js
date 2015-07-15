@@ -32,10 +32,10 @@ GameInitState.prototype = {
 
         var style = {font: "24px Helvetica", fill: 0x000000, align: "center"};
 
-        initRules = game.add.text(100, 100, 'Test', style);
+        initRules = game.add.text(50, 100, 'Test', style);
         initRules.alpha = 0.0;
 
-        initLevel = game.add.text(100, 100 + 100, 'Test', style);
+        initLevel = game.add.text(50, 100 + 100, 'Test', style);
         initLevel.alpha = 0.0;
     },
     generateRoundRules: function() {

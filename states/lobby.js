@@ -1,4 +1,4 @@
-var minimumPlayers = 1;
+var minimumPlayers = 4;
 function LobbyState() {}
 LobbyState.prototype = {
     init: function(initData) {

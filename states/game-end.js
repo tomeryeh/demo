@@ -25,7 +25,7 @@ GameEndState.prototype = {
 
         var style = {font: "24px Helvetica", fill: 0x000000, align: "center"};
 
-        winner = game.add.text(100, 100, 'Test', style);
+        winner = game.add.text(50, 100, 'Test', style);
         winner.alpha = 0.0;
 
         if(game.player.isMaster) {

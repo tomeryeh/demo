@@ -6,13 +6,15 @@ PreloadState.prototype = {
         this.game.load.script('blurY', 'engine/filters/BlurY.js');
         this.game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
         this.game.load.image('kuzzle', 'assets/sprites/kuzzle.png');
+        this.game.load.bitmapFont('font', 'assets/fonts/font.png', 'assets/fonts/font.fnt');
 
         // Music
-        this.game.load.audio('music-main-menu', 'assets/musics/boot-sequence.wav');
+        //this.game.load.audio('music-main-menu', 'assets/musics/boot-sequence.wav');
         this.game.load.audio('music-options', 'assets/musics/hot-pursuit.wav');
         this.game.load.audio('music-connecting', 'assets/musics/cyber-soldier.wav');
         this.game.load.audio('music-lobby', 'assets/musics/lobby.mp3');
-        this.game.load.audio('music-game', 'assets/musics/twin-turbo.wav');
+        this.game.load.audio('music-game', 'assets/musics/twin-turbo.mp3');
+        this.game.load.audio('music-main-menu', 'assets/musics/epic-song.mp3');
 
             // Intro
         this.game.load.image('title', 'assets/sprites/title.png');
@@ -38,7 +40,7 @@ PreloadState.prototype = {
         this.game.load.image('go-unselected', 'assets/sprites/options/go-orange.png');
 
         // Credits
-        this.game.load.image('pixi-js', 'assets/sprites/credits/pixi-js.png');
+        this.game.load.image('phaser2', 'assets/sprites/credits/phaser2.png');
     },
     create: function() {
         this.game.stateTransition = this.game.plugins.add(Phaser.Plugin.StateTransition);

@@ -28,6 +28,7 @@ GameRoundNoMonsterState.prototype = {
         self = this;
         self.initData = initData;
         game.player = initData.player;
+        game.player.hp = defaultHp;
         game.player.isAlive = true;
         playersToConnect = initData.players;
         room = {
@@ -36,6 +37,7 @@ GameRoundNoMonsterState.prototype = {
         };
         lasers = [];
         nades = [];
+        nadeCount = 3;
         /*roomIdPlayers = kuzzle.subscribe('kf-users', {"exists": {"field": "username"}}, function (dataPlayer) {
             console.log('New player');
             if (dataPlayer.result.action == "create" && dataPlayer.result._id != game.player.id) {
@@ -68,20 +70,33 @@ GameRoundNoMonsterState.prototype = {
         /*game.load.tilemap('mario-map', 'assets/maps/mario.csv', null, Phaser.Tilemap.CSV);
         game.load.image('tiles-mario', 'assets/sprites/game-round/tiles-mario.png');*/
 
-        game.load.bitmapFont('font', 'assets/fonts/font.png', 'assets/fonts/font.fnt');
-
         game.load.spritesheet('pierre-idle', 'assets/sprites/game-round/pierre-idle.png', 42, 102, 2);
         game.load.spritesheet('pierre-run', 'assets/sprites/game-round/pierre-run.png', 42, 102, 2);
 
         game.load.audio('groundpound', 'assets/sounds/groundpound.wav');
+        game.load.audio('nade-countdown', 'assets/sounds/nade-countdown.wav');
+        game.load.audio('nade', 'assets/sounds/nade.wav');
+        game.load.audio('footstep', 'assets/sounds/footstep.wav');
+        game.load.audio('start-game', 'assets/sounds/start-game.wav');
+        game.load.audio('laser1', 'assets/sounds/laser1.wav');
+        game.load.audio('laser2', 'assets/sounds/laser2.wav');
 
         game.time.advancedTiming = true;
     },
     create: function() {
         musicGameRound = game.add.audio('music-game');
-        if(game.hasMusic) musicGameRound.fadeIn();
+        //musicGameRound.loop = true;
+        if(game.hasMusic) musicGameRound.play();
 
         audioGroundpound = game.add.audio('groundpound');
+        audioNadeCountdown = game.add.audio('nade-countdown');
+        audioNade = game.add.audio('nade');
+        audioFootstep = game.add.audio('footstep');
+        audioStartGame = game.add.audio('start-game');
+        audioLaser1 = game.add.audio('laser1');
+        audioLaser2 = game.add.audio('laser2');
+
+        audioStartGame.play();
 
         filterPixelate6      = new PIXI.PixelateFilter();
         filterPixelate6.size = {x: 6, y: 6};
@@ -496,6 +511,7 @@ GameRoundNoMonsterState.prototype = {
                 game.physics.arcade.collide(n, p);
             });
             if(n.timer <= 0) {
+                audioNade.play();
                 if(n.owner == game.player.id) {
                     if(game.physics.arcade.distanceBetween(n, player) < 250 && game.player.isAlive) {
                         var dmg = Math.floor(Math.sin(((250 - game.physics.arcade.distanceBetween(n, player)) / 250) * (Math.PI / 2)) * defaultHp);
@@ -543,6 +559,7 @@ GameRoundNoMonsterState.prototype = {
         });
     },
     shootLaser: function() {
+        audioLaser1.play();
         var posX = direction == 'right' ? player.x : player.x - 80;
         var laser = game.add.sprite(posX, player.y - 80, 'laser');
         game.physics.enable(laser, Phaser.Physics.ARCADE);
@@ -566,6 +583,7 @@ GameRoundNoMonsterState.prototype = {
         lasers.push(laser);
     },
     spawnLaser: function(owner, x, y) {
+        audioLaser2.play();
         var vx = 1200;
         var posX = x;
         if(owner.going == 'right') {
@@ -597,6 +615,7 @@ GameRoundNoMonsterState.prototype = {
         laser.destroy();
     },
     throwNade: function() {
+        audioNadeCountdown.play();
         var posX = direction == 'right' ? player.x : player.x - 80;
         var nade = game.add.sprite(posX, player.y - 80, 'nade');
         game.physics.enable(nade, Phaser.Physics.ARCADE);
@@ -625,6 +644,7 @@ GameRoundNoMonsterState.prototype = {
         nades.push(nade);
     },
     spawnNade: function(owner, x, y) {
+        audioNadeCountdown.play();
         var vx = 500;
         if(owner.going == 'right')
             vx = 500;
@@ -658,10 +678,6 @@ GameRoundNoMonsterState.prototype = {
             enemy = getPlayerById(e.id);
             game.juicy.shake(30, 60);
             flying = false;
-            /*enemy.hp -= groundPoundDamage;
-            enemy.hpMeter.text = enemy.hp;
-            enemy.hpMeter.tint = Phaser.Color.interpolateColor(0xFF0000, 0xFFFFFF, defaultHp, enemy.hp);
-            this.tweenTint(enemy.sprite, 0x333333, 0xFF11FF, 100);*/
             hasDamaged.push({id: enemy.id, dmg: groundPoundDamage});
             self.playerTakesDamage(enemy, groundPoundDamage, true);
         }
@@ -673,7 +689,6 @@ GameRoundNoMonsterState.prototype = {
         }
     },
     playerTakesDamage: function(p, dmg, iKilled) {
-        p.blood.start(false, 1500, 2);
         self.tweenTint(p.sprite, 0x333333, 0xFF11FF, 100);
         p.hp -= dmg;
         p.hpMeter.text = p.hp;
@@ -681,10 +696,8 @@ GameRoundNoMonsterState.prototype = {
         if(p.hp <= 0) {
             self.playerDies(p, iKilled);
         }
-        p.blood.on = false;
     },
     iTakeDamage: function(enemy, dmg) {
-        blood.start(false, 1500, 2);
         self.tweenTint(player, 0x333333, 0xFF11FF, 100);
         game.player.hp -= dmg;
         hpMeter.text = game.player.hp;
@@ -692,7 +705,6 @@ GameRoundNoMonsterState.prototype = {
         if(game.player.hp <= 0) {
             self.iDie(enemy);
         }
-        blood.on = false;
     },
     playerDies: function(p, iKilled) {
         p.isAlive = false;
@@ -704,7 +716,6 @@ GameRoundNoMonsterState.prototype = {
         game.add.tween(p.shadow).to({alpha: 0.0}, 500, 'Linear').start();
         dieAnimation.onComplete.add(function() {
             p.sprite.body.enable = false;
-            //p.sprite.destroy();
             p.shadow.destroy();
             p.blood.on = false;
             if(iKilled) {
@@ -732,7 +743,6 @@ GameRoundNoMonsterState.prototype = {
         game.add.tween(playerShadow).to({alpha: 0.0}, 500, 'Linear').start();
         dieAnimation.onComplete.add(function() {
             player.body.enable = false;
-            //player.destroy();
             playerShadow.destroy();
             blood.on = false;
             if(enemy.id == game.player.id) {
@@ -786,6 +796,7 @@ GameRoundNoMonsterState.prototype = {
     prepareToGameEnd: function() {
         game.add.tween(blurSprite).to({alpha: 0.5}, 2000, 'Linear').start();
         setTimeout(function() {
+            musicGameRound.stop();
             game.stateTransition.to('game-end', true, false, room);
         }, 2000);
     },
