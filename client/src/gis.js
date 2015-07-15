@@ -430,6 +430,9 @@
 				};
 			},
 			moveSlowly: function() {
+				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+				if(userType !== "taxi")
+					return;
 				userPosition = new google.maps.LatLng(userMarker.position.lat() - -(Math.random() - 0.5) / 1000, userMarker.position.lng() - -(Math.random() - 0.5) / 1000);
 				userMarker.position = userPosition;
 

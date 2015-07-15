@@ -29,7 +29,7 @@ var app = {
 	init: function() {
 
 		//simulate taxi and customer not in the same position, and moving
-		app.simulate = false;
+		app.simulate = true;
 
 		//this.initUI();
 
@@ -147,8 +147,8 @@ var app = {
 	//////////////////(wanabee) static  privates attributes///////////////////////
 
 	var
-	//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
-		KUZZLE_URL = 'http://localhost:8081',
+		KUZZLE_URL = 'api.uat.kuzzle.io:7512',
+		//KUZZLE_URL = 'http://localhost:8081',
 		CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions',
 		CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users',
 		CABBLE_COLLECTION_RIDES = 'coding-challenge-cabble-rides';
@@ -348,13 +348,16 @@ var app = {
 				console.log("recie a ride ");
 				console.log(message);
 
-				app.kuzzleController.manageRideProposal(message.result);
+				app.kuzzleController.manageRideProposal(message);
 			});
 		},
 
 		manageRideProposal: function(rideProposal) {
 
-			var rideInfo = rideProposal._source;
+			var rideInfo = rideProposal.body;
+			//._source;
+			//if(!rideInfo)
+			//	rideInfo = rideProposal.body;
 
 			console.log(rideInfo);
 			if (!rideInfo) {
