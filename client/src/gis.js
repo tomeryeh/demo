@@ -189,6 +189,10 @@
 							rightText = wanabeTaxiForCustomer;
 						}
 					}
+					else {
+						leftText = "i need a ride";
+						rightText = "i'm looking of ra customer";
+					}
 
 					userMarker.setMap(map);
 
@@ -213,8 +217,15 @@
 						var left_cabble = document.querySelector("#left_cabble");
 						var right_cabble = document.querySelector("#right_cabble");
 
-						right_cabble.disabled = (userType == "taxi");
-						left_cabble.disabled = !(userType == "taxi");
+						var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+						if(!userType){
+							right_cabble.disabled = false;
+							left_cabble.disabled = false;
+						}
+						else {
+							right_cabble.disabled = (userType == "taxi");
+							left_cabble.disabled = !(userType == "taxi");
+						}
 
 						left_cabble.addEventListener("click", function(event) {
 							userMarker.setIcon(getIcon("customer"));
