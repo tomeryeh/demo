@@ -48,8 +48,8 @@ GameRoundNoMonsterState.prototype = {
             }
         });*/
         roomIdGameUpdates = kuzzle.subscribe('kf-room-1', {"term": {"roomId": "room1"}}, function (dataGameUpdate) {
-            if (dataGameUpdate.data.body.pid != game.player.id && game.state.current == 'game-round-no-monster') {
-                self.updateFromKuzzle(dataGameUpdate.data.body);
+            if (dataGameUpdate.body.pid != game.player.id && game.state.current == 'game-round-no-monster') {
+                self.updateFromKuzzle(dataGameUpdate.body);
             }
         });
         live = true;
@@ -70,8 +70,8 @@ GameRoundNoMonsterState.prototype = {
         /*game.load.tilemap('mario-map', 'assets/maps/mario.csv', null, Phaser.Tilemap.CSV);
         game.load.image('tiles-mario', 'assets/sprites/game-round/tiles-mario.png');*/
 
-        game.load.spritesheet('pierre-idle', 'assets/sprites/game-round/pierre-idle.png', 42, 102, 2);
-        game.load.spritesheet('pierre-run', 'assets/sprites/game-round/pierre-run.png', 42, 102, 2);
+        game.load.spritesheet('pierre', 'assets/sprites/game-round/pierre.png', 42, 102, 4);
+        //game.load.spritesheet('pierre-run', 'assets/sprites/game-round/pierre-run.png', 42, 102, 2);
 
         game.load.audio('groundpound', 'assets/sounds/groundpound.wav');
         game.load.audio('nade-countdown', 'assets/sounds/nade-countdown.wav');
@@ -86,7 +86,7 @@ GameRoundNoMonsterState.prototype = {
     create: function() {
         musicGameRound = game.add.audio('music-game');
         //musicGameRound.loop = true;
-        if(game.hasMusic) musicGameRound.play();
+        if(this.game.hasMusic) musicGameRound.play();
 
         audioGroundpound = game.add.audio('groundpound');
         audioNadeCountdown = game.add.audio('nade-countdown');
@@ -105,7 +105,7 @@ GameRoundNoMonsterState.prototype = {
 
         game.world.setBounds(0, 0, 400, 200);
 
-        if(room.params.level.id == 'CITY')
+        //if(room.params.level.id == 'CITY')
             background = game.add.sprite(game.world.centerX, game.world.centerY, 'city');
 
         game.renderer.renderSession.roundPixels = true;
@@ -123,10 +123,10 @@ GameRoundNoMonsterState.prototype = {
         blood        = self.addPlayerBlood();
         //game.camera.follow(player);
 
-        if(room.params.level.id == 'CITY') {
+        //if(room.params.level.id == 'CITY') {
             map = game.add.tilemap('city-map', 20, 20);
             map.addTilesetImage('tiles-city');
-        }
+        //}
         /*map = game.add.tilemap('mario-map', 21, 21);
         map.addTilesetImage('tiles-mario', 'tiles-mario', 21, 21, 2, 2);*/
         map.setCollisionBetween(0, 2000);
@@ -180,12 +180,14 @@ GameRoundNoMonsterState.prototype = {
     },
     addPlayer: function(id) {
         //var p = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
-        var p = game.add.sprite(Math.floor((Math.random() * (game.world.width - 200)) + 200), game.world.centerY, 'pierre-idle');
+        var p = game.add.sprite(Math.floor((Math.random() * (game.world.width - 200)) + 200), game.world.centerY, 'pierre');
+        p.animations.add('idle', [0, 1], 2, true);
+        p.animations.add('run', [2, 3], 3, true);
         game.physics.enable(p, Phaser.Physics.ARCADE);
         //p.filters = [filterPixelate6];
         //.blendMode = PIXI.blendModes.ADD;
         p.body.collideWorldBounds = true;
-        p.body.bounce.setTo(0.8, 0.5);
+        p.body.bounce.setTo(0.4, 0.4);
         p.body.linearDamping = 1;
         p.anchor.setTo(0.5, 1.0);
         p.hp = defaultHp;
@@ -193,8 +195,7 @@ GameRoundNoMonsterState.prototype = {
         //p.width = 64;
         p.width = 42;
         p.id = id;
-        //p.animations.add('idle');
-        //p.animations.play('idle', 2, true);
+        p.animations.play('idle');
         //p.scale.set(1.5);
 
         return p;
@@ -370,25 +371,19 @@ GameRoundNoMonsterState.prototype = {
             p.emitter.emitY = py;
             if(typeof p.going != "undefined") {
                 if(p.going == 'right') {
-                    p.sprite.loadTexture('pierre-run', 0, false);
-                    p.sprite.animations.add('run');
-                    p.sprite.animations.play('run', 3, true);
+                    p.sprite.animations.play('run');
                     game.add.tween(p.sprite.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
                     game.add.tween(p.shadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
                     p.changedDirection = false;
                     p.sprite.body.velocity.x = p.sprite.body.velocity.x - 10.0;
                 } else if(p.going == 'left') {
-                    p.sprite.loadTexture('pierre-run', 0, false);
-                    p.sprite.animations.add('run');
-                    p.sprite.animations.play('run', 3, true);
+                    p.sprite.animations.play('run');
                     game.add.tween(p.sprite.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
                     game.add.tween(p.shadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
                     p.changedDirection = false;
                     p.sprite.body.velocity.x = p.sprite.body.velocity.x + 10.0;
                 } else {
-                    p.sprite.loadTexture('pierre-idle', 0, false);
-                    p.sprite.animations.add('idle');
-                    p.sprite.animations.play('idle', 2, true);
+                    p.sprite.animations.play('idle');
                 }
             }
             game.physics.arcade.collide(p.sprite, layer);
@@ -404,25 +399,19 @@ GameRoundNoMonsterState.prototype = {
             player.body.velocity.x = 0.0;
         }
         if(player.body.velocity.x > 0.0) {
-            player.loadTexture('pierre-run', 0, false);
-            player.animations.add('run');
-            player.animations.play('run', 3, true);
+            player.play('run');
             direction = 'right';
             player.body.velocity.x = player.body.velocity.x - 10.0;
             game.add.tween(player.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
             game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
         } else if(player.body.velocity.x < 0.0) {
-            player.loadTexture('pierre-run', 0, false);
-            player.animations.add('run');
-            player.animations.play('run', 3, true);
+            player.play('run');
             direction = 'left';
             player.body.velocity.x = player.body.velocity.x + 10.0;
             game.add.tween(player.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
             game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
         } else {
-            player.loadTexture('pierre-idle', 0, false);
-            player.animations.add('idle');
-            player.animations.play('idle', 2, true);
+            player.play('idle');
         }
         if(player.body.onFloor()) {
             player.body.gravity.y = 1000;
@@ -795,10 +784,10 @@ GameRoundNoMonsterState.prototype = {
     },
     prepareToGameEnd: function() {
         game.add.tween(blurSprite).to({alpha: 0.5}, 2000, 'Linear').start();
-        setTimeout(function() {
+        //setTimeout(function() {
             musicGameRound.stop();
             game.stateTransition.to('game-end', true, false, room);
-        }, 2000);
+        //}, 2000);
     },
     tweenTint: function(obj, startColor, endColor, time) {
         var colorBlend = {step: 0};

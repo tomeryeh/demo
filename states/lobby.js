@@ -1,4 +1,4 @@
-var minimumPlayers = 4;
+var minimumPlayers = 2;
 function LobbyState() {}
 LobbyState.prototype = {
     init: function(initData) {
@@ -143,6 +143,7 @@ LobbyState.prototype = {
                     players: room.players
                 };
                 game.stateTransition.to('game-init', true, false, initData);
+                //game.stateTransition.to('game-round-no-monster', true, false, initData);
             }, 10000);
         }, 2000);
     },

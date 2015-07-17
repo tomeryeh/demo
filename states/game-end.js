@@ -30,7 +30,7 @@ GameEndState.prototype = {
 
         if(game.player.isMaster) {
             console.log('Clearing rules & ending for current room..');
-            setTimeout(function() {
+            //setTimeout(function() {
                 var updateQuery = {
                     _id: game.player.rid,
                     roundReady: false,
@@ -38,15 +38,15 @@ GameEndState.prototype = {
                 };
                 kuzzle.update('kf-rooms', updateQuery, function() {
                     console.log('Cleared game round rules and ending');
-                    setTimeout(function() {
+                    //setTimeout(function() {
                         initData = {
                             player: game.player,
                             players: room.players
                         };
                         game.stateTransition.to('game-init', true, false, initData);
-                    }, 5000);
+                    //}, 5000);
                 });
-            }, 5000);
+            //}, 5000);
         }
     },
     showWinner: function() {
@@ -60,12 +60,12 @@ GameEndState.prototype = {
         game.add.tween(winner.scale).to({x: 2.0, y: 2.0}, 1000, 'Bounce').delay(200).start();
         game.add.tween(winner).to({alpha: 1.0}, 500, 'Linear').delay(200).start();
 
-        setTimeout(function() {
+        //setTimeout(function() {
             initData = {
                 player: game.player,
                 players: room.players
             };
             game.stateTransition.to('game-init', true, false, initData);
-        }, 5000);
+        //}, 5000);
     }
 };

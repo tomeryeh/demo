@@ -123,7 +123,6 @@ MainMenuState.prototype = {
         menuItem[selectedMenu].selected = true;
     },
     selectMenuITem: function() {
-        musicMainMenu.stop();
         switch(this.getSelectedMenu().id) {
             case 'ONLINE_GAME':
                 this.selectOnlineGame();
@@ -137,13 +136,15 @@ MainMenuState.prototype = {
         }
     },
     selectOnlineGame: function() {
+        musicMainMenu.stop();
         this.game.stateTransition.to('connecting');
-        //this.game.stateTransition.to('game-round-no-monster');
     },
     selectOptions: function() {
+        musicMainMenu.stop();
         this.game.stateTransition.to('options');
     },
     selectCredits: function() {
+        musicMainMenu.stop();
         this.game.stateTransition.to('credits');
     },
     getSelectedMenu: function() {

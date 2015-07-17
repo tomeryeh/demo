@@ -16,16 +16,17 @@ GameInitState.prototype = {
             room.params = self.generateRoundRules();
             var updateQuery = {
                 _id: game.player.rid,
+                rid: game.player.rid,
                 params: room.params,
                 roundReady: true,
                 showWinner: false,
                 ending: null
             };
-            setTimeout(function() {
+            //setTimeout(function() {
                 kuzzle.update('kf-rooms', updateQuery, function () {
                     console.log('Pushed new game round rules to other players');
                 });
-            }, 3000);
+            //}, 3000);
         } else {
             console.log('Waiting for round rules from Kuzzle..');
         }
@@ -59,17 +60,17 @@ GameInitState.prototype = {
         initRules.text = 'Rules: ' + room.params.rules.label;
         initLevel.text = 'Level: ' + room.params.level.label;
 
-        game.add.tween(initRules.scale).to({x: 2.0, y: 2.0}, 2000, 'Bounce').start();
-        game.add.tween(initRules).to({alpha: 1.0}, 1000, 'Linear').start();
+        game.add.tween(initRules.scale).to({x: 2.0, y: 2.0}, 1000, 'Bounce').start();
+        game.add.tween(initRules).to({alpha: 1.0}, 500, 'Linear').start();
 
-        var levelScaleIn = game.add.tween(initLevel.scale).to({x: 2.0, y: 2.0}, 2000, 'Bounce').delay(2000).start();
-        game.add.tween(initLevel).to({alpha: 1.0}, 1000, 'Linear').delay(2000).start();
+        var levelScaleIn = game.add.tween(initLevel.scale).to({x: 2.0, y: 2.0}, 1000, 'Bounce').delay(500).start();
+        game.add.tween(initLevel).to({alpha: 1.0}, 500, 'Linear').delay(500).start();
 
         levelScaleIn.onComplete.add(function() {
-            setTimeout(function() {
+            //setTimeout(function() {
                 roundData.params = room.params;
                 game.stateTransition.to('game-round-no-monster', true, false, roundData);
-            }, 1000);
+            //}, 1000);
         }, this);
     }
 };
