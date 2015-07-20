@@ -17,9 +17,9 @@ BootState.prototype = {
         this.game.minimumPlayersPerRoom = 2;
         this.game.maximumPlayersPerRoom = 8;
 
-        //this.game.kuzzleUrl = 'http://localhost:8081';
-        this.game.kuzzleUrl = 'http://192.168.0.24:7512';
-        //this.game.kuzzleUrl = 'http://api.uat.kuzzle.io:7512';
+        //this.game.kuzzleUrl = 'http://localhost:7512';
+        //this.game.kuzzleUrl = 'http://192.168.0.24:7512';
+        this.game.kuzzleUrl = 'http://api.uat.kuzzle.io:7512';
 
         /*this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.scale.pageAlignHorizontally = true;

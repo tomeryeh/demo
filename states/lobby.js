@@ -41,7 +41,8 @@ LobbyState.prototype = {
                 room.players.push({
                     id: e._id,
                     username: e._source.username,
-                    color: e._source.color
+                    color: e._source.color,
+                    look: e._source.look
                 });
             });
             countdown = game.add.bitmapText(320, 180, 'font-lobby', 'Ready?', 96);
@@ -146,7 +147,6 @@ LobbyState.prototype = {
                 };
                 musicLobby.stop();
                 game.stateTransition.to('game-init', true, false, initData);
-                //game.stateTransition.to('game-round-no-monster', true, false, initData);
             }, 10000);
         }, 2000);
     },

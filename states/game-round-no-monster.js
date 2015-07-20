@@ -57,8 +57,8 @@ GameRoundNoMonsterState.prototype = {
         }
 
         roomIdGameUpdates = kuzzle.subscribe('kf-room-1', {"term": {"roomId": game.player.rid.toLowerCase()}}, function (dataGameUpdate) {
-            if (dataGameUpdate.data.body.pid != game.player.id && game.state.current == 'game-round-no-monster') {
-                self.updateFromKuzzle(dataGameUpdate.data.body);
+            if (dataGameUpdate.body.pid != game.player.id && game.state.current == 'game-round-no-monster') {
+                self.updateFromKuzzle(dataGameUpdate.body);
             }
         });
         live = true;
@@ -86,6 +86,7 @@ GameRoundNoMonsterState.prototype = {
         game.load.image('tiles-glitch', 'assets/sprites/game-round/tiles-glitch.png');
 
         game.load.spritesheet('pierre', 'assets/sprites/game-round/pierre.png', 42, 102, 4);
+        game.load.spritesheet('gilles', 'assets/sprites/game-round/gilles.png', 42, 102, 4);
 
         game.load.audio('groundpound', 'assets/sounds/groundpound.wav');
         game.load.audio('nade-countdown', 'assets/sounds/nade-countdown.wav');
@@ -133,8 +134,8 @@ GameRoundNoMonsterState.prototype = {
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 1000;
 
-        playerShadow = self.addPlayerShadow();
-        player       = self.addPlayer(game.player.id);
+        playerShadow = self.addPlayerShadow(game.player.look);
+        player       = self.addPlayer(game.player.id, game.player.look);
         emitter      = self.addPlayerEmitter();
         hpMeter      = self.addPlayerHPMeter();
         tag          = self.addPlayerTag(game.player.username);
@@ -211,9 +212,8 @@ GameRoundNoMonsterState.prototype = {
     switchKuzzleSynch: function() {
         live = !live;
     },
-    addPlayer: function(id) {
-        //var p = game.add.sprite(game.world.centerX, game.world.centerY, 'player');
-        var p = game.add.sprite(Math.floor((Math.random() * (game.world.width - 200)) + 200), game.world.centerY, 'pierre');
+    addPlayer: function(id, look) {
+        var p = game.add.sprite(Math.floor((Math.random() * (game.world.width - 200)) + 200), game.world.centerY, look);
         p.animations.add('idle', [0, 1], 2, true);
         p.animations.add('run', [2, 3], 3, true);
         game.physics.enable(p, Phaser.Physics.ARCADE);
@@ -233,8 +233,8 @@ GameRoundNoMonsterState.prototype = {
 
         return p;
     },
-    addPlayerShadow: function() {
-        var ps = game.add.sprite(game.world.centerX, game.world.centerY, 'pierre');
+    addPlayerShadow: function(look) {
+        var ps = game.add.sprite(game.world.centerX, game.world.centerY, look);
         ps.animations.add('idle', [0, 1], 2, true);
         ps.animations.add('run', [2, 3], 3, true);
         ps.anchor.setTo(0.5, 1.0);
@@ -351,6 +351,7 @@ GameRoundNoMonsterState.prototype = {
             kuzzle.create("kf-room-1", {
                 roomId   : game.player.rid.toLowerCase(),
                 pid      : game.player.id,
+                look     : game.player.look,
                 username : game.player.username,
                 hp       : game.player.hp,
                 x        : player.x,
@@ -944,14 +945,15 @@ GameRoundNoMonsterState.prototype = {
         console.log('Player connected: ' + p.username);
         var newPlayer = {
             id             : p.id,
+            look           : p.look,
             kflastconnected: 0,
             kfconnected    : 0,
             username       : p.username,
             isAlive        : true,
             color          : p.color,
             hp             : defaultHp,
-            shadow         : this.addPlayerShadow(),
-            sprite         : this.addPlayer(p.id),
+            shadow         : this.addPlayerShadow(p.look),
+            sprite         : this.addPlayer(p.id, p.look),
             emitter        : this.addPlayerEmitter(),
             hpMeter        : this.addPlayerHPMeter(),
             tag            : this.addPlayerTag(p.username),

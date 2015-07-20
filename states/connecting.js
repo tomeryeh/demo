@@ -130,10 +130,9 @@ ConnectingState.prototype = {
         console.log('Now subscribing to collections..');
         connectText.setText("Connecting to Kuzzle..\nOK!");
         roomIdPlayers = kuzzle.subscribe('kf-users', {"term": {"roomId": roomId}}, function(data) {
-            console.log(data);
-            if(data.result.action == "create" && data.result._id != game.player.id) {
-                var newPlayer = {id: data.result._id, username: data.result._source.username, color: data.result._source.color};
-                var text = game.add.text(320, 180, "- Awesome! -\nA new player joined:\n" + data.result._source.username);
+            if(data.action == "create" && data._id != game.player.id) {
+                var newPlayer = {id: data._id, username: data.body.username, color: data.body.color, look: data.body.look};
+                var text = game.add.text(320, 180, "- Awesome! -\nA new player joined:\n" + data.body.username);
                 text.font = 'Arial';
                 text.fontWeight = 'bold';
                 text.fontSize = 48;
@@ -150,8 +149,8 @@ ConnectingState.prototype = {
                     self.handleConnect(newPlayer);
                 }
             }
-            if(data.result.action == "delete") {
-                var deletedPlayer = getPlayerById(data.result._id);
+            if(data.action == "delete") {
+                var deletedPlayer = getPlayerById(data._id);
                 console.log('deleted player: ');
                 console.log(deletedPlayer);
                 var deletedUsername = deletedPlayer.username;
@@ -174,17 +173,17 @@ ConnectingState.prototype = {
                     self.handleDisconnect(deletedPlayer);
                 }
             }
-            if(data.result.action == "update") {
-                if(!getPlayerById(data.result._id) && data.result._id != game.player.id) {
-                    var newPlayer = {id: data.result._id, username: data.result._source.username, color: data.result._source.color};
+            if(data.action == "update") {
+                if(!getPlayerById(data._id) && data._id != game.player.id) {
+                    var newPlayer = {id: data._id, username: data.body.username, color: data.body.color, look: data.body.look};
                     if(typeof self.handleConnect == 'function') {
                         self.handleConnect(newPlayer);
                     }
                 } else {
                     room.players.forEach(function(p) {
-                        if(p.id == data.result._id && data.result._id != game.player.id)  {
-                            if(typeof data.result._source.kflastconnected != "undefined") {
-                                p.kflastconnected = data.result._source.kflastconnected;
+                        if(p.id == data._id && data._id != game.player.id)  {
+                            if(typeof data.body.kflastconnected != "undefined") {
+                                p.kflastconnected = data.body.kflastconnected;
                                 p.kfconnected = p.kflastconnected;
                             }
                         }
@@ -194,41 +193,43 @@ ConnectingState.prototype = {
         });
         roomIdRoom = kuzzle.subscribe('kf-rooms', {"term": {"rid": roomId}}, function(data) {
             console.log('Update to room!');
-            if(data.result.action == "update") {
+            if(data.action == "update") {
                 if(typeof gameState == "undefined") {
                     gameState = "";
                 }
-                if(!game.player.isMaster && (data.result._source.master == game.player.id)) {
+                if(!game.player.isMaster && (data.body.master == game.player.id)) {
                     console.log('You are now the new master of this room');
                     game.player.isMaster = true;
                 }
-                if(data.result._source.params != null) {
-                    room.params = data.result._source.params;
+                if(data.body.params != null) {
+                    room.params = data.body.params;
                 }
-                if(data.result._source.roundReady && game.state.current == 'game-init' && room.params != null && gameState != "STARTING") {
+                if(data.body.roundReady && game.state.current == 'game-init' && room.params != null && gameState != "STARTING") {
                     gameState = 'STARTING';
                     self.runGameRound();
                 }
-                if(data.result._source.ending != null && game.state.current == 'game-round-no-monster' && gameState != 'ENDING') {
+                if(data.body.ending != null && game.state.current == 'game-round-no-monster' && gameState != 'ENDING') {
                     gameState = 'ENDING';
-                    room.ending = data.result._source.ending;
+                    room.ending = data.body.ending;
                     self.prepareToGameEnd();
                 }
-                if(data.result._source.showWinner == true && game.state.current == 'game-end' && gameState != 'SHOWING_WINNER') {
+                if(data.body.showWinner == true && game.state.current == 'game-end' && gameState != 'SHOWING_WINNER') {
                     gameState = 'SHOWING_WINNER';
                     self.showWinner();
                 }
             }
-            if(data.result.action == 'delete') {
-                console.log('Deleted room #' + data.result._id);
+            if(data.action == 'delete') {
+                console.log('Deleted room #' + data._id);
             }
         });
         connectTextTweenOut.start();
     },
     test: function() {
         var randColor = Phaser.Color.getRandomColor(30, 220);
-        kuzzle.create("kf-users", {username: kuzzleGame.name, color: randColor}, true, function(createData) {
-            game.player = {id: createData.result._id, username: kuzzleGame.name, color: randColor, hp: 50};
+        var looks = ["pierre", "gilles"];
+        var look = looks[Math.floor(Math.random() * looks.length)];
+        kuzzle.create("kf-users", {username: kuzzleGame.name, color: randColor, look: look}, true, function(createData) {
+            game.player = {id: createData.result._id, username: kuzzleGame.name, color: randColor, hp: 50, look: look};
             kuzzle.search('kf-rooms', {"filter": {"exists": {"field": "connectedPlayers"}}}, function (totalRooms) {
                 if(totalRooms.result.hits.total == 0) {
                     console.log('No room found, creating..');
