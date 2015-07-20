@@ -147,7 +147,7 @@ LobbyState.prototype = {
                 musicLobby.stop();
                 game.stateTransition.to('game-init', true, false, initData);
                 //game.stateTransition.to('game-round-no-monster', true, false, initData);
-            }, 1000);
+            }, 10000);
         }, 2000);
     },
     tweenTint: function(obj, startColor, endColor, time) {
