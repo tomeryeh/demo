@@ -142,7 +142,7 @@ ConnectingState.prototype = {
                 grd.addColorStop(1, '#004CB3');
                 text.fill = grd;
                 text.anchor.set(0.5);
-                text.alpha = 1.0;
+                text.alpha = 0.0;
                 var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
                 game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
                 if(typeof self.handleConnect == 'function') {
@@ -166,7 +166,7 @@ ConnectingState.prototype = {
                 grd.addColorStop(1, '#823B3B');
                 text.fill = grd;
                 text.anchor.set(0.5);
-                text.alpha = 1.0;
+                text.alpha = 0.0;
                 var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
                 game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
                 if(typeof self.handleDisconnect == 'function') {
