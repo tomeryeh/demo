@@ -6,6 +6,9 @@ GameEndState.prototype = {
         roundEndData = initData;
     },
     create: function() {
+        musicInit = this.game.add.audio('music-game');
+        if(this.game.hasMusic) musicInit.play();
+
         game.stage.backgroundColor = 0xFFFFFF;
 
         w = null;
@@ -20,6 +23,17 @@ GameEndState.prototype = {
                     w = w.username;
                 }
                 break;
+            case 'TM':
+                if(room.ending.winners == 'blue') {
+                    w = 'blue team';
+                }
+                if(room.ending.winners == 'red') {
+                    w = 'red team';
+                }
+                if(room.ending.winners == currentTeam) {
+                    iWon = true;
+                }
+                break;
         }
         console.log('Match over. Winner: ' + w);
 
@@ -30,7 +44,7 @@ GameEndState.prototype = {
 
         if(game.player.isMaster) {
             console.log('Clearing rules & ending for current room..');
-            //setTimeout(function() {
+            setTimeout(function() {
                 var updateQuery = {
                     _id: game.player.rid,
                     roundReady: false,
@@ -38,34 +52,46 @@ GameEndState.prototype = {
                 };
                 kuzzle.update('kf-rooms', updateQuery, function() {
                     console.log('Cleared game round rules and ending');
-                    //setTimeout(function() {
+                    /*setTimeout(function() {
                         initData = {
                             player: game.player,
                             players: room.players
                         };
                         game.stateTransition.to('game-init', true, false, initData);
-                    //}, 5000);
+                    }, 2000);*/
                 });
-            //}, 5000);
+            }, 2000);
         }
     },
     showWinner: function() {
+        switch(room.params.rules.id) {
+            case 'FFA':
+                if(iWon) {
+                    winner.text = 'Congratulations!\nYou won!';
+                } else {
+                    winner.text = 'The winner is ' + w;
+                }
+                break;
+            case 'TM':
+                if(iWon) {
+                    winner.text = 'Congratulations!\nYour team won!';
+                } else {
+                    winner.text = 'The winner team\nis: ' + w;
+                }
+                break;
+        }
         room.params = null;
         room.ending = null;
-        if(iWon) {
-            winner.text = 'Congratulations, you won!';
-        } else {
-            winner.text = 'The winner is: ' + w;
-        }
         game.add.tween(winner.scale).to({x: 2.0, y: 2.0}, 1000, 'Bounce').delay(200).start();
         game.add.tween(winner).to({alpha: 1.0}, 500, 'Linear').delay(200).start();
 
-        //setTimeout(function() {
+        setTimeout(function() {
             initData = {
                 player: game.player,
                 players: room.players
             };
+            musicInit.stop();
             game.stateTransition.to('game-init', true, false, initData);
-        //}, 5000);
+        }, 2000);
     }
 };

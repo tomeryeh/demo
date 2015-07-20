@@ -6,6 +6,9 @@ GameInitState.prototype = {
         roundData = initData;
     },
     create: function() {
+        musicInit = this.game.add.audio('music-game');
+        if(this.game.hasMusic) musicInit.play();
+
         room.params = null;
 
         game.stage.backgroundColor = 0xFFFFFF;
@@ -22,11 +25,27 @@ GameInitState.prototype = {
                 showWinner: false,
                 ending: null
             };
-            //setTimeout(function() {
+            if(room.params.rules.id == 'TM') {
+                self.shufflePlayers(room.players);
+                var blueTeam = [];
+                var redTeam = [];
+                room.players.forEach(function(p, i) {
+                    if(i % 2 === 0)
+                        blueTeam.push(p.id);
+                    else
+                        redTeam.push(p.id)
+                });
+                var teams = {
+                    red: redTeam,
+                    blue: blueTeam
+                };
+                room.params.teams = teams;
+            }
+            setTimeout(function() {
                 kuzzle.update('kf-rooms', updateQuery, function () {
                     console.log('Pushed new game round rules to other players');
                 });
-            //}, 3000);
+            }, 2000);
         } else {
             console.log('Waiting for round rules from Kuzzle..');
         }
@@ -41,12 +60,22 @@ GameInitState.prototype = {
     },
     generateRoundRules: function() {
         var modes = [
-            {id: 'FFA', label: 'Free for all'},
-            /*{id: 'TM', label: 'Team match'}*/
+            {id: 'FFA', label: 'Free for all!'}
         ];
+        var foundMe = false;
+        room.players.forEach(function(p) {
+            if(p.id == game.player.id)
+                foundMe = true;
+        });
+        if(!foundMe)
+            room.players.push(game.player);
+        if(room.players.length >= 2) {
+            modes.push({id: 'TM', label: 'Team match!'});
+        }
         var levels = [
             {id: 'CITY', label: 'City'},
-            /*{id: 'KUZZLE', label: 'Kuzzle'}*/
+            {id: 'KUZZLE', label: 'Kuzzle'},
+            {id: 'GLITCH', label: 'Glitch world'}
         ];
 
         return {
@@ -67,10 +96,15 @@ GameInitState.prototype = {
         game.add.tween(initLevel).to({alpha: 1.0}, 500, 'Linear').delay(500).start();
 
         levelScaleIn.onComplete.add(function() {
-            //setTimeout(function() {
+            setTimeout(function() {
                 roundData.params = room.params;
+                musicInit.stop();
                 game.stateTransition.to('game-round-no-monster', true, false, roundData);
-            //}, 1000);
+            }, 2000);
         }, this);
+    },
+    shufflePlayers: function(_players) {
+        for(var j, x, i = _players.length; i; j = Math.floor(Math.random() * i), x = _players[--i], _players[i] = _players[j], _players[j] = x);
+        return _players;
     }
 };

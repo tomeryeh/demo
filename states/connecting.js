@@ -7,7 +7,7 @@ ConnectingState.prototype = {
         musicConnecting = this.game.add.audio('music-connecting');
         if(this.game.hasMusic) musicConnecting.play();
 
-        var fragmentSrc = [
+        fragmentSrc = [
             "precision mediump float;",
             "uniform float     time;",
             "uniform vec2      resolution;",
@@ -57,12 +57,12 @@ ConnectingState.prototype = {
         var blurY = this.game.add.filter('BlurY');
         sprite.filters = [filter/*, blurX, blurY*/];
 
-        var kuzzleLogo = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'kuzzle');
+        kuzzleLogo = this.game.add.sprite(320, 180, 'kuzzleTitle');
         kuzzleLogo.anchor.setTo(0.5, 1.25);
         this.game.add.tween(kuzzleLogo.scale).to({x: 6.0, y: 6.0}, 200, Phaser.Easing.Exponential.Out).start();
         kuzzleLogo.filters = [blurX, blurY];
 
-        menuItem = [
+        menuItemConnecting = [
             {
                 id: 'OK',
                 selected: true,
@@ -75,13 +75,13 @@ ConnectingState.prototype = {
             }
         ];
 
-        menuItem[0]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'go-selected');
-        menuItem[0]['sprite'].anchor.setTo(0.5, -0.5);
-        this.game.add.tween(menuItem[0]['sprite']).from({x: 1200}, 1200, Phaser.Easing.Quintic.Out).start();
+        menuItemConnecting[0]['sprite'] = this.game.add.sprite(320, 180, 'go-selected');
+        menuItemConnecting[0]['sprite'].anchor.setTo(0.5, -0.5);
+        this.game.add.tween(menuItemConnecting[0]['sprite']).from({x: 1200}, 1200, Phaser.Easing.Quintic.Out).start();
 
-        menuItem[1]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'options-menu-back-unselected');
-        menuItem[1]['sprite'].anchor.setTo(0.5, -2.5);
-        this.game.add.tween(menuItem[1]['sprite']).from({x: 1200}, 1200, Phaser.Easing.Quintic.Out).delay(200).start();
+        menuItemConnecting[1]['sprite'] = this.game.add.sprite(320, 180, 'options-menu-back-unselected');
+        menuItemConnecting[1]['sprite'].anchor.setTo(0.5, -2.5);
+        this.game.add.tween(menuItemConnecting[1]['sprite']).from({x: 1200}, 1200, Phaser.Easing.Quintic.Out).delay(200).start();
 
         kuzzle = new Kuzzle(this.game.kuzzleUrl);
         kuzzleGame = this.game;
@@ -93,17 +93,17 @@ ConnectingState.prototype = {
         this.keyUp.onDown.add(this.updateMenu, this);
 
         this.enterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-        this.enterKey.onDown.add(this.selectMenuITem, this);
+        this.enterKey.onDown.add(this.selectMenuItem, this);
 
         this.enterName();
 
-        menuItem[0]['sprite'].inputEnabled = true;
-        menuItem[0]['sprite'].events.onInputDown.add(this.selectName, this);
-        menuItem[1]['sprite'].inputEnabled = true;
-        menuItem[1]['sprite'].events.onInputDown.add(this.selectBack, this);
+        menuItemConnecting[0]['sprite'].inputEnabled = true;
+        menuItemConnecting[0]['sprite'].events.onInputDown.add(this.selectName, this);
+        menuItemConnecting[1]['sprite'].inputEnabled = true;
+        menuItemConnecting[1]['sprite'].events.onInputDown.add(this.selectBack, this);
     },
     connectToKuzzle: function() {
-        connectText = this.game.add.text(this.game.world.centerX, this.game.world.centerY, "Connecting to Kuzzle..\n");
+        connectText = this.game.add.text(320, 180, "Connecting to Kuzzle..\n");
         connectText.font = 'Arial';
         connectText.fontWeight = 'bold';
         connectText.fontSize = 36;
@@ -131,9 +131,9 @@ ConnectingState.prototype = {
         connectText.setText("Connecting to Kuzzle..\nOK!");
         roomIdPlayers = kuzzle.subscribe('kf-users', {"term": {"roomId": roomId}}, function(data) {
             console.log(data);
-            if(data.action == "create" && data._id != game.player.id) {
-                var newPlayer = {id: data._id, username: data.body.username, color: data.body.color};
-                var text = game.add.text(game.world.centerX, game.world.centerY, "- Awesome! -\nA new player joined:\n" + data.body.username);
+            if(data.result.action == "create" && data.result._id != game.player.id) {
+                var newPlayer = {id: data.result._id, username: data.result._source.username, color: data.result._source.color};
+                var text = game.add.text(320, 180, "- Awesome! -\nA new player joined:\n" + data.result._source.username);
                 text.font = 'Arial';
                 text.fontWeight = 'bold';
                 text.fontSize = 48;
@@ -143,19 +143,19 @@ ConnectingState.prototype = {
                 grd.addColorStop(1, '#004CB3');
                 text.fill = grd;
                 text.anchor.set(0.5);
-                text.alpha = 0.0;
+                text.alpha = 1.0;
                 var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
                 game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
                 if(typeof self.handleConnect == 'function') {
                     self.handleConnect(newPlayer);
                 }
             }
-            if(data.action == "delete") {
-                var deletedPlayer = getPlayerById(data._id);
+            if(data.result.action == "delete") {
+                var deletedPlayer = getPlayerById(data.result._id);
                 console.log('deleted player: ');
                 console.log(deletedPlayer);
                 var deletedUsername = deletedPlayer.username;
-                var text = game.add.text(game.world.centerX, game.world.centerY, "- Awww.. :( -\nA player left:\n" + deletedUsername);
+                var text = game.add.text(320, 180, "- Awww.. :( -\nA player left:\n" + deletedUsername);
                 console.log('player left:');
                 console.log(room.players);
                 text.font = 'Arial';
@@ -167,45 +167,60 @@ ConnectingState.prototype = {
                 grd.addColorStop(1, '#823B3B');
                 text.fill = grd;
                 text.anchor.set(0.5);
-                text.alpha = 0.0;
+                text.alpha = 1.0;
                 var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
                 game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
                 if(typeof self.handleDisconnect == 'function') {
                     self.handleDisconnect(deletedPlayer);
                 }
             }
-            if(data.action == "update") {
-                if(!getPlayerById(data._id)) {
-                    var newPlayer = {id: data._id, username: data.body.username, color: data.body.color};
+            if(data.result.action == "update") {
+                if(!getPlayerById(data.result._id) && data.result._id != game.player.id) {
+                    var newPlayer = {id: data.result._id, username: data.result._source.username, color: data.result._source.color};
                     if(typeof self.handleConnect == 'function') {
                         self.handleConnect(newPlayer);
                     }
+                } else {
+                    room.players.forEach(function(p) {
+                        if(p.id == data.result._id && data.result._id != game.player.id)  {
+                            if(typeof data.result._source.kflastconnected != "undefined") {
+                                p.kflastconnected = data.result._source.kflastconnected;
+                                p.kfconnected = p.kflastconnected;
+                            }
+                        }
+                    });
                 }
             }
         });
         roomIdRoom = kuzzle.subscribe('kf-rooms', {"term": {"rid": roomId}}, function(data) {
             console.log('Update to room!');
-            if(data.action == "update") {
-                if(!game.player.isMaster && (data.body.master == game.player.id)) {
+            if(data.result.action == "update") {
+                if(typeof gameState == "undefined") {
+                    gameState = "";
+                }
+                if(!game.player.isMaster && (data.result._source.master == game.player.id)) {
                     console.log('You are now the new master of this room');
                     game.player.isMaster = true;
                 }
-                if(data.body.params != null) {
-                    room.params = data.body.params;
+                if(data.result._source.params != null) {
+                    room.params = data.result._source.params;
                 }
-                if(data.body.roundReady && game.state.current == 'game-init' && room.params != null) {
+                if(data.result._source.roundReady && game.state.current == 'game-init' && room.params != null && gameState != "STARTING") {
+                    gameState = 'STARTING';
                     self.runGameRound();
                 }
-                if(data.body.ending != null && game.state.current == 'game-round-no-monster') {
-                    room.ending = data.body.ending;
+                if(data.result._source.ending != null && game.state.current == 'game-round-no-monster' && gameState != 'ENDING') {
+                    gameState = 'ENDING';
+                    room.ending = data.result._source.ending;
                     self.prepareToGameEnd();
                 }
-                if(data.body.showWinner == true && game.state.current == 'game-end') {
+                if(data.result._source.showWinner == true && game.state.current == 'game-end' && gameState != 'SHOWING_WINNER') {
+                    gameState = 'SHOWING_WINNER';
                     self.showWinner();
                 }
             }
-            if(data.action == 'delete') {
-                console.log('Deleted room #' + data._id);
+            if(data.result.action == 'delete') {
+                console.log('Deleted room #' + data.result._id);
             }
         });
         connectTextTweenOut.start();
@@ -244,40 +259,54 @@ ConnectingState.prototype = {
                             lowestCount = 100;
                             roomToJoin = null;
                             roomsData.result.hits.hits.forEach(function(r) {
-                                if(r._source.connectedPlayers < lowestCount) {
+                                console.log(r._source.connectedPlayers,  game.maximumPlayersPerRoom);
+                                if(r._source.connectedPlayers < lowestCount && r._source.connectedPlayers < game.maximumPlayersPerRoom) {
                                     lowestCount = r._source.connectedPlayers;
                                     roomToJoin = r._id;
                                 }
                             });
-                            game.player.isMaster = false;
-                            game.player.rid = roomToJoin;
-                            console.log('Joining room #' + roomToJoin + ' (' + lowestCount + ' players connected)');
-                            kuzzle.update('kf-users', {_id: game.player.id, roomId: roomToJoin}, function(updateData) {
-                                var updateQuery = {
-                                    _id: roomToJoin,
-                                    connectedPlayers: (lowestCount + 1)
-                                };
-                                if(lowestCount == 0) {
+                            if(roomToJoin == null) {
+                                kuzzle.create("kf-rooms", {connectedPlayers: 1}, true, function (roomData) {
+                                    console.log('No more room left in any room, creating one..');
+                                    console.log('Created room #' + roomData.result._id);
                                     console.log('You are now master');
-                                    updateQuery.master = game.player.id;
-                                } else {
-                                    console.log('You are not master');
-                                }
-                                if(response.result.hits.total > 0) {
-                                    console.log('Found empty room(s), deleting..');
-                                    response.result.hits.hits.forEach(function(room) {
-                                        if(room._id != roomToJoin) {
-                                            kuzzle.delete("kf-rooms", room._id, function() {
-                                                console.log('- Deleted room #' + room._id);
-                                            });
-                                        }
+                                    game.player.isMaster = true;
+                                    roomToJoin = roomData.result._id;
+                                    game.player.rid = roomToJoin;
+                                    kuzzle.update('kf-users', {_id: game.player.id, roomId: roomData.result._id, master: game.player.id}, function() {
+                                        self.subscribeAndGo(roomData.result._id);
                                     });
-                                }
-                                kuzzle.update('kf-rooms', updateQuery, function() {
-                                    console.log('Done!');
-                                    self.subscribeAndGo(roomToJoin);
                                 });
-                            });
+                            } else {
+                                game.player.isMaster = false;
+                                game.player.rid = roomToJoin;
+                                console.log('Joining room #' + roomToJoin + ' (' + lowestCount + ' player(s) connected)');
+                                kuzzle.update('kf-users', {_id: game.player.id, roomId: roomToJoin}, function(updateData) {
+                                    var updateQuery = {
+                                        _id: roomToJoin,
+                                        connectedPlayers: (lowestCount + 1)
+                                    };
+                                    if(lowestCount == 0) {
+                                        console.log('You are now master');
+                                        updateQuery.master = game.player.id;
+                                    } else {
+                                        console.log('You are not master');
+                                    }
+                                    if(response.result.hits.total > 0) {
+                                        console.log('Found empty room(s), deleting..');
+                                        response.result.hits.hits.forEach(function(room) {
+                                            if(room._id != roomToJoin) {
+                                                kuzzle.delete("kf-rooms", room._id, function() {
+                                                    console.log('- Deleted room #' + room._id);
+                                                });
+                                            }
+                                        });
+                                    }
+                                    kuzzle.update('kf-rooms', updateQuery, function() {
+                                        self.subscribeAndGo(roomToJoin);
+                                    });
+                                });
+                            }
                         });
                     });
                 }
@@ -285,7 +314,7 @@ ConnectingState.prototype = {
         });
     },
     enterName: function() {
-        var nameText = this.game.add.text(this.game.world.centerX, this.game.world.centerY, "Enter your name:\n");
+        var nameText = this.game.add.text(320, 180, "Enter your name:\n");
         nameText.font = 'Arial';
         nameText.fontWeight = 'bold';
         nameText.fontSize = 36;
@@ -306,17 +335,17 @@ ConnectingState.prototype = {
     updateMenu: function(ev) {
         var selectedMenu = 0;
         nextMenu = ev.event.keyIdentifier == 'Down' ? 1 : -1;
-        menuItem.forEach(function(e, i) {
+        menuItemConnecting.forEach(function(e, i) {
             if(e.selected) {
-                selectedMenu = typeof menuItem[i + (nextMenu)] === "undefined" ? ev.event.keyIdentifier == 'Down' ? 0 : 3 : i + (nextMenu);
+                selectedMenu = typeof menuItemConnecting[i + (nextMenu)] === "undefined" ? ev.event.keyIdentifier == 'Down' ? 0 : 1 : i + (nextMenu);
             }
             e.selected = false;
             e.sprite.loadTexture(e.spriteIdentifier + '-unselected');
         });
-        menuItem[selectedMenu].sprite.loadTexture(menuItem[selectedMenu].spriteIdentifier + '-selected');
-        menuItem[selectedMenu].selected = true;
+        menuItemConnecting[selectedMenu].sprite.loadTexture(menuItemConnecting[selectedMenu].spriteIdentifier + '-selected');
+        menuItemConnecting[selectedMenu].selected = true;
     },
-    selectMenuITem: function() {
+    selectMenuItem: function() {
         switch(this.getSelectedMenu().id) {
             case 'OK':
                 this.selectName();
@@ -327,8 +356,10 @@ ConnectingState.prototype = {
         }
     },
     selectName: function() {
-        nameTextTweenOut.start();
-        this.connectToKuzzle();
+        if(kuzzleGame.name != "") {
+            nameTextTweenOut.start();
+            this.connectToKuzzle();
+        }
     },
     selectBack: function() {
         musicConnecting.stop();
@@ -336,10 +367,10 @@ ConnectingState.prototype = {
     },
     getSelectedMenu: function() {
         var selectedMenu = 0;
-        menuItem.forEach(function(e, i) {
+        menuItemConnecting.forEach(function(e, i) {
             if(e.selected) selectedMenu = i;
         });
-        return menuItem[selectedMenu];
+        return menuItemConnecting[selectedMenu];
     },
     update: function() {
         filter.update();

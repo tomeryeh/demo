@@ -16,12 +16,17 @@ var groundPounding = false;
 var shadowOffset = new Phaser.Point(10, 8);
 var defaultHp = 50;
 var laserDamage = 5;
-var groundPoundDamage = 50;
+var groundPoundDamage = 20;
 var live = false;
 var updateRate = 200;
 var shooted = false;
 var shootCoords = {};
 var hasDamaged = [];
+var tellThatImConnected = 2000;
+var tellThatImConnectedTimer = 0;
+var checkThatPlayersAreAlive = 6000;
+var checkThatPlayersAreAliveTimer = 0;
+var checkedVitality = false;
 function GameRoundNoMonsterState() {}
 GameRoundNoMonsterState.prototype = {
     init: function(initData) {
@@ -38,21 +43,26 @@ GameRoundNoMonsterState.prototype = {
         lasers = [];
         nades = [];
         nadeCount = 3;
-        /*roomIdPlayers = kuzzle.subscribe('kf-users', {"exists": {"field": "username"}}, function (dataPlayer) {
-            console.log('New player');
-            if (dataPlayer.result.action == "create" && dataPlayer.result._id != game.player.id) {
-                self.handleConnect(dataPlayer.result._source);
-            }
-            if (dataPlayer.result.action == "delete") {
-                self.handleDisconnect(dataPlayer.result._source);
-            }
-        });*/
-        roomIdGameUpdates = kuzzle.subscribe('kf-room-1', {"term": {"roomId": "room1"}}, function (dataGameUpdate) {
-            if (dataGameUpdate.body.pid != game.player.id && game.state.current == 'game-round-no-monster') {
-                self.updateFromKuzzle(dataGameUpdate.body);
+        checkedVitality = false;
+
+        if(room.params.rules.id == 'TM') {
+            room.params.teams.blue.forEach(function(i) {
+                if(i == game.player.id)
+                    currentTeam = 'blue';
+            });
+            room.params.teams.red.forEach(function(i) {
+                if(i == game.player.id)
+                    currentTeam = 'red';
+            });
+        }
+
+        roomIdGameUpdates = kuzzle.subscribe('kf-room-1', {"term": {"roomId": game.player.rid.toLowerCase()}}, function (dataGameUpdate) {
+            if (dataGameUpdate.data.body.pid != game.player.id && game.state.current == 'game-round-no-monster') {
+                self.updateFromKuzzle(dataGameUpdate.data.body);
             }
         });
         live = true;
+        gameState = "STARTED";
     },
     preload: function() {
         game.load.image('player', 'assets/sprites/game-round/player.png');
@@ -62,16 +72,20 @@ GameRoundNoMonsterState.prototype = {
         game.load.image('nade', 'assets/sprites/game-round/nade.png');
         game.load.image('explosion-fire', 'assets/sprites/game-round/explosion-fire.png');
         game.load.image('explosion-smoke', 'assets/sprites/game-round/explosion-smoke.png');
-        game.load.image('city', 'assets/sprites/game-round/background-city.png');
+        game.load.image('city-bg', 'assets/sprites/game-round/background-city.png');
+        game.load.image('kuzzle-bg', 'assets/sprites/game-round/background-kuzzle.png');
+        game.load.image('glitch-bg', 'assets/sprites/game-round/background-glitch.png');
 
         game.load.tilemap('city-map', 'assets/maps/city.csv', null, Phaser.Tilemap.CSV);
         game.load.image('tiles-city', 'assets/sprites/game-round/tiles-city.png');
 
-        /*game.load.tilemap('mario-map', 'assets/maps/mario.csv', null, Phaser.Tilemap.CSV);
-        game.load.image('tiles-mario', 'assets/sprites/game-round/tiles-mario.png');*/
+        game.load.tilemap('kuzzle-map', 'assets/maps/kuzzle.csv', null, Phaser.Tilemap.CSV);
+        game.load.image('tiles-kuzzle', 'assets/sprites/game-round/tiles-kuzzle.png');
+
+        game.load.tilemap('glitch-map', 'assets/maps/glitch.csv', null, Phaser.Tilemap.CSV);
+        game.load.image('tiles-glitch', 'assets/sprites/game-round/tiles-glitch.png');
 
         game.load.spritesheet('pierre', 'assets/sprites/game-round/pierre.png', 42, 102, 4);
-        //game.load.spritesheet('pierre-run', 'assets/sprites/game-round/pierre-run.png', 42, 102, 2);
 
         game.load.audio('groundpound', 'assets/sounds/groundpound.wav');
         game.load.audio('nade-countdown', 'assets/sounds/nade-countdown.wav');
@@ -80,14 +94,11 @@ GameRoundNoMonsterState.prototype = {
         game.load.audio('start-game', 'assets/sounds/start-game.wav');
         game.load.audio('laser1', 'assets/sounds/laser1.wav');
         game.load.audio('laser2', 'assets/sounds/laser2.wav');
+        game.load.audio('yeah', 'assets/sounds/yeah.mp3');
 
         game.time.advancedTiming = true;
     },
     create: function() {
-        musicGameRound = game.add.audio('music-game');
-        //musicGameRound.loop = true;
-        if(this.game.hasMusic) musicGameRound.play();
-
         audioGroundpound = game.add.audio('groundpound');
         audioNadeCountdown = game.add.audio('nade-countdown');
         audioNade = game.add.audio('nade');
@@ -95,6 +106,10 @@ GameRoundNoMonsterState.prototype = {
         audioStartGame = game.add.audio('start-game');
         audioLaser1 = game.add.audio('laser1');
         audioLaser2 = game.add.audio('laser2');
+        audioYeah = game.add.audio('yeah');
+
+        musicGameRound = gameMusics[room.params.level.id];
+        if(this.game.hasMusic) musicGameRound.play();
 
         audioStartGame.play();
 
@@ -105,12 +120,15 @@ GameRoundNoMonsterState.prototype = {
 
         game.world.setBounds(0, 0, 400, 200);
 
-        //if(room.params.level.id == 'CITY')
-            background = game.add.sprite(game.world.centerX, game.world.centerY, 'city');
+        if(room.params.level.id == 'CITY')
+            background = game.add.sprite(320, 180, 'city-bg');
+        if(room.params.level.id == 'KUZZLE')
+            background = game.add.sprite(320, 180, 'kuzzle-bg');
+        if(room.params.level.id == 'GLITCH')
+            background = game.add.sprite(320, 180, 'glitch-bg');
 
         game.renderer.renderSession.roundPixels = true;
         game.stage.backgroundColor = 0x444444;
-        //game.stage.backgroundColor = 0x5e81a2;
 
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 1000;
@@ -123,18 +141,22 @@ GameRoundNoMonsterState.prototype = {
         blood        = self.addPlayerBlood();
         //game.camera.follow(player);
 
-        //if(room.params.level.id == 'CITY') {
+        if(room.params.level.id == 'CITY') {
             map = game.add.tilemap('city-map', 20, 20);
             map.addTilesetImage('tiles-city');
-        //}
-        /*map = game.add.tilemap('mario-map', 21, 21);
-        map.addTilesetImage('tiles-mario', 'tiles-mario', 21, 21, 2, 2);*/
+        }
+        if(room.params.level.id == 'KUZZLE') {
+            map = game.add.tilemap('kuzzle-map', 20, 20);
+            map.addTilesetImage('tiles-kuzzle');
+        }
+        if(room.params.level.id == 'GLITCH') {
+            map = game.add.tilemap('glitch-map', 20, 20);
+            map.addTilesetImage('tiles-glitch');
+        }
         map.setCollisionBetween(0, 2000);
         layer = map.createLayer(0);
         layer.resizeWorld();
 
-        //style                = {font: '42px Helvetica', fontWeight: 'bold', fill: "#BF0000", align: "center"};
-        //deathMessage         = game.add.text(player.x, player.y, "F#@k U!!", style);
         deathMessage         = game.add.bitmapText(10, 100, 'font', 'Monster Kill', 48);
         deathMessage.alpha   = 0.0;
         deathMessage.filters = [filterPixelate3];
@@ -161,7 +183,7 @@ GameRoundNoMonsterState.prototype = {
         self.quitKey.onDown.add(self.quitGame, self);
 
         playersToConnect.forEach(function(p) {
-            if (p.id != game.player.id) {
+            if(p.id != game.player.id) {
                 self.handleConnect(p);
             }
         });
@@ -174,6 +196,17 @@ GameRoundNoMonsterState.prototype = {
         blurX = game.add.filter('BlurX');
         blurY = game.add.filter('BlurY');
         blurSprite.filters = [blurX, blurY];
+
+        if(room.params.level.id == 'GLITCH') {
+            nfilter = new PIXI.AsciiFilter();
+            nfilter.size = 8;
+        }
+        if(room.params.level.id == 'KUZZLE') {
+            nfilter = game.add.filter('Vignette', 320, 180);
+            nfilter.size = 0.3;
+            nfilter.amount = 0.5;
+            nfilter.alpha = 1.0;
+        }
     },
     switchKuzzleSynch: function() {
         live = !live;
@@ -201,12 +234,15 @@ GameRoundNoMonsterState.prototype = {
         return p;
     },
     addPlayerShadow: function() {
-        var ps = game.add.sprite(game.world.centerX, game.world.centerY, 'pierre-idle');
+        var ps = game.add.sprite(game.world.centerX, game.world.centerY, 'pierre');
+        ps.animations.add('idle', [0, 1], 2, true);
+        ps.animations.add('run', [2, 3], 3, true);
         ps.anchor.setTo(0.5, 1.0);
         ps.tint = 0x000000;
-        ps.alpha = 0.6;
-        ps.height = 85;
-        ps.width = 64;
+        ps.alpha = 0.5;
+        ps.height = 102;
+        ps.width = 42;
+        ps.play('idle');
 
         return ps;
     },
@@ -252,7 +288,6 @@ GameRoundNoMonsterState.prototype = {
         return b;
     },
     updateFromKuzzle: function(data) {
-        console.log('UPDATE FROM KUZZLE');
         room.players.forEach(function(e) {
             if(e.id == data.pid) {
                 e.sprite.x = data.x;
@@ -261,7 +296,6 @@ GameRoundNoMonsterState.prototype = {
                 e.sprite.body.velocity.y = data.vy;
                 e.emitter.on = data.emits;
                 if(data.damaged.length > 0) {
-                    console.log(data.damaged);
                     data.damaged.forEach(function(d) {
                         if(d.id == game.player.id) {
                             self.iTakeDamage(e, d.dmg);
@@ -305,11 +339,17 @@ GameRoundNoMonsterState.prototype = {
 
         this.updatePlayers();
 
-        if(game.time.now > updateTimer && live) {
+        if(typeof lastPlayerCoordsX == "undefined") {
+            lastPlayerCoordsX = player.x;
+        }
+        if(typeof lastPlayerCoordsY == "undefined") {
+            lastPlayerCoordsY = player.y;
+        }
+
+        if(game.time.now > updateTimer && live && ((player.x != lastPlayerCoordsX || player.y != lastPlayerCoordsY) || shooted || hasDamaged.length > 0)) {
             updateTimer = game.time.now + updateRate;
             kuzzle.create("kf-room-1", {
-                //_id      : game.player.updateId,
-                roomId   : "room1",
+                roomId   : game.player.rid.toLowerCase(),
                 pid      : game.player.id,
                 username : game.player.username,
                 hp       : game.player.hp,
@@ -326,6 +366,46 @@ GameRoundNoMonsterState.prototype = {
                 hasDamaged = [];
             }
             if(shooted) shooted = false;
+            lastPlayerCoordsX = player.x;
+            lastPlayerCoordsY = player.y;
+        }
+
+        if(game.time.now > tellThatImConnectedTimer) {
+            tellThatImConnectedTimer = game.time.now + tellThatImConnected;
+            kuzzle.update('kf-users', {_id: game.player.id, kflastconnected: game.time.now}, function() {
+            });
+            room.players.forEach(function(p) {
+               if(p.id != game.player.id) {
+                   p.kfconnected = p.kfconnected + tellThatImConnected;
+               }
+            });
+        }
+
+        if(game.time.now > checkThatPlayersAreAliveTimer) {
+            checkThatPlayersAreAliveTimer = game.time.now + checkThatPlayersAreAlive;
+            var filterConnected = {
+                "filter": {
+                    "term": {
+                        "roomId": game.player.rid.toLowerCase().replace("-", "")
+                    }
+                }
+            };
+            kuzzle.search('kf-users', filterConnected, function(response) {
+                response.result.hits.hits.forEach(function(e, i) {
+                    if(e._id != game.player.id) {
+                        room.players.forEach(function (p) {
+                            if(p.id == e._id && (p.kfconnected - p.kflastconnected > 6000)) {
+                                self.handleDisconnect(p);
+                                kuzzle.delete('kf-users', p.id, function() { });
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        if(typeof background != "undefined" && room.params.level.id == 'GLITCH' || room.params.level.id == 'KUZZLE') {
+            background.filters = [nfilter];
         }
     },
     fullScreen: function() {
@@ -350,6 +430,13 @@ GameRoundNoMonsterState.prototype = {
         deathMessage.x = player.x + 60;
         deathMessage.y = player.y - 100;
 
+        if(room.params.rules.id == 'TM') {
+            if(currentTeam == 'blue')
+                tag.tint = 0x0000FF;
+            else
+                tag.tint = 0xFF0000;
+        }
+
         room.players.forEach(function(p) {
             var px = p.sprite.x;
             var py = p.sprite.y;
@@ -372,19 +459,28 @@ GameRoundNoMonsterState.prototype = {
             if(typeof p.going != "undefined") {
                 if(p.going == 'right') {
                     p.sprite.animations.play('run');
+                    p.shadow.animations.play('run');
                     game.add.tween(p.sprite.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
                     game.add.tween(p.shadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
                     p.changedDirection = false;
                     p.sprite.body.velocity.x = p.sprite.body.velocity.x - 10.0;
                 } else if(p.going == 'left') {
                     p.sprite.animations.play('run');
+                    p.shadow.animations.play('run');
                     game.add.tween(p.sprite.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
-                    game.add.tween(p.shadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+                    game.add.tween(p.shadow.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
                     p.changedDirection = false;
                     p.sprite.body.velocity.x = p.sprite.body.velocity.x + 10.0;
                 } else {
                     p.sprite.animations.play('idle');
+                    p.shadow.animations.play('idle');
                 }
+            }
+            if(room.params.rules.id == 'TM') {
+                if(p.team == 'blue')
+                    p.tag.tint = 0x0000FF;
+                else
+                    p.tag.tint = 0xFF0000;
             }
             game.physics.arcade.collide(p.sprite, layer);
         });
@@ -400,18 +496,21 @@ GameRoundNoMonsterState.prototype = {
         }
         if(player.body.velocity.x > 0.0) {
             player.play('run');
+            playerShadow.play('run');
             direction = 'right';
             player.body.velocity.x = player.body.velocity.x - 10.0;
             game.add.tween(player.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
             game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
         } else if(player.body.velocity.x < 0.0) {
             player.play('run');
+            playerShadow.play('run');
             direction = 'left';
             player.body.velocity.x = player.body.velocity.x + 10.0;
             game.add.tween(player.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
-            game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+            game.add.tween(playerShadow.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
         } else {
             player.play('idle');
+            playerShadow.play('idle');
         }
         if(player.body.onFloor()) {
             player.body.gravity.y = 1000;
@@ -696,6 +795,7 @@ GameRoundNoMonsterState.prototype = {
         }
     },
     playerDies: function(p, iKilled) {
+        p.sprite.body.enable = false;
         p.isAlive = false;
         p.blood.start(false, 1500, 2);
         p.blood.filters = [filterPixelate3];
@@ -704,10 +804,10 @@ GameRoundNoMonsterState.prototype = {
         var dieAnimation = game.add.tween(p.sprite).to({alpha: 0.0}, 500, 'Linear').start();
         game.add.tween(p.shadow).to({alpha: 0.0}, 500, 'Linear').start();
         dieAnimation.onComplete.add(function() {
-            p.sprite.body.enable = false;
             p.shadow.destroy();
             p.blood.on = false;
             if(iKilled) {
+                audioYeah.play();
                 var messages = ["Monster Kill", "Yeaaaaahhh!!", "Stay down!!", "Awesome :D", "Niiiiice!!", "Time to\nKick ass!"];
                 deathMessage.text = messages[Math.floor(Math.random() * messages.length)];
                 game.add.tween(deathMessage.scale).to({x: 2.0, y: 2.0}, 1500, 'Elastic', true);
@@ -723,6 +823,7 @@ GameRoundNoMonsterState.prototype = {
         }
     },
     iDie: function(enemy) {
+        player.body.enable = false;
         game.player.isAlive = false;
         blood.start(false, 1500, 2);
         blood.filters = [filterPixelate3];
@@ -731,7 +832,6 @@ GameRoundNoMonsterState.prototype = {
         var dieAnimation = game.add.tween(player).to({alpha: 0.0}, 500, 'Linear').start();
         game.add.tween(playerShadow).to({alpha: 0.0}, 500, 'Linear').start();
         dieAnimation.onComplete.add(function() {
-            player.body.enable = false;
             playerShadow.destroy();
             blood.on = false;
             if(enemy.id == game.player.id) {
@@ -765,7 +865,39 @@ GameRoundNoMonsterState.prototype = {
                     w = playersAlive[0];
                 }
                 break;
-            case 'DM':
+            case 'TM':
+                var _b = 0;
+                var _r = 0;
+                if(currentTeam == 'blue')
+                    _b += 1;
+                if(currentTeam == 'red')
+                    _r += 1;
+                room.players.forEach(function(p) {
+                    if(p.team == 'blue') {
+                        _b += 1;
+                    }
+                    if(p.team == 'red') {
+                        _r += 1;
+                    }
+                });
+                room.players.forEach(function(p) {
+                    if(p.team == 'blue' && !p.isAlive) {
+                        _b -= 1;
+                    }
+                    if(p.team == 'red' && !p.isAlive) {
+                        _r -= 1;
+                    }
+                });
+                if(!game.player.isAlive) {
+                    if(currentTeam == 'blue')
+                        _b -= 1;
+                    if(currentTeam == 'red')
+                        _r -= 1;
+                }
+                if(_b == 0 && _r > 0)
+                    w = 'red';
+                if(_r == 0 && _b > 0)
+                    w = 'blue';
                 break;
         }
         if(w != null) {
@@ -776,18 +908,18 @@ GameRoundNoMonsterState.prototype = {
                 _id: game.player.rid,
                 ending: room.ending
             };
-            kuzzle.update('kf-rooms', updateQuery, function () {
-                console.log('Pushed new game round rules to other players');
-            });
-            self.prepareToGameEnd();
+            setTimeout(function() {
+                kuzzle.update('kf-rooms', updateQuery, function () {
+                    console.log('Pushed new game round rules to other players');
+                    self.prepareToGameEnd();
+                });
+            }, 2000);
         }
     },
     prepareToGameEnd: function() {
         game.add.tween(blurSprite).to({alpha: 0.5}, 2000, 'Linear').start();
-        //setTimeout(function() {
-            musicGameRound.stop();
-            game.stateTransition.to('game-end', true, false, room);
-        //}, 2000);
+        musicGameRound.stop();
+        game.stateTransition.to('game-end', true, false, room);
     },
     tweenTint: function(obj, startColor, endColor, time) {
         var colorBlend = {step: 0};
@@ -811,22 +943,37 @@ GameRoundNoMonsterState.prototype = {
     handleConnect: function(p) {
         console.log('Player connected: ' + p.username);
         var newPlayer = {
-            id      : p.id,
-            username: p.username,
-            isAlive : true,
-            color   : p.color,
-            hp      : defaultHp,
-            shadow  : this.addPlayerShadow(),
-            sprite  : this.addPlayer(p.id),
-            emitter : this.addPlayerEmitter(),
-            hpMeter : this.addPlayerHPMeter(),
-            tag     : this.addPlayerTag(p.username),
-            blood   : this.addPlayerBlood(),
-            x       : 0.0,
-            y       : 0.0,
-            vx      : 0.0,
-            vy      : 0.0
+            id             : p.id,
+            kflastconnected: 0,
+            kfconnected    : 0,
+            username       : p.username,
+            isAlive        : true,
+            color          : p.color,
+            hp             : defaultHp,
+            shadow         : this.addPlayerShadow(),
+            sprite         : this.addPlayer(p.id),
+            emitter        : this.addPlayerEmitter(),
+            hpMeter        : this.addPlayerHPMeter(),
+            tag            : this.addPlayerTag(p.username),
+            blood          : this.addPlayerBlood(),
+            x              : 0.0,
+            y              : 0.0,
+            vx             : 0.0,
+            vy             : 0.0,
+            team           : null
         };
+
+        if(room.params.rules.id == 'TM') {
+            room.params.teams.blue.forEach(function(i) {
+                if(i == p.id)
+                    newPlayer.team = 'blue';
+            });
+            room.params.teams.red.forEach(function(i) {
+                if(i == p.id)
+                    newPlayer.team = 'red';
+            });
+        }
+
         //newPlayer.sprite.tint = newPlayer.color;
         room.players.push(newPlayer);
     },
@@ -846,6 +993,23 @@ GameRoundNoMonsterState.prototype = {
                 room.players.splice(i, 1);
             }
         });
+        if(room.players.length + 1 < game.minimumPlayersPerRoom) {
+            kuzzle.unsubscribe(roomIdPlayers);
+            kuzzle.unsubscribe(roomIdGameUpdates);
+            kuzzle.unsubscribe(roomIdRoom);
+            var roomUpdateQuery = {
+                _id: game.player.rid,
+                connectedPlayers: 0
+            };
+            kuzzle.update('kf-rooms', roomUpdateQuery, function() {
+                console.log('Updated connected player count for current room (' + room.players.length + ' players remaining)');
+                kuzzle.delete('kf-users', game.player.id, function() {
+                    console.log('All done!');
+                    musicGameRound.stop();
+                    game.stateTransition.to('not-enough-players');
+                });
+            });
+        }
     },
     quitGame: function() {
         console.log('Disconnecting..');
@@ -865,7 +1029,7 @@ GameRoundNoMonsterState.prototype = {
             kuzzle.delete('kf-users', game.player.id, function() {
                 console.log('All done!');
                 musicGameRound.stop();
-                game.state.start('boot', true, false);
+                game.state.start('main-menu', true, false);
             });
         });
     },

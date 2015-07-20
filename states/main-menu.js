@@ -2,7 +2,7 @@ function MainMenuState() {}
 MainMenuState.prototype = {
     create: function() {
         self = this;
-        var fragmentSrc = [
+        fragmentSrc = [
             "precision mediump float;",
             "uniform float     time;",
             "uniform vec2      resolution;",
@@ -42,27 +42,33 @@ MainMenuState.prototype = {
             "gl_FragColor = vec4(c*d);",
             "}"
         ];
-        filter = new Phaser.Filter(this.game, null, fragmentSrc);
-        filter.setResolution(game.width, game.height);
-        sprite = this.game.add.sprite();
-        sprite.width = game.width;
-        sprite.height = game.height;
-        sprite.filters = [filter];
+        filterMainMenu = new Phaser.Filter(game, null, fragmentSrc);
+        filterMainMenu.setResolution(game.width, game.height);
+        spriteMainMenu = game.add.sprite();
+        spriteMainMenu.width = game.width;
+        spriteMainMenu.height = game.height;
+        spriteMainMenu.filters = [filterMainMenu];
 
-        musicMainMenu = this.game.add.audio('music-main-menu');
+        room = {
+            players: []
+        };
+
+        game.stage.backgroundColor = 0x000000;
+
+        musicMainMenu = game.add.audio('music-main-menu');
         musicMainMenu.loop = true;
-        if(this.game.hasMusic) musicMainMenu.play();
+        if(game.hasMusic) musicMainMenu.play();
 
-        var kuzzle = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'kuzzle');
-        kuzzle.anchor.setTo(0.5, 1.25);
-        this.game.add.tween(kuzzle.scale).to({ x: 1.18, y: 1.18}, 440, Phaser.Easing.Elastic.Out, true, 0, -1);
+        kuzzleTitle = game.add.sprite(320, 180, 'kuzzleTitle');
+        kuzzleTitle.anchor.setTo(0.5, 1.25);
+        game.add.tween(kuzzleTitle.scale).to({x: 1.18, y: 1.18}, 440, Phaser.Easing.Elastic.Out, true, 0, -1);
 
         filterPixelate3      = new PIXI.PixelateFilter();
         filterPixelate3.size = {x: 3, y: 3};
-        var tournament = game.add.bitmapText(425, 150, 'font', 'Tournament!!', 56);
+        tournament = game.add.bitmapText(425, 150, 'font', 'Tournament!!', 56);
         tournament.filters = [filterPixelate3];
         tournament.anchor.setTo(0.5, 0.5);
-        this.game.add.tween(tournament.scale).to({ x: 1.4, y: 1.4}, 440, Phaser.Easing.Elastic.Out, true, 0, -1);
+        game.add.tween(tournament.scale).to({x: 1.4, y: 1.4}, 440, Phaser.Easing.Elastic.Out, true, 0, -1);
 
         menuItem = [
             {
@@ -81,25 +87,25 @@ MainMenuState.prototype = {
                 spriteIdentifier: 'main-menu-credits'
             }
         ];
-        menuItem[0]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'main-menu-online-game-selected');
+        menuItem[0]['sprite'] = game.add.sprite(320, 180, 'main-menu-online-game-selected');
         menuItem[0]['sprite'].anchor.setTo(0.5, -0.5);
 
-        menuItem[1]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'main-menu-options-unselected');
+        menuItem[1]['sprite'] = game.add.sprite(320, 180, 'main-menu-options-unselected');
         menuItem[1]['sprite'].anchor.setTo(0.5, -1.5);
 
-        menuItem[2]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'main-menu-credits-unselected');
+        menuItem[2]['sprite'] = game.add.sprite(320, 180, 'main-menu-credits-unselected');
         menuItem[2]['sprite'].anchor.setTo(0.5, -2.5);
 
-        this.game.add.tween(menuItem[0].sprite).from( { y: 1200 }, 1000, Phaser.Easing.Quintic.Out).start();
-        this.game.add.tween(menuItem[1].sprite).from( { y: 1200 }, 800, Phaser.Easing.Quintic.Out).delay(200).start();
-        this.game.add.tween(menuItem[2].sprite).from( { y: 1200 }, 600, Phaser.Easing.Quintic.Out).delay(400).start();
+        game.add.tween(menuItem[0].sprite).from( { y: 1200 }, 1000, Phaser.Easing.Quintic.Out).start();
+        game.add.tween(menuItem[1].sprite).from( { y: 1200 }, 800, Phaser.Easing.Quintic.Out).delay(200).start();
+        game.add.tween(menuItem[2].sprite).from( { y: 1200 }, 600, Phaser.Easing.Quintic.Out).delay(400).start();
 
-        this.keyDown = this.game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+        this.keyDown = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         this.keyDown.onDown.add(this.updateMenu, this);
-        this.keyUp = this.game.input.keyboard.addKey(Phaser.Keyboard.UP);
+        this.keyUp = game.input.keyboard.addKey(Phaser.Keyboard.UP);
         this.keyUp.onDown.add(this.updateMenu, this);
 
-        this.enterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+        this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
         this.enterKey.onDown.add(this.selectMenuITem, this);
 
         menuItem[0]['sprite'].inputEnabled = true;
@@ -137,15 +143,15 @@ MainMenuState.prototype = {
     },
     selectOnlineGame: function() {
         musicMainMenu.stop();
-        this.game.stateTransition.to('connecting');
+        game.stateTransition.to('connecting');
     },
     selectOptions: function() {
         musicMainMenu.stop();
-        this.game.stateTransition.to('options');
+        game.stateTransition.to('options');
     },
     selectCredits: function() {
         musicMainMenu.stop();
-        this.game.stateTransition.to('credits');
+        game.stateTransition.to('credits');
     },
     getSelectedMenu: function() {
         var selectedMenu = 0;
@@ -155,6 +161,6 @@ MainMenuState.prototype = {
         return menuItem[selectedMenu];
     },
     update: function() {
-        filter.update();
+        filterMainMenu.update();
     }
 };

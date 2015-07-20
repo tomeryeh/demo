@@ -2,7 +2,7 @@ function CreditsState() {}
 CreditsState.prototype = {
     create: function() {
         self = this;
-        var fragmentSrc = [
+        fragmentSrc = [
             "precision mediump float;",
             "uniform float     time;",
             "uniform vec2      resolution;",
@@ -55,17 +55,17 @@ CreditsState.prototype = {
         musicCredits.loop = true;
         if(this.game.hasMusic) musicCredits.play();
 
-        var kuzzle = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'kuzzle');
-        kuzzle.anchor.setTo(0.5, 1.25);
-        this.game.add.tween(kuzzle.scale).to({x: 0.0, y: 0.0}, 2000, Phaser.Easing.Exponential.Out).start();
-        kuzzle.filters = [blurX, blurY];
+        kuzzleTitle = this.game.add.sprite(320, 180, 'kuzzleTitle');
+        kuzzleTitle.anchor.setTo(0.5, 1.25);
+        this.game.add.tween(kuzzleTitle.scale).to({x: 0.0, y: 0.0}, 2000, Phaser.Easing.Exponential.Out).start();
+        kuzzleTitle.filters = [blurX, blurY];
 
-        var phaser2 = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'phaser2');
+        var phaser2 = this.game.add.sprite(320, 180, 'phaser2');
         phaser2.anchor.setTo(0.5, 0.75);
         phaser2.scale.setTo(0.5, 0.5);
         this.game.add.tween(phaser2).from({x: 1200.0}, 800, Phaser.Easing.Exponential.Out).delay(400).start();
 
-        var back = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'options-menu-back-selected');
+        var back = this.game.add.sprite(320, 180, 'options-menu-back-selected');
         back.anchor.setTo(0.5, -2.5);
 
         this.game.add.tween(back).from({x: 1200}, 1200, Phaser.Easing.Quintic.Out).start();
@@ -83,7 +83,7 @@ CreditsState.prototype = {
         filterPixelate3      = new PIXI.PixelateFilter();
         filterPixelate3.size = {x: 3, y: 3};
         var style = {font: '28px Helvetica', fontWeight: 'bold', fill: "#FFF", align: "center"};
-        copyright = game.add.text(game.world.centerX, game.world.centerY, 'Copyright Samuel Bouic 2015', style);
+        copyright = game.add.text(320, 180, 'Copyright Samuel Bouic 2015', style);
         copyright.anchor.setTo(0.5, -2.0);
         copyright.filters = [filterPixelate3];
         game.add.tween(copyright.scale).from({x: 3.0, y: 3.0}, 500, 'Bounce').start();

@@ -5,7 +5,11 @@ PreloadState.prototype = {
         this.game.load.script('blurX', 'engine/filters/BlurX.js');
         this.game.load.script('blurY', 'engine/filters/BlurY.js');
         this.game.load.script('pixelate', 'engine/filters/PixelateFilter.js');
-        this.game.load.image('kuzzle', 'assets/sprites/kuzzle.png');
+        this.load.script('vignette', 'engine/filters/Vignette.js');
+        this.load.script('noise', 'engine/filters/SNoise.js');
+        this.load.script('grain', 'engine/filters/FilmGrain.js');
+        this.load.script('ascii', 'engine/filters/AsciiFilter.js');
+        this.game.load.image('kuzzleTitle', 'assets/sprites/kuzzle.png');
         this.game.load.bitmapFont('font', 'assets/fonts/font.png', 'assets/fonts/font.fnt');
 
         // Music
@@ -15,6 +19,9 @@ PreloadState.prototype = {
         this.game.load.audio('music-lobby', 'assets/musics/lobby.mp3');
         this.game.load.audio('music-game', 'assets/musics/twin-turbo.mp3');
         this.game.load.audio('music-main-menu', 'assets/musics/epic-song.mp3');
+        this.game.load.audio('club-fight', 'assets/musics/club-fight.mp3');
+        this.game.load.audio('nvision', 'assets/musics/nvision.mp3');
+        this.game.load.audio('angry-mod', 'assets/musics/angry-mod.mp3');
 
             // Intro
         this.game.load.image('title', 'assets/sprites/title.png');
@@ -43,6 +50,11 @@ PreloadState.prototype = {
         this.game.load.image('phaser2', 'assets/sprites/credits/phaser2.png');
     },
     create: function() {
+        gameMusics = {
+            'CITY': this.game.add.audio('club-fight'),
+            'KUZZLE': this.game.add.audio('nvision'),
+            'GLITCH': this.game.add.audio('angry-mod')
+        };
         this.game.stateTransition = this.game.plugins.add(Phaser.Plugin.StateTransition);
         this.game.juicy = this.game.plugins.add(Phaser.Plugin.Juicy);
         this.game.stateTransition.configure({

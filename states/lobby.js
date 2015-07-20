@@ -1,4 +1,3 @@
-var minimumPlayers = 2;
 function LobbyState() {}
 LobbyState.prototype = {
     init: function(initData) {
@@ -23,8 +22,8 @@ LobbyState.prototype = {
 
         var filters = {
             "filter": {
-                "exists": {
-                    "field": "username"
+                "term": {
+                    "roomId": game.player.rid.toLowerCase().replace("-", "")
                 }
             }
         };
@@ -38,7 +37,6 @@ LobbyState.prototype = {
         self.lobbyDrawables = [];
 
         kuzzle.search('kf-users', filters, function(response) {
-            console.log(response);
             response.result.hits.hits.forEach(function(e, i) {
                 room.players.push({
                     id: e._id,
@@ -46,13 +44,13 @@ LobbyState.prototype = {
                     color: e._source.color
                 });
             });
-            self.drawLobby();
-            countdown = game.add.bitmapText(game.world.centerX, game.world.centerY, 'font-lobby', 'Ready?', 96);
+            countdown = game.add.bitmapText(320, 180, 'font-lobby', 'Ready?', 96);
             countdown.alpha = 0.0;
             countdown.filters = [filterPixelate3];
             countdown.anchor.setTo(0.5, 0.5);
             countdown.fixedToCamera = true;
             countdown.scale.set(1.5, 1.5);
+            self.drawLobby(false);
         });
 
         this.game.input.onDown.add(this.quitGame, this);
@@ -62,7 +60,7 @@ LobbyState.prototype = {
         countingDown = 10;
         isCountingDown = false;
     },
-    drawLobby: function() {
+    drawLobby: function(wasCheckingForPlayers) {
         var yCoord = -68;
         var delay = 0;
         room.players.forEach(function(e, i) {
@@ -86,7 +84,7 @@ LobbyState.prototype = {
 
             var color = Phaser.Color.getWebRGB(0x000000);
             var style = {font: "28px Helvetica", fill: color, align: "center"};
-            var text = game.add.text(game.world.centerX, game.world.centerY, e.username, style);
+            var text = game.add.text(320, 180, e.username, style);
             text.z = 0;
             text.x = xCoord + 10;
             text.y = yCoord + 20;
@@ -104,11 +102,15 @@ LobbyState.prototype = {
 
             delay += 100;
         });
-        if(room.players.length >= minimumPlayers && !isCountingDown) {
+        if(room.players.length >= game.minimumPlayersPerRoom && !isCountingDown) {
             isCountingDown = true;
-            setTimeout(function() {
+            if(wasCheckingForPlayers) {
+                setTimeout(function () {
+                    self.countDown();
+                }, 1500);
+            } else {
                 self.countDown();
-            }, 1500);
+            }
         }
     },
     cd: function() {
@@ -142,9 +144,10 @@ LobbyState.prototype = {
                     player: game.player,
                     players: room.players
                 };
+                musicLobby.stop();
                 game.stateTransition.to('game-init', true, false, initData);
                 //game.stateTransition.to('game-round-no-monster', true, false, initData);
-            }, 10000);
+            }, 1000);
         }, 2000);
     },
     tweenTint: function(obj, startColor, endColor, time) {
@@ -173,7 +176,7 @@ LobbyState.prototype = {
             e.destroy();
         });
         self.lobbyDrawables = [];
-        self.drawLobby();
+        self.drawLobby(true);
     },
     handleDisconnect: function(p) {
         var index = -1;
@@ -190,7 +193,24 @@ LobbyState.prototype = {
             e.destroy();
         });
         self.lobbyDrawables = [];
-        self.drawLobby();
+        if(room.players.length < game.minimumPlayersPerRoom) {
+            kuzzle.unsubscribe(roomIdPlayers);
+            kuzzle.unsubscribe(roomIdRoom);
+            var roomUpdateQuery = {
+                _id: game.player.rid,
+                connectedPlayers: 0
+            };
+            kuzzle.update('kf-rooms', roomUpdateQuery, function() {
+                console.log('Updated connected player count for current room (' + (room.players.length - 1) + ' players remaining)');
+                kuzzle.delete('kf-users', game.player.id, function() {
+                    console.log('All done!');
+                    musicLobby.stop();
+                    game.stateTransition.to('not-enough-players');
+                });
+            });
+        } else {
+            self.drawLobby(false);
+        }
     },
     quitGame: function() {
         console.log('Disconnecting..');

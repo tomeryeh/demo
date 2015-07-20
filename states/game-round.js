@@ -21,6 +21,7 @@ GameRoundState.prototype = {
         game.load.image('smoke-particle', 'assets/sprites/game-round/smoke.png');
         game.load.image('blood-particle', 'assets/sprites/game-round/blood-particle.png');
         game.load.image('laser', 'assets/sprites/game-round/laser.png');
+        game.load.image('city', 'assets/sprites/game-round/background-city.png');
         game.time.advancedTiming = true;
         /*game.load.spritesheet('dude', 'assets/games/starstruck/dude.png', 32, 48);
         game.load.spritesheet('droid', 'assets/games/starstruck/droid.png', 32, 32);
@@ -33,12 +34,14 @@ GameRoundState.prototype = {
         musicGameRound = game.add.audio('music-game');
         if(game.hasMusic) musicGameRound.fadeIn();
 
-        game.gameData.players = [];
+        game.room= {};
+        game.room.players = [];
         self = this;
 
         /* GAME LOGIC */
 
         game.stage.backgroundColor = 0x333333;
+        background = game.add.sprite(0, 0, 'city');
 
         game.physics.startSystem(Phaser.Physics.ARCADE);
         game.physics.arcade.gravity.y = 1000;
@@ -108,6 +111,15 @@ GameRoundState.prototype = {
         //decorHPText.filters = [filter];
         /*player.filters = [filter];
         decor.filters = [filter];*/
+
+        /*nfilter = game.add.filter('Vignette', game.width, game.height);
+        nfilter.size = 0.3;
+        nfilter.amount = 0.5;
+        nfilter.alpha = 1.0;*/
+
+        //filter[FILTER_SNOISE] = game.add.filter('SNoise');
+
+        nfilter = new PIXI.AsciiFilter();
     },
     update: function() {
         this.updatePlayers();
@@ -183,7 +195,7 @@ GameRoundState.prototype = {
 
         if(flying && player.body.onFloor() && groundPounding) {
             flying = false;
-            game.juicy.shake(30, 100);
+            //game.juicy.shake(30, 100);
             //game.juicy.jelly(player, 1.5, 100);
             this.kuzzleFlash(1, 2000);
             this.tweenTint(player, 0x333333, 0xFF11FF, 500);
@@ -216,7 +228,9 @@ GameRoundState.prototype = {
         deathMessage.x = player.x - 80;
         deathMessage.y = player.y - 140;
         player.filters = [filterPixelate3];
-        decor.filters = [filterPixelate3];
+        //decor.filters = [filterPixelate3];
+
+        game.stage.filters = [nfilter];
     },
     spawnMonster: function() {
         decorHP = 50;
@@ -243,7 +257,7 @@ GameRoundState.prototype = {
     },
     decorTakesDamageFromGroundPound: function() {
         if(groundPounding && flying) {
-            game.juicy.shake(30, 60);
+            //game.juicy.shake(30, 60);
             flying = false;
             decorHP -= 20;
             this.tweenTint(decor, 0x333333, 0xFF11FF, 100);
@@ -256,7 +270,7 @@ GameRoundState.prototype = {
         l.destroy();
         decorHP -= 1;
         this.tweenTint(decor, 0x333333, 0xFF11FF, 100);
-        game.juicy.shake(20, 30);
+        //game.juicy.shake(20, 30);
         if(decorHP <= 0) {
             this.decorDies();
         }

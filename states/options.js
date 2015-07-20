@@ -51,7 +51,7 @@ OptionsState.prototype = {
         musicOptions.loop = true;
         if(this.game.hasMusic) musicOptions.play();
 
-        var kuzzle = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'kuzzle');
+        var kuzzle = this.game.add.sprite(320, 180, 'kuzzleTitle');
         kuzzle.anchor.setTo(0.5, 1.25);
         this.game.add.tween(kuzzle.scale).to({ x: 0.82, y: 0.82}, 980, Phaser.Easing.Elastic.Out, true, 0, -1);
         var blurX = this.game.add.filter('BlurX');
@@ -67,7 +67,7 @@ OptionsState.prototype = {
 
         sprite.filters = [filter, blurX, blurY];
 
-        menuItem = [
+        menuItemOptions = [
             {
                 id: 'FULLSCREEN',
                 selected: true,
@@ -89,22 +89,22 @@ OptionsState.prototype = {
                 spriteIdentifier: 'options-menu-back'
             }
         ];
-        menuItem[0]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'options-menu-fullscreen-selected');
-        menuItem[0]['sprite'].anchor.setTo(0.5, 0.5);
+        menuItemOptions[0]['sprite'] = this.game.add.sprite(320, 180, 'options-menu-fullscreen-selected');
+        menuItemOptions[0]['sprite'].anchor.setTo(0.5, 0.5);
 
-        menuItem[1]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'options-menu-music-unselected');
-        menuItem[1]['sprite'].anchor.setTo(0.5, -0.5);
+        menuItemOptions[1]['sprite'] = this.game.add.sprite(320, 180, 'options-menu-music-unselected');
+        menuItemOptions[1]['sprite'].anchor.setTo(0.5, -0.5);
 
-        menuItem[2]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'options-menu-sounds-unselected');
-        menuItem[2]['sprite'].anchor.setTo(0.5, -1.5);
+        menuItemOptions[2]['sprite'] = this.game.add.sprite(320, 180, 'options-menu-sounds-unselected');
+        menuItemOptions[2]['sprite'].anchor.setTo(0.5, -1.5);
 
-        menuItem[3]['sprite'] = this.game.add.sprite(this.game.world.centerX, this.game.world.centerY, 'options-menu-back-unselected');
-        menuItem[3]['sprite'].anchor.setTo(0.5, -2.5);
+        menuItemOptions[3]['sprite'] = this.game.add.sprite(320, 180, 'options-menu-back-unselected');
+        menuItemOptions[3]['sprite'].anchor.setTo(0.5, -2.5);
 
-        this.game.add.tween(menuItem[0].sprite).from( { y: -1200 }, 1200, Phaser.Easing.Quintic.Out).start();
-        this.game.add.tween(menuItem[1].sprite).from( { y: -1200 }, 1000, Phaser.Easing.Quintic.Out).delay(200).start();
-        this.game.add.tween(menuItem[2].sprite).from( { y: -1200 }, 800, Phaser.Easing.Quintic.Out).delay(400).start();
-        this.game.add.tween(menuItem[3].sprite).from( { y: -1200 }, 600, Phaser.Easing.Quintic.Out).delay(600).start();
+        this.game.add.tween(menuItemOptions[0].sprite).from( { y: -1200 }, 1200, Phaser.Easing.Quintic.Out).start();
+        this.game.add.tween(menuItemOptions[1].sprite).from( { y: -1200 }, 1000, Phaser.Easing.Quintic.Out).delay(200).start();
+        this.game.add.tween(menuItemOptions[2].sprite).from( { y: -1200 }, 800, Phaser.Easing.Quintic.Out).delay(400).start();
+        this.game.add.tween(menuItemOptions[3].sprite).from( { y: -1200 }, 600, Phaser.Easing.Quintic.Out).delay(600).start();
 
         this.keyDown = this.game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
         this.keyDown.onDown.add(this.updateMenu, this);
@@ -114,27 +114,27 @@ OptionsState.prototype = {
         this.enterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
         this.enterKey.onDown.add(this.selectMenuITem, this);
 
-        menuItem[0]['sprite'].inputEnabled = true;
-        menuItem[0]['sprite'].events.onInputDown.add(this.selectFullscreen, this);
-        menuItem[1]['sprite'].inputEnabled = true;
-        menuItem[1]['sprite'].events.onInputDown.add(this.selectMusic, this);
-        menuItem[2]['sprite'].inputEnabled = true;
-        menuItem[2]['sprite'].events.onInputDown.add(this.selectSounds, this);
-        menuItem[3]['sprite'].inputEnabled = true;
-        menuItem[3]['sprite'].events.onInputDown.add(this.selectBack, this);
+        menuItemOptions[0]['sprite'].inputEnabled = true;
+        menuItemOptions[0]['sprite'].events.onInputDown.add(this.selectFullscreen, this);
+        menuItemOptions[1]['sprite'].inputEnabled = true;
+        menuItemOptions[1]['sprite'].events.onInputDown.add(this.selectMusic, this);
+        menuItemOptions[2]['sprite'].inputEnabled = true;
+        menuItemOptions[2]['sprite'].events.onInputDown.add(this.selectSounds, this);
+        menuItemOptions[3]['sprite'].inputEnabled = true;
+        menuItemOptions[3]['sprite'].events.onInputDown.add(this.selectBack, this);
     },
     updateMenu: function(ev) {
         var selectedMenu = 0;
         nextMenu = ev.event.keyIdentifier == 'Down' ? 1 : -1;
-        menuItem.forEach(function(e, i) {
+        menuItemOptions.forEach(function(e, i) {
             if(e.selected) {
-                selectedMenu = typeof menuItem[i + (nextMenu)] === "undefined" ? ev.event.keyIdentifier == 'Down' ? 0 : 3 : i + (nextMenu);
+                selectedMenu = typeof menuItemOptions[i + (nextMenu)] === "undefined" ? ev.event.keyIdentifier == 'Down' ? 0 : 3 : i + (nextMenu);
             }
             e.selected = false;
             e.sprite.loadTexture(e.spriteIdentifier + '-unselected');
         });
-        menuItem[selectedMenu].sprite.loadTexture(menuItem[selectedMenu].spriteIdentifier + '-selected');
-        menuItem[selectedMenu].selected = true;
+        menuItemOptions[selectedMenu].sprite.loadTexture(menuItemOptions[selectedMenu].spriteIdentifier + '-selected');
+        menuItemOptions[selectedMenu].selected = true;
     },
     selectMenuITem: function() {
         switch(this.getSelectedMenu().id) {
@@ -151,10 +151,10 @@ OptionsState.prototype = {
     },
     getSelectedMenu: function() {
         var selectedMenu = 0;
-        menuItem.forEach(function(e, i) {
+        menuItemOptions.forEach(function(e, i) {
             if(e.selected) selectedMenu = i;
         });
-        return menuItem[selectedMenu];
+        return menuItemOptions[selectedMenu];
     },
     selectFullscreen: function() {
         if(!this.game.isFullScreen) {

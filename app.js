@@ -1,7 +1,7 @@
 function Game() {}
 Game.prototype = {
     start: function() {
-        game = new Phaser.Game(640, 360, Phaser.WEBGL, 'kuzzle-fighters');
+        game = new Phaser.Game(640, 360, Phaser.WEBGL, 'kuzzle-tournament');
 
         game.state.add('boot', BootState);
 
@@ -26,6 +26,8 @@ Game.prototype = {
         game.state.add('lobby', LobbyState);
 
         game.state.add('game-end', GameEndState);
+
+        game.state.add('not-enough-players', NotEnoughPlayersState);
 
         game.state.start('boot');
     }
