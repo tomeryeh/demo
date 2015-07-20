@@ -155,8 +155,6 @@
 				bias = [0, 0];
 			}
 
-			bias = [0, 0];
-
 			return new Promise(
 				function(resolve, reject) {
 					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
@@ -192,7 +190,7 @@
 						}
 					} else {
 						leftText = "i need a ride";
-						rightText = "i'm looking of ra customer";
+						rightText = "i'm looking for a customer";
 					}
 
 					userMarker.setMap(map);
