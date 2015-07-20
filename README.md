@@ -13,9 +13,16 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 ##How to install Cabble
 
 client/ must be reachable from client 
-(and index.html is the entry point)
+(and client/index.html is the entry point)
 
 
+###change Kuzzle Adress 
+See in client/src/app.js and found 
+	KUZZLE_URL = '....whatever ',
+
+
+
+##Dev process  
 
 ### Server
 ```bash
