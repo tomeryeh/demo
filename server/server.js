@@ -12,7 +12,7 @@ var _ = require('underscore');
 var appsDir = path.join(__dirname, '..');
 
 app.get('/', function(req, res) {
-	res.sendFile(appsDir + "/index.html");
+	res.sendFile(appsDir + "/client/index.html");
 });
 
 app.use("/client/", function(req, res, next) {
