@@ -12,23 +12,27 @@ var _ = require('underscore');
 var appsDir = path.join(__dirname, '..');
 
 app.get('/', function(req, res) {
-	res.sendFile(appsDir + "/client/index.html");
+	res.sendFile(appsDir + "/index.html");
 });
 
-app.use("/client/", function(req, res, next) {
+app.use("/src/", function(req, res, next) {
 	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
 
 app.use("/bower_components/", function(req, res, next) {
-	res.sendFile(appsDir + "/client/" + req.client._httpMessage.req.originalUrl);
+	res.sendFile(appsDir +  req.client._httpMessage.req.originalUrl);
 });
 
 app.use("/css/", function(req, res, next) {
-	res.sendFile(appsDir + "/client/" + req.client._httpMessage.req.originalUrl);
+	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
+});
+
+app.use("/lib/", function(req, res, next) {
+	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
 
 app.use("/assets/", function(req, res, next) {
-	res.sendFile(appsDir + "/client/" + req.client._httpMessage.req.originalUrl);
+	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
 
 app.use(function(req, res, next) {

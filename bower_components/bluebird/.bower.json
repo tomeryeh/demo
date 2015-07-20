@@ -38,7 +38,7 @@
     "tag": "v2.9.34",
     "commit": "28a4c561458b16c783b36cfadcbdbd55e76429e2"
   },
-  "_source": "https://github.com/petkaantonov/bluebird.git",
+  "_source": "git://github.com/petkaantonov/bluebird.git",
   "_target": "~2.9.33",
   "_originalSource": "bluebird"
 }

@@ -155,6 +155,8 @@
 				bias = [0, 0];
 			}
 
+			bias = [0, 0];
+
 			return new Promise(
 				function(resolve, reject) {
 					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
@@ -251,11 +253,13 @@
 
 					// 3 seconds after the center of the map has changed, pan back to the
 					// marker.
+					/*
 					google.maps.event.addListener(map, 'center_changed', function() {
 						window.setTimeout(function() {
 							map.panTo(userMarker.getPosition());
 						}, 3000);
 					});
+*/
 
 					var visible = !userType;
 
@@ -308,7 +312,6 @@
 								marker.setMap(null);
 								console.dir(marker.infowindow);
 								google.maps.event.clearListeners(marker.infowindow, 'click');
-								//google.maps.event.removeListeners(marker.infowindow);
 							}
 						);
 
@@ -346,7 +349,6 @@
 						if (currentWindowClose)
 							currentWindowClose();
 					}
-					//infowindow.close(map, otherMarker);
 					else {
 						if (currentWindowClose)
 							currentWindowClose();
