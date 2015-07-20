@@ -54,7 +54,6 @@ LobbyState.prototype = {
             self.drawLobby(false);
         });
 
-        this.game.input.onDown.add(this.quitGame, this);
         this.quitKey = this.game.input.keyboard.addKey(Phaser.Keyboard.Q);
         this.quitKey.onDown.add(this.quitGame, this);
 
