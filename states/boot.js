@@ -9,7 +9,7 @@ BootState.prototype = {
 
         //this.game.plugins.add(Phaser.Plugin.SaveCPU);
 
-        this.game.hasMusic = false;
+        this.game.hasMusic = true;
 
         this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
         this.game.isFullScreen = false;
