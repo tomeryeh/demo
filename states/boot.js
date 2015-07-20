@@ -1,13 +1,8 @@
 function BootState() {}
 BootState.prototype = {
     preload: function() {
-        // load preloader assets
     },
     create: function() {
-        // setup game environment
-        // scale, input etc..
-
-        //this.game.plugins.add(Phaser.Plugin.SaveCPU);
 
         this.game.hasMusic = true;
 
@@ -17,8 +12,7 @@ BootState.prototype = {
         this.game.minimumPlayersPerRoom = 2;
         this.game.maximumPlayersPerRoom = 8;
 
-        //this.game.kuzzleUrl = 'http://localhost:7512';
-        //this.game.kuzzleUrl = 'http://192.168.0.24:7512';
+        // Change Kuzzle API URL here:
         this.game.kuzzleUrl = 'http://api.uat.kuzzle.io:7512';
 
         /*this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
