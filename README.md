@@ -12,6 +12,11 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 
 ##How to install Cabble
 
+client/ must be reachable from client 
+(and index.html is the entry point)
+
+
+
 ### Server
 ```bash
 npm update
