@@ -4,7 +4,7 @@ module.exports = function(grunt) {
 
 	return {
 		html: {
-			files: ['client/index.html'],
+			files: ['index.html'],
 			//tasks: ['handlebars'],
 			options: {
 				debounceDelay: 250,
@@ -21,7 +21,7 @@ module.exports = function(grunt) {
 			}
 		},
 		less: {
-			files: 'client/css/*.less',
+			files: 'css/*.less',
 			tasks: ['less'],
 			options: {
 				debounceDelay: 250,
@@ -34,9 +34,9 @@ module.exports = function(grunt) {
 				livereload: true
 			},
 			files: [
-				'client/css/app.css',
-				'client/src/**/*.js',
-				'client/index.html',
+				'css/app.css',
+				'src/**/*.js',
+				'index.html',
 				'locales/**/*.json'
 			]
 		}
