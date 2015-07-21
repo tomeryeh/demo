@@ -147,8 +147,8 @@ var app = {
 	//////////////////(wanabee) static  privates attributes///////////////////////
 
 	var
-		KUZZLE_URL = 'api.uat.kuzzle.io:7512',
-		//KUZZLE_URL = 'http://localhost:8081',
+		//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
+		KUZZLE_URL = 'http://localhost:8081',
 		CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions',
 		CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users',
 		CABBLE_COLLECTION_RIDES = 'coding-challenge-cabble-rides';
@@ -189,6 +189,7 @@ var app = {
 								);
 
 								console.log("cannot save user  locally");
+								return;
 							}
 						});
 					}
@@ -237,8 +238,8 @@ var app = {
 
 			// If a currentRide has been accepted, we only want to subscribe to the other person position
 			if (currentRide) {
-				//	console.log("ride");
-				//	console.log(currentRide);
+					console.log("ride");
+					console.log(currentRide);
 			}
 			if (currentRide && currentRide.status && currentRide.status.indexOf('accepted') !== -1) {
 				filter.and.push({
@@ -256,7 +257,7 @@ var app = {
 				if (message.error) {
 					console.error(message.error);
 				}
-				//console.log("we got position  ");
+				//console.log("we've got position  ");
 				//console.log(message);
 				if (message.action == "create") {
 					var data = message.data;
@@ -267,8 +268,8 @@ var app = {
 					var userId = data.body.userId;
 					app.gisController.addPosition(userPosition, userType, userId);
 				} else {
-					console.log("we got a strange message ");
-					console.log(message);
+					//console.log("we've got a strange message ");
+					//console.log(message);
 
 				}
 
@@ -346,10 +347,11 @@ var app = {
 					return false;
 				}
 
-				console.log("recie a ride ");
+				console.log("recive a ride ");
 				console.log(message);
 
-				app.kuzzleController.manageRideProposal(message);
+
+				app.kuzzleController.manageRideProposal(message.result ? message.result : message);
 			});
 		},
 
@@ -357,8 +359,9 @@ var app = {
 
 			var rideInfo = rideProposal.body;
 			//._source;
-			//if(!rideInfo)
-			//	rideInfo = rideProposal.body;
+			if(!rideInfo)
+				rideInfo = rideProposal._source;
+
 
 			console.log(rideInfo);
 			if (!rideInfo) {
