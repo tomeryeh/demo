@@ -22,10 +22,6 @@ var updateRate = 200;
 var shooted = false;
 var shootCoords = {};
 var hasDamaged = [];
-var tellThatImConnected = 2000;
-var tellThatImConnectedTimer = 0;
-var checkThatPlayersAreAlive = 6000;
-var checkThatPlayersAreAliveTimer = 0;
 var checkedVitality = false;
 function GameRoundNoMonsterState() {}
 GameRoundNoMonsterState.prototype = {
@@ -117,6 +113,10 @@ GameRoundNoMonsterState.prototype = {
         audioLaser1 = game.add.audio('laser1');
         audioLaser2 = game.add.audio('laser2');
         audioYeah = game.add.audio('yeah');
+
+        if(typeof musicInit != "undefined") {
+            musicInit.stop();
+        }
 
         musicGameRound = gameMusics[room.params.level.id];
         if(this.game.hasMusic) musicGameRound.play();
@@ -409,6 +409,15 @@ GameRoundNoMonsterState.prototype = {
                             if(p.id == e._id && (p.kfconnected - p.kflastconnected > 6000)) {
                                 self.handleDisconnect(p);
                                 kuzzle.delete('kf-users', p.id, function() { });
+                                if(roomMasterId == p.id) {
+                                    game.player.isMaster = true;
+                                    console.log('You are now the new master of the room');
+                                    var updateQuery = {
+                                        _id: game.player.rid,
+                                        masterId: game.player.id
+                                    };
+                                    kuzzle.update('kf-rooms', updateQuery, function() { });
+                                }
                             }
                         });
                     }
@@ -957,51 +966,68 @@ GameRoundNoMonsterState.prototype = {
         console.log('Player connected: ' + p.username);
 
         if(joinInit) {
-            var newPlayer = {
-                id             : p.id,
-                look           : p.look,
-                kflastconnected: 0,
-                kfconnected    : 0,
-                username       : p.username,
-                isAlive        : true,
-                color          : p.color,
-                hp             : defaultHp,
-                shadow         : this.addPlayerShadow(p.look),
-                sprite         : this.addPlayer(p.id, p.look),
-                emitter        : this.addPlayerEmitter(),
-                hpMeter        : this.addPlayerHPMeter(),
-                tag            : this.addPlayerTag(p.username),
-                blood          : this.addPlayerBlood(),
-                x              : 0.0,
-                y              : 0.0,
-                vx             : 0.0,
-                vy             : 0.0,
-                team           : null
-            };
+            var alreadyConnected = false;
+            room.players.forEach(function(pac) {
+                if(pac.id == p.id) {
+                    alreadyConnected = true;
+                }
+            });
+            if(!alreadyConnected) {
+                var newPlayer = {
+                    id: p.id,
+                    look: p.look,
+                    kflastconnected: 0,
+                    kfconnected: 0,
+                    username: p.username,
+                    isAlive: true,
+                    color: p.color,
+                    hp: defaultHp,
+                    shadow: this.addPlayerShadow(p.look),
+                    sprite: this.addPlayer(p.id, p.look),
+                    emitter: this.addPlayerEmitter(),
+                    hpMeter: this.addPlayerHPMeter(),
+                    tag: this.addPlayerTag(p.username),
+                    blood: this.addPlayerBlood(),
+                    x: 0.0,
+                    y: 0.0,
+                    vx: 0.0,
+                    vy: 0.0,
+                    team: null
+                };
 
-            if(room.params.rules.id == 'TM') {
-                room.params.teams.blue.forEach(function(i) {
-                    if(i == p.id)
-                        newPlayer.team = 'blue';
-                });
-                room.params.teams.red.forEach(function(i) {
-                    if(i == p.id)
-                        newPlayer.team = 'red';
-                });
+                if(room.params.rules.id == 'TM') {
+                    room.params.teams.blue.forEach(function (i) {
+                        if (i == p.id)
+                            newPlayer.team = 'blue';
+                    });
+                    room.params.teams.red.forEach(function (i) {
+                        if (i == p.id)
+                            newPlayer.team = 'red';
+                    });
+                }
+                room.players.push(newPlayer);
             }
-            room.players.push(newPlayer);
         } else {
-            var newPlayer = {
-                id             : p.id,
-                look           : p.look,
-                kflastconnected: 0,
-                kfconnected    : 0,
-                username       : p.username,
-                isAlive        : true,
-                color          : p.color,
-                team           : null
-            };
-            room.joiningPlayers.push(newPlayer);
+            var alreadyConnected = false;
+            room.joiningPlayers.forEach(function(pac) {
+                if(pac.id == p.id) {
+                    alreadyConnected = true;
+                }
+            });
+            if(!alreadyConnected) {
+                var newPlayer = {
+                    id: p.id,
+                    look: p.look,
+                    kflastconnected: 0,
+                    kfconnected: 0,
+                    username: p.username,
+                    isAlive: true,
+                    color: p.color,
+                    team: null,
+                    hp: defaultHp
+                };
+                room.joiningPlayers.push(newPlayer);
+            }
         }
     },
     handleDisconnect: function(p) {

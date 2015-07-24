@@ -12,6 +12,11 @@ BootState.prototype = {
         this.game.minimumPlayersPerRoom = 2;
         this.game.maximumPlayersPerRoom = 8;
 
+        tellThatImConnected = 2000;
+        tellThatImConnectedTimer = 0;
+        checkThatPlayersAreAlive = 6000;
+        checkThatPlayersAreAliveTimer = 0;
+
         // Change Kuzzle API URL here:
         this.game.kuzzleUrl = 'http://api.uat.kuzzle.io:7512';
 

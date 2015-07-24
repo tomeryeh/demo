@@ -199,12 +199,20 @@ ConnectingState.prototype = {
         roomIdRoom = kuzzle.subscribe('kf-rooms', {"term": {"rid": roomId}}, function(data) {
             console.log('Update to room!');
             if(data.action == "update") {
+                if(typeof data.body.master != "undefined") {
+                    roomMasterId = data.body.master;
+                }
                 if(typeof gameState == "undefined") {
                     gameState = "";
                 }
                 if(!game.player.isMaster && (data.body.master == game.player.id)) {
                     console.log('You are now the new master of this room');
                     game.player.isMaster = true;
+                    var updateQuery = {
+                        _id: game.player.rid,
+                        masterId: game.player.id
+                    };
+                    kuzzle.update('kf-rooms', updateQuery, function() { });
                 }
                 if(data.body.params != null) {
                     room.params = data.body.params;
@@ -226,7 +234,7 @@ ConnectingState.prototype = {
                 } else {
                     if(game.player.status = 'joining' && data.body.roundReady && game.state.current == 'lobby') {
                         game.player.wasWaitingToJoin = true;
-                        self.countDown(false);
+                        self.countDown(true);
                     }
                 }
             }
@@ -250,6 +258,7 @@ ConnectingState.prototype = {
                         console.log('You are now master');
                         game.player.isMaster = true;
                         game.player.rid = roomData.result._id;
+                        roomMasterId = game.player.id;
                         console.log('Updating your current room in kf-users collection..');
                         kuzzle.update('kf-users', {_id: game.player.id, roomId: game.player.rid.toLowerCase().replace("-", "")}, function() {
                             console.log('Done!');
@@ -278,6 +287,7 @@ ConnectingState.prototype = {
                                     lowestCount = r._source.connectedPlayers;
                                     roomToJoin = r._id;
                                     roomToJoinStatus = r._source.status;
+                                    roomMasterId = r._source.masterId;
                                 }
                             });
                             if(roomToJoin == null) {
@@ -289,6 +299,7 @@ ConnectingState.prototype = {
                                     game.player.isMaster = true;
                                     roomToJoin = roomData.result._id;
                                     game.player.rid = roomToJoin;
+                                    roomMasterId = game.player.rid;
                                     kuzzle.update('kf-users', {_id: game.player.id, roomId: roomData.result._id.toLowerCase().replace("-", ""), master: game.player.id}, function() {
                                         self.subscribeAndGo(roomData.result._id);
                                     });

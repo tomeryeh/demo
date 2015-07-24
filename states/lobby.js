@@ -9,7 +9,7 @@ LobbyState.prototype = {
     },
     create: function() {
         musicLobby = game.add.audio('music-lobby');
-        if(game.hasMusic) musicLobby.fadeIn();
+        if(game.hasMusic) musicLobby.play();
 
         audioCountdown = game.add.audio('countdown');
 
@@ -262,5 +262,47 @@ LobbyState.prototype = {
         });
     },
     update: function() {
+        if(game.time.now > tellThatImConnectedTimer) {
+            tellThatImConnectedTimer = game.time.now + tellThatImConnected;
+            kuzzle.update('kf-users', {_id: game.player.id, kflastconnected: game.time.now}, function() {
+            });
+            room.players.forEach(function(p) {
+                if(typeof p.kfconnected == "undefined" || isNaN(p.kfconnected)) {
+                    p.kfconnected = 0;
+                }
+                if(typeof p.kflastconnected == "undefined" || isNaN(p.kflastconnected)) {
+                    p.kflastconnected = 0;
+                }
+                if(p.id != game.player.id) {
+                    p.kfconnected = p.kfconnected + tellThatImConnected;
+                }
+            });
+        }
+
+        if(game.time.now > checkThatPlayersAreAliveTimer) {
+            checkThatPlayersAreAliveTimer = game.time.now + checkThatPlayersAreAlive;
+            var filterConnected = {
+                "filter": {
+                    "term": {
+                        "roomId": game.player.rid.toLowerCase().replace("-", "")
+                    }
+                }
+            };
+            kuzzle.search('kf-users', filterConnected, function(response) {
+                response.result.hits.hits.forEach(function(e, i) {
+                    if(e._id != game.player.id) {
+                        room.players.forEach(function (p) {
+                            if(p.id == e._id && (p.kfconnected - p.kflastconnected > 6000)) {
+                                self.handleDisconnect(p);
+                                kuzzle.delete('kf-users', p.id, function() { });
+                                if(roomMasterId == p.id) {
+                                    game.player.isMaster = true;
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        }
     }
 };

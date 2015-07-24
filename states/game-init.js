@@ -165,7 +165,7 @@ GameInitState.prototype = {
                 console.log('Updated connected player count for current room (' + room.players.length + ' players remaining)');
                 kuzzle.delete('kf-users', game.player.id, function() {
                     console.log('All done!');
-                    musicGameRound.stop();
+                    musicInit.stop();
                     game.stateTransition.to('not-enough-players');
                 });
             });
@@ -188,9 +188,89 @@ GameInitState.prototype = {
             console.log('Updated connected player count for current room (' + room.players.length + ' players remaining)');
             kuzzle.delete('kf-users', game.player.id, function() {
                 console.log('All done!');
-                musicGameRound.stop();
+                musicInit.stop();
                 game.state.start('main-menu', true, false);
             });
         });
+    },
+    update: function() {
+        if(game.time.now > tellThatImConnectedTimer) {
+            tellThatImConnectedTimer = game.time.now + tellThatImConnected;
+            kuzzle.update('kf-users', {_id: game.player.id, kflastconnected: game.time.now}, function() {
+            });
+            room.players.forEach(function(p) {
+                if(typeof p.kfconnected == "undefined" || isNaN(p.kfconnected)) {
+                    p.kfconnected = 0;
+                }
+                if(typeof p.kflastconnected == "undefined" || isNaN(p.kflastconnected)) {
+                    p.kflastconnected = 0;
+                }
+                if(p.id != game.player.id) {
+                    p.kfconnected = p.kfconnected + tellThatImConnected;
+                }
+            });
+        }
+
+        if(game.time.now > checkThatPlayersAreAliveTimer) {
+            checkThatPlayersAreAliveTimer = game.time.now + checkThatPlayersAreAlive;
+            var filterConnected = {
+                "filter": {
+                    "term": {
+                        "roomId": game.player.rid.toLowerCase().replace("-", "")
+                    }
+                }
+            };
+            kuzzle.search('kf-users', filterConnected, function(response) {
+                response.result.hits.hits.forEach(function(e, i) {
+                    if(e._id != game.player.id) {
+                        room.players.forEach(function (p) {
+                            if(p.id == e._id && (p.kfconnected - p.kflastconnected > 6000)) {
+                                self.handleDisconnect(p);
+                                kuzzle.delete('kf-users', p.id, function() { });
+                                if(roomMasterId == p.id) {
+                                    game.player.isMaster = true;
+                                    console.log('You are now the new master of the room');
+                                    console.log('Generating rules..');
+                                    room.params = self.generateRoundRules();
+                                    var updateQuery = {
+                                        _id: game.player.rid,
+                                        rid: game.player.rid,
+                                        params: room.params,
+                                        roundReady: true,
+                                        showWinner: false,
+                                        ending: null,
+                                        masterId: game.player.id
+                                    };
+                                    if(room.params.rules.id == 'TM') {
+                                        self.shufflePlayers(room.players);
+                                        var blueTeam = [];
+                                        var redTeam = [];
+                                        room.players.forEach(function(p, i) {
+                                            if(i % 2 === 0)
+                                                blueTeam.push(p.id);
+                                            else
+                                                redTeam.push(p.id)
+                                        });
+                                        var teams = {
+                                            red: redTeam,
+                                            blue: blueTeam
+                                        };
+                                        room.params.teams = teams;
+                                    }
+                                    room.joiningPlayers.forEach(function(p) {
+                                        room.players.push(p);
+                                    });
+                                    setTimeout(function() {
+                                        kuzzle.update('kf-rooms', updateQuery, function () {
+                                            console.log('Pushed new game round rules to other players');
+                                        });
+                                    }, 2000);
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+        }
     }
 };
