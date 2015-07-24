@@ -316,6 +316,7 @@ ConnectingState.prototype = {
                                     };
                                     if(lowestCount == 0) {
                                         console.log('You are now master');
+                                        game.player.isMaster = true;
                                         updateQuery.master = game.player.id;
                                     } else {
                                         console.log('You are not master');
