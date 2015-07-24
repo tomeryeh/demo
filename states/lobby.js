@@ -160,7 +160,7 @@ LobbyState.prototype = {
                     };
                     musicLobby.stop();
                     game.stateTransition.to('game-init', true, false, initData);
-                }, 1000);
+                }, 10000);
             }, 2000);
         }
         if(wwtj) {

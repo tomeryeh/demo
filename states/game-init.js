@@ -170,5 +170,27 @@ GameInitState.prototype = {
                 });
             });
         }
+    },
+    quitGame: function() {
+        console.log('Disconnecting..');
+        kuzzle.unsubscribe(roomIdPlayers);
+        kuzzle.unsubscribe(roomIdGameUpdates);
+        kuzzle.unsubscribe(roomIdRoom);
+        var roomUpdateQuery = {
+            _id: game.player.rid,
+            connectedPlayers: room.players.length
+        };
+        if(game.player.isMaster && room.players.length > 0) {
+            console.log('You were master, now electing a new master');
+            roomUpdateQuery.master = room.players[0].id;
+        }
+        kuzzle.update('kf-rooms', roomUpdateQuery, function() {
+            console.log('Updated connected player count for current room (' + room.players.length + ' players remaining)');
+            kuzzle.delete('kf-users', game.player.id, function() {
+                console.log('All done!');
+                musicGameRound.stop();
+                game.state.start('main-menu', true, false);
+            });
+        });
     }
 };

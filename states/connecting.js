@@ -129,6 +129,11 @@ ConnectingState.prototype = {
         console.log('RoomID: ' + roomId);
         console.log('Now subscribing to collections..');
         connectText.setText("Connecting to Kuzzle..\nOK!");
+        window.addEventListener("beforeunload", function(e) {
+            if(typeof self.quitGame == 'function') {
+                self.quitGame();
+            }
+        });
         roomIdPlayers = kuzzle.subscribe('kf-users', {"term": {"roomId": roomId.toLowerCase().replace("-", "")}}, function(data) {
             if(data.action == "create" && data._id != game.player.id) {
                 var newPlayer = {id: data._id, username: data.body.username, color: data.body.color, look: data.body.look};
