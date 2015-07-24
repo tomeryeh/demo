@@ -129,10 +129,10 @@ ConnectingState.prototype = {
         console.log('RoomID: ' + roomId);
         console.log('Now subscribing to collections..');
         connectText.setText("Connecting to Kuzzle..\nOK!");
-        roomIdPlayers = kuzzle.subscribe('kf-users', {"term": {"roomId": roomId}}, function(data) {
+        roomIdPlayers = kuzzle.subscribe('kf-users', {"term": {"roomId": roomId.toLowerCase().replace("-", "")}}, function(data) {
             if(data.action == "create" && data._id != game.player.id) {
                 var newPlayer = {id: data._id, username: data.body.username, color: data.body.color, look: data.body.look};
-                var text = game.add.text(320, 180, "- Awesome! -\nA new player joined:\n" + data.body.username);
+                /*var text = game.add.text(320, 180, "- Awesome! -\nA new player joined:\n" + data.body.username);
                 text.font = 'Arial';
                 text.fontWeight = 'bold';
                 text.fontSize = 48;
@@ -144,7 +144,7 @@ ConnectingState.prototype = {
                 text.anchor.set(0.5);
                 text.alpha = 0.0;
                 var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
-                game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+                game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);*/
                 if(typeof self.handleConnect == 'function') {
                     self.handleConnect(newPlayer);
                 }
@@ -152,8 +152,8 @@ ConnectingState.prototype = {
             if(data.action == "delete") {
                 var deletedPlayer = getPlayerById(data._id);
                 console.log('deleted player: ');
-                console.log(deletedPlayer);
-                var deletedUsername = deletedPlayer.username;
+                console.log(deletedPlayer.username);
+                /*var deletedUsername = deletedPlayer.username;
                 var text = game.add.text(320, 180, "- Awww.. :( -\nA player left:\n" + deletedUsername);
                 console.log('player left:');
                 console.log(room.players);
@@ -168,7 +168,7 @@ ConnectingState.prototype = {
                 text.anchor.set(0.5);
                 text.alpha = 0.0;
                 var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
-                game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+                game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);*/
                 if(typeof self.handleDisconnect == 'function') {
                     self.handleDisconnect(deletedPlayer);
                 }
@@ -204,18 +204,25 @@ ConnectingState.prototype = {
                 if(data.body.params != null) {
                     room.params = data.body.params;
                 }
-                if(data.body.roundReady && game.state.current == 'game-init' && room.params != null && gameState != "STARTING") {
-                    gameState = 'STARTING';
-                    self.runGameRound();
-                }
-                if(data.body.ending != null && game.state.current == 'game-round-no-monster' && gameState != 'ENDING') {
-                    gameState = 'ENDING';
-                    room.ending = data.body.ending;
-                    self.prepareToGameEnd();
-                }
-                if(data.body.showWinner == true && game.state.current == 'game-end' && gameState != 'SHOWING_WINNER') {
-                    gameState = 'SHOWING_WINNER';
-                    self.showWinner();
+                if(game.player.status = 'joined') {
+                    if(data.body.roundReady && game.state.current == 'game-init' && room.params != null && gameState != "STARTING") {
+                        gameState = 'STARTING';
+                        self.runGameRound();
+                    }
+                    if(data.body.ending != null && game.state.current == 'game-round-no-monster' && gameState != 'ENDING') {
+                        gameState = 'ENDING';
+                        room.ending = data.body.ending;
+                        self.prepareToGameEnd();
+                    }
+                    if(data.body.showWinner == true && game.state.current == 'game-end' && gameState != 'SHOWING_WINNER') {
+                        gameState = 'SHOWING_WINNER';
+                        self.showWinner();
+                    }
+                } else {
+                    if(game.player.status = 'joining' && data.body.roundReady && game.state.current == 'lobby') {
+                        game.player.wasWaitingToJoin = true;
+                        self.countDown(false);
+                    }
                 }
             }
             if(data.action == 'delete') {
@@ -229,17 +236,17 @@ ConnectingState.prototype = {
         var looks = ["pierre", "gilles"];
         var look = looks[Math.floor(Math.random() * looks.length)];
         kuzzle.create("kf-users", {username: kuzzleGame.name, color: randColor, look: look}, true, function(createData) {
-            game.player = {id: createData.result._id, username: kuzzleGame.name, color: randColor, hp: 50, look: look};
+            game.player = {id: createData.result._id, username: kuzzleGame.name, color: randColor, hp: 50, look: look, status: 'joining'};
             kuzzle.search('kf-rooms', {"filter": {"exists": {"field": "connectedPlayers"}}}, function (totalRooms) {
                 if(totalRooms.result.hits.total == 0) {
                     console.log('No room found, creating..');
-                    kuzzle.create("kf-rooms", {connectedPlayers: 1, master: game.player.id}, true, function (roomData) {
+                    kuzzle.create("kf-rooms", {connectedPlayers: 1, master: game.player.id, status: 'waiting'}, true, function (roomData) {
                         console.log('Created room #' + roomData.result._id);
                         console.log('You are now master');
                         game.player.isMaster = true;
                         game.player.rid = roomData.result._id;
                         console.log('Updating your current room in kf-users collection..');
-                        kuzzle.update('kf-users', {_id: game.player.id, roomId: game.player.rid}, function() {
+                        kuzzle.update('kf-users', {_id: game.player.id, roomId: game.player.rid.toLowerCase().replace("-", "")}, function() {
                             console.log('Done!');
                             self.subscribeAndGo(roomData.result._id);
                         });
@@ -259,30 +266,34 @@ ConnectingState.prototype = {
                         kuzzle.search('kf-rooms', {}, function(roomsData) {
                             lowestCount = 100;
                             roomToJoin = null;
+                            roomToJoinStatus = 'waiting';
                             roomsData.result.hits.hits.forEach(function(r) {
                                 console.log(r._source.connectedPlayers,  game.maximumPlayersPerRoom);
                                 if(r._source.connectedPlayers < lowestCount && r._source.connectedPlayers < game.maximumPlayersPerRoom) {
                                     lowestCount = r._source.connectedPlayers;
                                     roomToJoin = r._id;
+                                    roomToJoinStatus = r._source.status;
                                 }
                             });
                             if(roomToJoin == null) {
-                                kuzzle.create("kf-rooms", {connectedPlayers: 1}, true, function (roomData) {
-                                    console.log('No more room left in any room, creating one..');
+                                console.log('No more room left in any room, creating one..');
+                                game.player.wasWaitingToJoin = false;
+                                kuzzle.create("kf-rooms", {connectedPlayers: 1, status: 'waiting'}, true, function (roomData) {
                                     console.log('Created room #' + roomData.result._id);
                                     console.log('You are now master');
                                     game.player.isMaster = true;
                                     roomToJoin = roomData.result._id;
                                     game.player.rid = roomToJoin;
-                                    kuzzle.update('kf-users', {_id: game.player.id, roomId: roomData.result._id, master: game.player.id}, function() {
+                                    kuzzle.update('kf-users', {_id: game.player.id, roomId: roomData.result._id.toLowerCase().replace("-", ""), master: game.player.id}, function() {
                                         self.subscribeAndGo(roomData.result._id);
                                     });
                                 });
                             } else {
                                 game.player.isMaster = false;
                                 game.player.rid = roomToJoin;
+                                game.player.wasWaitingToJoin = roomToJoinStatus != 'waiting';
                                 console.log('Joining room #' + roomToJoin + ' (' + lowestCount + ' player(s) connected)');
-                                kuzzle.update('kf-users', {_id: game.player.id, roomId: roomToJoin}, function(updateData) {
+                                kuzzle.update('kf-users', {_id: game.player.id, roomId: roomToJoin.toLowerCase().replace("-", "")}, function(updateData) {
                                     var updateQuery = {
                                         _id: roomToJoin,
                                         connectedPlayers: (lowestCount + 1)

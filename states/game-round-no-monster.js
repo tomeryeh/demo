@@ -38,7 +38,8 @@ GameRoundNoMonsterState.prototype = {
         playersToConnect = initData.players;
         room = {
             players: [],
-            params: initData.params
+            params: initData.params,
+            joiningPlayers: []
         };
         lasers = [];
         nades = [];
@@ -63,6 +64,14 @@ GameRoundNoMonsterState.prototype = {
         });
         live = true;
         gameState = "STARTED";
+
+        if(game.player.isMaster) {
+            var updateQueryFalseReady = {
+                _id: game.player.rid,
+                roundReady: false
+            };
+            kuzzle.update('kf-rooms', updateQueryFalseReady, function () {});
+        }
     },
     preload: function() {
         game.load.image('player', 'assets/sprites/game-round/player.png');
@@ -183,11 +192,13 @@ GameRoundNoMonsterState.prototype = {
         self.fullscreenKey.onDown.add(self.fullScreen, self);
         self.quitKey.onDown.add(self.quitGame, self);
 
+        joinInit = true;
         playersToConnect.forEach(function(p) {
             if(p.id != game.player.id) {
                 self.handleConnect(p);
             }
         });
+        joinInit = false;
 
         blurSprite = game.add.sprite(0, 0);
         blurSprite.width = game.width;
@@ -944,44 +955,62 @@ GameRoundNoMonsterState.prototype = {
     },
     handleConnect: function(p) {
         console.log('Player connected: ' + p.username);
-        var newPlayer = {
-            id             : p.id,
-            look           : p.look,
-            kflastconnected: 0,
-            kfconnected    : 0,
-            username       : p.username,
-            isAlive        : true,
-            color          : p.color,
-            hp             : defaultHp,
-            shadow         : this.addPlayerShadow(p.look),
-            sprite         : this.addPlayer(p.id, p.look),
-            emitter        : this.addPlayerEmitter(),
-            hpMeter        : this.addPlayerHPMeter(),
-            tag            : this.addPlayerTag(p.username),
-            blood          : this.addPlayerBlood(),
-            x              : 0.0,
-            y              : 0.0,
-            vx             : 0.0,
-            vy             : 0.0,
-            team           : null
-        };
 
-        if(room.params.rules.id == 'TM') {
-            room.params.teams.blue.forEach(function(i) {
-                if(i == p.id)
-                    newPlayer.team = 'blue';
-            });
-            room.params.teams.red.forEach(function(i) {
-                if(i == p.id)
-                    newPlayer.team = 'red';
-            });
+        if(joinInit) {
+            var newPlayer = {
+                id             : p.id,
+                look           : p.look,
+                kflastconnected: 0,
+                kfconnected    : 0,
+                username       : p.username,
+                isAlive        : true,
+                color          : p.color,
+                hp             : defaultHp,
+                shadow         : this.addPlayerShadow(p.look),
+                sprite         : this.addPlayer(p.id, p.look),
+                emitter        : this.addPlayerEmitter(),
+                hpMeter        : this.addPlayerHPMeter(),
+                tag            : this.addPlayerTag(p.username),
+                blood          : this.addPlayerBlood(),
+                x              : 0.0,
+                y              : 0.0,
+                vx             : 0.0,
+                vy             : 0.0,
+                team           : null
+            };
+
+            if(room.params.rules.id == 'TM') {
+                room.params.teams.blue.forEach(function(i) {
+                    if(i == p.id)
+                        newPlayer.team = 'blue';
+                });
+                room.params.teams.red.forEach(function(i) {
+                    if(i == p.id)
+                        newPlayer.team = 'red';
+                });
+            }
+            room.players.push(newPlayer);
+        } else {
+            var newPlayer = {
+                id             : p.id,
+                look           : p.look,
+                kflastconnected: 0,
+                kfconnected    : 0,
+                username       : p.username,
+                isAlive        : true,
+                color          : p.color,
+                team           : null
+            };
+            room.joiningPlayers.push(newPlayer);
         }
-
-        //newPlayer.sprite.tint = newPlayer.color;
-        room.players.push(newPlayer);
     },
     handleDisconnect: function(p) {
         console.log('Player disconnected: ' + p.username);
+        room.joiningPlayers.forEach(function(e, i) {
+            if(e.id == p.id) {
+                room.joiningPlayers.splice(i, 1);
+            }
+        });
         room.players.forEach(function(e, i) {
             if(e.id == p.id) {
                 e.sprite.body.enable = false;

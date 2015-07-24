@@ -5,6 +5,9 @@ GameInitState.prototype = {
         self = this;
         roundData = initData;
     },
+    preload: function() {
+        game.load.image('please-wait', 'assets/sprites/please-wait.png');
+    },
     create: function() {
         musicInit = this.game.add.audio('music-game');
         if(this.game.hasMusic) musicInit.play();
@@ -14,6 +17,17 @@ GameInitState.prototype = {
         game.stage.backgroundColor = 0x000000;
 
         room.params = null;
+
+        if(roundData.displayWaitingMessage) {
+            console.log('Waiting for players..');
+            pleaseWait = game.add.sprite(100, 60, 'please-wait');
+            pleaseWait.alpha = 0.0;
+            pleaseWait.scale.set(0.0, 0.0);
+            game.add.tween(pleaseWait.scale).to({x: 0.8, y: 0.8}, 1000, Phaser.Easing.Bounce.Out, true);
+            game.add.tween(pleaseWait).to({angle: 1080}, 1000, Phaser.Easing.Elastic.Out, true);
+            game.add.tween(pleaseWait).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out, true);
+        }
+
         if(game.player.isMaster) {
             console.log('Generating rules..');
             room.params = self.generateRoundRules();
@@ -70,7 +84,7 @@ GameInitState.prototype = {
         });
         if(!foundMe)
             room.players.push(game.player);
-        if(room.players.length >= 2) {
+        if(room.players.length >= 2 && (room.players.length % 2 == 0)) {
             modes.push({id: 'TM', label: 'Team match!'});
         }
         var levels = [
@@ -86,6 +100,10 @@ GameInitState.prototype = {
     },
     runGameRound: function() {
         console.log('Round ready, now starting!');
+
+        if(typeof pleaseWait != "undefined") {
+            pleaseWait.alpha = 0.0;
+        }
 
         initRules.text = 'Rules: ' + room.params.rules.label;
         initLevel.text = 'Level: ' + room.params.level.label;
@@ -107,5 +125,50 @@ GameInitState.prototype = {
     shufflePlayers: function(_players) {
         for(var j, x, i = _players.length; i; j = Math.floor(Math.random() * i), x = _players[--i], _players[i] = _players[j], _players[j] = x);
         return _players;
+    },
+    handleConnect: function(p) {
+        console.log('Player connected: ' + p.username);
+        var newPlayer = {
+            id             : p.id,
+            look           : p.look,
+            kflastconnected: 0,
+            kfconnected    : 0,
+            username       : p.username,
+            isAlive        : true,
+            color          : p.color,
+            team           : null
+        };
+
+        room.joiningPlayers.push(newPlayer);
+    },
+    handleDisconnect: function(p) {
+        console.log('Player disconnected: ' + p.username);
+        room.joiningPlayers.forEach(function(e, i) {
+            if(e.id == p.id) {
+                room.joiningPlayers.splice(i, 1);
+            }
+        });
+        room.players.forEach(function(e, i) {
+            if(e.id == p.id) {
+                room.players.splice(i, 1);
+            }
+        });
+        if(room.players.length + 1 < game.minimumPlayersPerRoom) {
+            kuzzle.unsubscribe(roomIdPlayers);
+            kuzzle.unsubscribe(roomIdGameUpdates);
+            kuzzle.unsubscribe(roomIdRoom);
+            var roomUpdateQuery = {
+                _id: game.player.rid,
+                connectedPlayers: 0
+            };
+            kuzzle.update('kf-rooms', roomUpdateQuery, function() {
+                console.log('Updated connected player count for current room (' + room.players.length + ' players remaining)');
+                kuzzle.delete('kf-users', game.player.id, function() {
+                    console.log('All done!');
+                    musicGameRound.stop();
+                    game.stateTransition.to('not-enough-players');
+                });
+            });
+        }
     }
 };

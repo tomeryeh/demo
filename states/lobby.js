@@ -20,7 +20,7 @@ LobbyState.prototype = {
 
         game.stage.backgroundColor = 0x000000;
 
-        var filters = {
+        var filtersSearchLobby = {
             "filter": {
                 "term": {
                     "roomId": game.player.rid.toLowerCase().replace("-", "")
@@ -36,7 +36,9 @@ LobbyState.prototype = {
 
         self.lobbyDrawables = [];
 
-        kuzzle.search('kf-users', filters, function(response) {
+        kuzzle.search('kf-users', filtersSearchLobby, function(response) {
+            console.log('Users:');
+            console.log(response);
             response.result.hits.hits.forEach(function(e, i) {
                 room.players.push({
                     id: e._id,
@@ -106,10 +108,10 @@ LobbyState.prototype = {
             isCountingDown = true;
             if(wasCheckingForPlayers) {
                 setTimeout(function () {
-                    self.countDown();
+                    self.countDown(game.player.wasWaitingToJoin);
                 }, 1500);
             } else {
-                self.countDown();
+                self.countDown(game.player.wasWaitingToJoin);
             }
         }
     },
@@ -127,27 +129,50 @@ LobbyState.prototype = {
             }, 1000);
         }
     },
-    countDown: function() {
-        musicLobby.fadeOut();
-        game.add.tween(countdown).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start();
-        var readyScale = game.add.tween(countdown.scale).to({x: 2.0, y: 2.0}, 1000, Phaser.Easing.Exponential.Out).start();
-        readyScale.onComplete.add(function() {
-            game.add.tween(countdown).to({alpha: 0.0}, 200, Phaser.Easing.Exponential.Out).start();
-        });
-        setTimeout(function() {
-            audioCountdown.play();
-
-            self.cd();
-
+    countDown: function(wwtj) {
+        if(game.player.isMaster) {
+            var roomUpdateQueryReady = {
+                _id: game.player.rid,
+                status: 'ongoing'
+            };
+            kuzzle.update('kf-rooms', roomUpdateQueryReady, function() {
+                console.log('Sended the ongoing state to current room');
+            });
+        }
+        if(!wwtj) {
+            game.player.status = 'joined';
+            musicLobby.fadeOut();
+            game.add.tween(countdown).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start();
+            var readyScale = game.add.tween(countdown.scale).to({x: 2.0, y: 2.0}, 1000, Phaser.Easing.Exponential.Out).start();
+            readyScale.onComplete.add(function() {
+                game.add.tween(countdown).to({alpha: 0.0}, 200, Phaser.Easing.Exponential.Out).start();
+            });
             setTimeout(function() {
-                initData = {
-                    player: game.player,
-                    players: room.players
-                };
-                musicLobby.stop();
-                game.stateTransition.to('game-init', true, false, initData);
-            }, 10000);
-        }, 2000);
+                audioCountdown.play();
+
+                self.cd();
+
+                setTimeout(function() {
+                    initData = {
+                        player: game.player,
+                        players: room.players,
+                        displayWaitingMessage: false
+                    };
+                    musicLobby.stop();
+                    game.stateTransition.to('game-init', true, false, initData);
+                }, 1000);
+            }, 2000);
+        }
+        if(wwtj) {
+            game.player.wasWaitingToJoin = false;
+            musicLobby.stop();
+            initData = {
+                player: game.player,
+                players: room.players,
+                displayWaitingMessage: true
+            };
+            game.stateTransition.to('game-init', true, false, initData);
+        }
     },
     tweenTint: function(obj, startColor, endColor, time) {
         // create an object to tween with our step value at 0

@@ -87,6 +87,9 @@ GameEndState.prototype = {
         game.add.tween(winner).to({alpha: 1.0}, 500, 'Linear').delay(200).start();
 
         setTimeout(function() {
+            room.joiningPlayers.forEach(function(p) {
+                room.players.push(p);
+            });
             initData = {
                 player: game.player,
                 players: room.players
@@ -94,5 +97,50 @@ GameEndState.prototype = {
             musicInit.stop();
             game.stateTransition.to('game-init', true, false, initData);
         }, 2000);
+    },
+    handleConnect: function(p) {
+        console.log('Player connected: ' + p.username);
+        var newPlayer = {
+            id             : p.id,
+            look           : p.look,
+            kflastconnected: 0,
+            kfconnected    : 0,
+            username       : p.username,
+            isAlive        : true,
+            color          : p.color,
+            team           : null
+        };
+
+        room.joinningPlayers.push(newPlayer);
+    },
+    handleDisconnect: function(p) {
+        console.log('Player disconnected: ' + p.username);
+        room.joiningPlayers.forEach(function(e, i) {
+            if(e.id == p.id) {
+                room.joiningPlayers.splice(i, 1);
+            }
+        });
+        room.players.forEach(function(e, i) {
+            if(e.id == p.id) {
+                room.players.splice(i, 1);
+            }
+        });
+        if(room.players.length + 1 < game.minimumPlayersPerRoom) {
+            kuzzle.unsubscribe(roomIdPlayers);
+            kuzzle.unsubscribe(roomIdGameUpdates);
+            kuzzle.unsubscribe(roomIdRoom);
+            var roomUpdateQuery = {
+                _id: game.player.rid,
+                connectedPlayers: 0
+            };
+            kuzzle.update('kf-rooms', roomUpdateQuery, function() {
+                console.log('Updated connected player count for current room (' + room.players.length + ' players remaining)');
+                kuzzle.delete('kf-users', game.player.id, function() {
+                    console.log('All done!');
+                    musicGameRound.stop();
+                    game.stateTransition.to('not-enough-players');
+                });
+            });
+        }
     }
 };

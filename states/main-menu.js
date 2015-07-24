@@ -50,7 +50,8 @@ MainMenuState.prototype = {
         spriteMainMenu.filters = [filterMainMenu];
 
         room = {
-            players: []
+            players: [],
+            joiningPlayers: []
         };
 
         game.stage.backgroundColor = 0x000000;

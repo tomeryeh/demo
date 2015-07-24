@@ -1,7 +1,8 @@
 game = new Game();
 game.start();
 room = {
-    players: []
+    players: [],
+    joiningPlayers : []
 };
 
 function getPlayerById(id) {
