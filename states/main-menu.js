@@ -70,6 +70,9 @@ MainMenuState.prototype = {
         tournament.anchor.setTo(0.5, 0.5);
         game.add.tween(tournament.scale).to({x: 1.4, y: 1.4}, 440, Phaser.Easing.Elastic.Out, true, 0, -1);
 
+        version = game.add.sprite(5, 340, 'version');
+        version.scale.set(0.5, 0.5);
+
         menuItem = [
             {
                 id: 'ONLINE_GAME',

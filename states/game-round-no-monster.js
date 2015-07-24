@@ -14,7 +14,7 @@ var emitterLifeSpan = 0;
 var flying = false;
 var groundPounding = false;
 var shadowOffset = new Phaser.Point(10, 8);
-var defaultHp = 50;
+var defaultHp = 80;
 var laserDamage = 5;
 var groundPoundDamage = 20;
 var live = false;
@@ -213,7 +213,7 @@ GameRoundNoMonsterState.prototype = {
         live = !live;
     },
     addPlayer: function(id, look) {
-        var p = game.add.sprite(Math.floor((Math.random() * (game.world.width - 200)) + 200), game.world.centerY, look);
+        var p = game.add.sprite(Math.floor((Math.random() * (2000)) + 10), game.world.centerY, look);
         p.animations.add('idle', [0, 1], 2, true);
         p.animations.add('run', [2, 3], 3, true);
         game.physics.enable(p, Phaser.Physics.ARCADE);
@@ -262,7 +262,7 @@ GameRoundNoMonsterState.prototype = {
     },
     addPlayerHPMeter: function() {
         var style = {font: '36px Helvetica', fontWeight: 'bold', fill: "#FFF", align: "center"};
-        h = game.add.text(game.world.centerX, game.world.centerY, decorHP, style);
+        h = game.add.text(game.world.centerX, game.world.centerY, defaultHp, style);
         h.filters = [filterPixelate3];
 
         return h;
@@ -561,12 +561,12 @@ GameRoundNoMonsterState.prototype = {
             groundPounding = false;
         }
 
-        if(fireButton.isDown && game.time.now > shootTimer) {
+        if(fireButton.isDown && game.time.now > shootTimer && game.player.isAlive) {
             shootTimer = game.time.now + shootRecover;
             this.shootLaser();
         }
 
-        if(nadeButton.isDown && nadeCount > 0 && game.time.now > nadeTimer) {
+        if(nadeButton.isDown && nadeCount > 0 && game.time.now > nadeTimer && game.player.isAlive) {
             nadeCount -= 1;
             nadeTimer = game.time.now + nadeRecover;
             this.throwNade();
@@ -624,7 +624,7 @@ GameRoundNoMonsterState.prototype = {
                 game.juicy.shake(60, 200);
                 self.tweenTint(n, 0x333333, 0xFF11FF, 1000);
                 var o = n.owner;
-                explosion = game.add.emitter(game.world.centerX, game.world.centerY, 400);
+                var explosion = game.add.emitter(game.world.centerX, game.world.centerY, 400);
                 explosion.emitX = n.x;
                 explosion.emitY = n.y - 10;
                 explosion.setScale(0.2, 2.0, 0.2, 2.0, 500, Phaser.Easing.Elastic.Out);
@@ -637,11 +637,10 @@ GameRoundNoMonsterState.prototype = {
                 //explosion.angularDrag = 30;
                 //explosion.gravity = -100;
                 explosion.start(false, 1000, 2);
-                nadeFadeOut = game.add.tween(n).to({alpha: 0.0}, 1000, 'Linear', true);
+                var nadeFadeOut = game.add.tween(n).to({alpha: 0.0}, 1000, 'Linear', true);
                 nadeFadeOut.onComplete.add(function() {
                     explosion.on = false;
-                    //explosion.destroy();
-                    //n.destroy();
+                    explosion.destroy();
                 });
                 nades.splice(i, 1);
             }
@@ -655,6 +654,7 @@ GameRoundNoMonsterState.prototype = {
         laser.events.onOutOfBounds.add(self.destroyLaser, self);
         laser.width = 80;
         laser.height = 50;
+        laser.body.setSize(80, 50);
         laser.checkWorldBounds = true;
         laser.outOfBoundsKill = true;
         laser.body.gravity.y = -1000;
@@ -690,6 +690,7 @@ GameRoundNoMonsterState.prototype = {
         laser.events.onOutOfBounds.add(self.destroyLaser, self);
         laser.width = 80;
         laser.height = 50;
+        laser.body.setSize(80, 50);
         laser.checkWorldBounds = true;
         laser.body.gravity.y = -1000;
         laser.tint = Phaser.Color.getRandomColor(100, 255);
@@ -909,18 +910,18 @@ GameRoundNoMonsterState.prototype = {
                 _id: game.player.rid,
                 ending: room.ending
             };
-            setTimeout(function() {
-                kuzzle.update('kf-rooms', updateQuery, function () {
-                    console.log('Pushed new game round rules to other players');
-                    self.prepareToGameEnd();
-                });
-            }, 2000);
+            kuzzle.update('kf-rooms', updateQuery, function () {
+                console.log('Pushed new game round rules to other players');
+            });
+            self.prepareToGameEnd();
         }
     },
     prepareToGameEnd: function() {
-        game.add.tween(blurSprite).to({alpha: 0.5}, 2000, 'Linear').start();
-        musicGameRound.stop();
-        game.stateTransition.to('game-end', true, false, room);
+        game.add.tween(blurSprite).to({alpha: 0.5}, 3000, 'Linear').start();
+        setTimeout(function() {
+            musicGameRound.stop();
+            game.stateTransition.to('game-end', true, false, room);
+        }, 3000);
     },
     tweenTint: function(obj, startColor, endColor, time) {
         var colorBlend = {step: 0};

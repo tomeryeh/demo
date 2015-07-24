@@ -82,7 +82,7 @@ LobbyState.prototype = {
             });
             game.add.tween(graphics).to({y:graphics.y - 10}, 250, Phaser.Easing.Elastic.In).delay(delay).start();
 
-            var color = Phaser.Color.getWebRGB(0x000000);
+            var color = Phaser.Color.getWebRGB(0xFFFFFF);
             var style = {font: "28px Helvetica", fill: color, align: "center"};
             var text = game.add.text(320, 180, e.username, style);
             text.z = 0;

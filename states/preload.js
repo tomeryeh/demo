@@ -33,6 +33,7 @@ PreloadState.prototype = {
         this.game.load.image('main-menu-options-unselected', 'assets/sprites/main-menu/options-orange.png');
         this.game.load.image('main-menu-credits-selected', 'assets/sprites/main-menu/credits-yellow.png');
         this.game.load.image('main-menu-credits-unselected', 'assets/sprites/main-menu/credits-orange.png');
+        this.game.load.image('version', 'assets/sprites/version.png');
 
         // Options
         this.game.load.image('options-menu-fullscreen-selected', 'assets/sprites/options/fullscreen-yellow.png');

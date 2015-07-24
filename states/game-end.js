@@ -9,7 +9,7 @@ GameEndState.prototype = {
         musicInit = this.game.add.audio('music-game');
         if(this.game.hasMusic) musicInit.play();
 
-        game.stage.backgroundColor = 0xFFFFFF;
+        game.stage.backgroundColor = 0x000000;
 
         w = null;
         iWon = false;
@@ -37,7 +37,8 @@ GameEndState.prototype = {
         }
         console.log('Match over. Winner: ' + w);
 
-        var style = {font: "24px Helvetica", fill: 0x000000, align: "center"};
+        var color = Phaser.Color.getWebRGB(0xFFFFFF);
+        var style = {font: "24px Helvetica", fill: color, align: "center"};
 
         winner = game.add.text(50, 100, 'Test', style);
         winner.alpha = 0.0;

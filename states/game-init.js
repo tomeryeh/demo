@@ -11,7 +11,7 @@ GameInitState.prototype = {
 
         room.params = null;
 
-        game.stage.backgroundColor = 0xFFFFFF;
+        game.stage.backgroundColor = 0x000000;
 
         room.params = null;
         if(game.player.isMaster) {
@@ -50,7 +50,8 @@ GameInitState.prototype = {
             console.log('Waiting for round rules from Kuzzle..');
         }
 
-        var style = {font: "24px Helvetica", fill: 0x000000, align: "center"};
+        var color = Phaser.Color.getWebRGB(0xFFFFFF);
+        var style = {font: "24px Helvetica", fill: color, align: "center"};
 
         initRules = game.add.text(50, 100, 'Test', style);
         initRules.alpha = 0.0;
