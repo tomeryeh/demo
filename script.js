@@ -47,7 +47,7 @@ angular.module("demo", [])
     };
 
     /**
-     * Add a document in Kuzzle with text in form
+     * This function is triggered when the user click on 'add' button or press enter
      */
     $scope.addTodo = function() {
       kuzzle.create("todo", {type: "todo", label: $scope.newTodo.label, done: false}, true);
@@ -75,7 +75,8 @@ angular.module("demo", [])
     };
 
     /**
-     * This function is triggered when the user click on 'add' button or press enter
+     * Add the document in the angular model
+     *
      * @param todo
      */
     var addToList = function(todo) {
