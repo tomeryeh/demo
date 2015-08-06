@@ -1,20 +1,24 @@
-var kuzzle = new Kuzzle("http://localhost:8081");
+var kuzzle = Kuzzle.init('http://localhost:7512');
 
 angular.module("demo", [])
   .controller("todoCtrl", ["$scope", function($scope) {
 
+
     $scope.newTodo = null;
     $scope.todos = [];
 
+    /**
+     * Initialize the application: retrieve all stored documents and subscribe to them
+     */
     $scope.init = function() {
       getAllTodo();
 
-      kuzzle.subscribe("todo", {term: {type:"todo"}}, function(response) {
+      kuzzle.subscribe("todo", {term: {type:"todo"}}, function(error, response) {
         if(response.action === "create") {
           var newTodo = {
             _id: response._id,
-            label: response.body.label,
-            done: response.body.done
+            label: response._source.label,
+            done: response._source.done
           };
 
           addToList(newTodo);
@@ -32,8 +36,7 @@ angular.module("demo", [])
         if(response.action === "update") {
           $scope.todos.some(function(todo, index) {
             if(todo._id === response._id) {
-              console.log($scope.todos[index]);
-              $scope.todos[index].done = response.body.done;
+              $scope.todos[index].done = response._source.done;
               return true;
             }
           });
@@ -43,26 +46,48 @@ angular.module("demo", [])
       });
     };
 
+    /**
+     * Add a document in Kuzzle with text in form
+     */
     $scope.addTodo = function() {
       kuzzle.create("todo", {type: "todo", label: $scope.newTodo.label, done: false}, true);
       $scope.newTodo = null;
     };
 
+    /**
+     * Triggered when the user check/uncheck the 'done' checkbox
+     * This function will update the document in Kuzzle
+     *
+     * @param index
+     */
     $scope.toggleDone = function(index) {
       kuzzle.update("todo", {_id: $scope.todos[index]._id, done: !$scope.todos[index].done});
     };
 
+    /**
+     * Triggered when the user click on trash button
+     * This function will delete the document in Kuzzle
+     *
+     * @param index
+     */
     $scope.delete = function(index) {
       kuzzle.delete("todo", $scope.todos[index]._id);
     };
 
+    /**
+     * This function is triggered when the user click on 'add' button or press enter
+     * @param todo
+     */
     var addToList = function(todo) {
       $scope.todos.push(todo);
     };
 
+    /**
+     * Fetch in Kuzzle all documents for the todolist
+     */
     var getAllTodo = function() {
-      kuzzle.search("todo", {}, function(response) {
-        response.result.hits.hits.forEach(function(todo) {
+      kuzzle.search("todo", {}, function(error, response) {
+        response.hits.hits.forEach(function(todo) {
           var newTodo = {
             _id: todo._id,
             label: todo._source.label,
