@@ -14,6 +14,11 @@ angular.module("demo", [])
       getAllTodo();
 
       kuzzle.subscribe("todo", {term: {type:"todo"}}, function(error, response) {
+        if (error) {
+          console.error(error);
+        }
+
+        // In case the action is "create", we call the addToList action
         if(response.action === "create") {
           var newTodo = {
             _id: response._id,
@@ -24,6 +29,7 @@ angular.module("demo", [])
           addToList(newTodo);
         }
 
+        // In case the action is "delete", we splice the angular model for remove the entry in array
         if(response.action === "delete") {
           $scope.todos.some(function(todo, index) {
             if(todo._id === response._id) {
@@ -33,6 +39,7 @@ angular.module("demo", [])
           });
         }
 
+        // In case the action is "update", we replace in the angular model with the new one
         if(response.action === "update") {
           $scope.todos.some(function(todo, index) {
             if(todo._id === response._id) {
@@ -42,6 +49,7 @@ angular.module("demo", [])
           });
         }
 
+        // Apply modification in angular model
         $scope.$apply();
       });
     };
@@ -75,7 +83,7 @@ angular.module("demo", [])
     };
 
     /**
-     * Add the document in the angular model
+     * Add the document in Kuzzle
      *
      * @param todo
      */
@@ -88,6 +96,10 @@ angular.module("demo", [])
      */
     var getAllTodo = function() {
       kuzzle.search("todo", {}, function(error, response) {
+        if (error) {
+          console.error(error);
+        }
+
         response.hits.hits.forEach(function(todo) {
           var newTodo = {
             _id: todo._id,
