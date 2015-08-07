@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kuzzle Chat Demo</title>
+  <link rel="stylesheet" href="css/foundation.css"/>
+  <link rel="stylesheet" href="css/app.css"/>
+  <script src="js/vendor/modernizr.js"></script>
+  <script src="js/vendor/socket.io.js"></script>
+  <script type="text/javascript" src="js/vendor/kuzzle.min.js"></script>
+</head>
+<body>
+<div class="row">
+  <div class="large-12 columns">
+    <h1>Kuzzle Chat Demo</h1>
+  </div>
+</div>
+
+<div class="row">
+  <div class="large-12 columns">
+    <div class="content" id="panelChat">
+      <section class="row">
+        <div id="messageFlow" class="large-9 columns">
+          <div class="message">
+            <small>Welcome to the Kuzzle Chat Demo!</small>
+          </div>
+        </div>
+        <div class="large-3 columns">
+          <div id="userList" class="panel"></div>
+        </div>
+      </section>
+      <div class="large-9 columns">
+        <div class="row collapse postfix-round">
+          <div class="small-9 columns">
+            <input id="inputChatMessage" type="text" placeholder="Write a message here">
+          </div>
+          <div class="small-3 columns">
+            <a id="sendChatMessage" href="" class="button postfix">Send</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<footer class="row">
+  <hr>
+  <div class="large-12 columns">
+    <p><strong>Kuzzle</strong> is published under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a></p>
+  </div>
+</footer>
+<script src="js/vendor/jquery.js"></script>
+<script src="js/vendor/foundation.min.js"></script>
+<script>
+  $(function () {
+    $(document).foundation();
+    startDemo('http://localhost:7512');
+  });
+</script>
+<script src="js/app.js"></script>
+</body>
+</html>
