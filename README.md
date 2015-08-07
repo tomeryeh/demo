@@ -1,3 +1,1 @@
-# Kuzzle Demo
-
-# What is Kuzzle ?
+# Kuzzle Demos
