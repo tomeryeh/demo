@@ -5,7 +5,7 @@ A simple real-time collaborative TODO list with [Kuzzle](https://github.com/kuzz
 # How to run this demo
 
 * You need to have a running [Kuzzle](https://github.com/kuzzleio/kuzzle).
-* Configure the `script.js` file for change the Kuzzle URL if you change the default Kuzzle installation
+* Configure the `script.js` file for change the Kuzzle URL if you have changed the default Kuzzle installation
 * You can directly open the `index.html` file in your browser.
  
 **Note:**
