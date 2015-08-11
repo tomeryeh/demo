@@ -16,6 +16,7 @@ angular.module("demo", [])
       kuzzle.subscribe("todo", {term: {type:"todo"}}, function(error, response) {
         if (error) {
           console.error(error);
+          return false;
         }
 
         // In case the action is "create", we call the addToList action
@@ -98,6 +99,7 @@ angular.module("demo", [])
       kuzzle.search("todo", {}, function(error, response) {
         if (error) {
           console.error(error);
+          return false;
         }
 
         response.hits.hits.forEach(function(todo) {
