@@ -4,8 +4,20 @@ Kuzzle - TODO List tutorial
 The main purpose of this file is to learn how to use Kuzzle by creating a clone of this TODO list.  
 In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-javascript).
 
+* [Application initialization](#app-init)
+    * [Angular initialization](#angular-init)
+    * [Function getAllTodo](#get-all-todo)
+    * [Display in view](#display-in-view)
+* [Push](#push)
+    * [Create](#create)
+    * [Update](#update)
+    * [Delete](#delete)
+* [Add real-time](#real-time)
+
+<a name="app-init" />
 # Application initialization
 
+<a name="angular-init" />
 ## Angular initialization
 
 In Angular, for execute a function on initialization, we can add the `ng-init` attribute
@@ -28,6 +40,7 @@ We also need an array with all TODO: we create an empty array `$scope.todos` lin
 $scope.todos = [];
 ```
 
+<a name="get-all-todo" />
 ## Function getAllTodo 
 
 In function `getAllTodo` we get all existing TODO.  
@@ -83,6 +96,7 @@ var getAllTodo = function() {
 
 The line `$scope.$apply()` is added just for allow Angular to manually trigger life cycle. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
 
+<a name="display-in-view" />
 ## Display in view
 
 In Angular, when we change the model in javascript, the view is automatically updated. For display the TODO list we loop on all entries and display it with the attribute `ng-repeat`. For each we display a checkbox, the label, and an icon with a trash for delete it.
@@ -102,9 +116,10 @@ In Angular, when we change the model in javascript, the view is automatically up
 ```
 
 
-
+<a name="push" />
 # Push
 
+<a name="create" />
 ## Create
 
 When the user type a new label in form and press enter, we add the new TODO to Kuzzle.  
@@ -134,6 +149,7 @@ $scope.addTodo = function() {
 };
 ```
 
+<a name="update" />
 ## Update
 
 When a TODO is in the list, the user can check it for mark as done. In the HTML, we add the action to execute:
@@ -150,6 +166,7 @@ $scope.toggleDone = function(index) {
 };
 ```
 
+<a name="delete" />
 ## Delete
 
 When the user click on the trash, we send to Kuzzle that we want to delete the corresponding TODO.  
@@ -167,6 +184,7 @@ $scope.delete = function(index) {
 };
 ```
 
+<a name="real-time" />
 # Add real-time
 
 We can list all existing TODO, create, update and delete a TODO. Now we want to display the list dynamicly without reloading the page and share with other users in real time our actions. In Angular initialization, we call the function `subscribe` from the SDK that allow to execute a callback, each time a document matching a filter is create, updated or deleted.  
@@ -211,7 +229,7 @@ In the callback, the response parameter contain the document and also the action
     }
     ```
     
-* If the action id `update`, we search the corresponding TODO and we update it
+* If the action is `update`, we search the corresponding TODO and we update it
 
     ```js
     if(response.action === "update") {
