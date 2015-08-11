@@ -229,7 +229,7 @@ In the callback, the response parameter contain the document and also the action
     }
     ```
     
-* If the action id `update`, we search the corresponding TODO and we update it
+* If the action is `update`, we search the corresponding TODO and we update it
 
     ```js
     if(response.action === "update") {
