@@ -7,6 +7,7 @@ In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-
 # Application initialization
 
 ## Angular initialization
+
 In Angular, for execute a function on initialization, we can add the `ng-init` attribute
 
 ```html
@@ -80,7 +81,7 @@ var getAllTodo = function() {
 };
 ```
 
-The line `$scope.$apply()` is added just for allow Angular to manually trigger life cycle (https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply)
+The line `$scope.$apply()` is added just for allow Angular to manually trigger life cycle. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
 
 ## Display in view
 
