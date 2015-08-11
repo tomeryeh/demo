@@ -1,0 +1,65 @@
+<div class="page-header">
+    <h2>{{ currentEvent.name }}</h2>
+</div>
+
+<table class="table" ng-init="init()">
+    <thead>
+    <tr>
+        <th class="text-center">Participants</th>
+		<th class="text-center" ng-repeat="date in currentEvent.dates" ng-if="date.active">{{ date.value }}</th>
+        <th class="text-center">Validate</th>
+    </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="(key, participant) in participants">
+            <td>
+                <div class="col-md-2">
+                    <button ng-click="removeParticipant($index)" class="btn btn-danger btn-md" data-title="Remove">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </div>
+                <div class="col-md-10" ng-click="editParticipant($index)">
+                    <input ng-if="editingParticipant == $index" ng-model="participant.name" type="text" class="form-control" placeholder="Name"/>
+                    <button class="btn btn-md btn-primary btn-block" ng-if="editingParticipant != $index">
+                        <span class="glyphicon glyphicon-pencil"></span>
+                        {{ participant.name}}
+                    </button>
+                </div>
+            </td>
+		    <td ng-repeat="date in participant.dates" ng-if="currentEvent.dates[$index].active" class="text-center">
+                <input ng-if="editingParticipant == key" type="checkbox" ng-click='toggleDate(date)' ng-checked="date.value" />
+                <div ng-class="date.value ? bg-success : bg-danger" ng-if="editingParticipant != key" type="checkbox">
+                    <span ng-if="date.value" ng-if="editingParticipant != key" class="glyphicon glyphicon-ok"></span>
+                    <span ng-if="date.value == false" ng-if="editingParticipant != key" class="glyphicon glyphicon-remove"></span>
+                </div>
+            </td>
+            <td class="text-center">
+                <button ng-if="editingParticipant == $index" ng-disabled="participant.name == ''" type="submit" class="btn btn-success" ng-click="updateParticipant(participant)">
+                    <span class="glyphicon glyphicon-ok"></span>
+                    Validate
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="col-md-10 col-md-offset-2">
+                    <input ng-focus="editParticipant('new')" ng-model="newParticipant.name" type="text" class="form-control" placeholder="Name"/>
+                </div>
+            </td>
+		    <td ng-repeat="date in currentEvent.dates" ng-if="date.active" class="text-center">
+                <input type="checkbox" ng-click='toggleDate(newParticipant.dates[$index])' ng-checked="newParticipant.dates[$index].value" ng-disabled="newParticipant.name == ''" />
+            </td>
+            <td class="text-center">
+                <button ng-if="editingParticipant == 'new'" ng-disabled="newParticipant.name == ''" type="submit" class="btn btn-success" ng-click="createParticipant()">
+                    <span class="glyphicon glyphicon-ok"></span>
+                    Validate
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<button type="submit" class="btn btn-primary pull-right" ng-click="changeView('/ListEvent')">
+    <span class="glyphicon glyphicon-arrow-left"></span>
+    Return to list
+</button>
