@@ -3,8 +3,8 @@
 These demos show how to use [Kuzzle](https://github.com/kuzzleio/kuzzle) to manage complex real-time applications with persistence.  
 You will also find a step by step tutorial for some demos:
 
-* [chat](chat/tuto.md)
-* [todolist](todolist/tuto.md)
+* [chat](chat/tutorial.md)
+* [todolist](todolist/tutorial.md)
  
 # What is Kuzzle
 
