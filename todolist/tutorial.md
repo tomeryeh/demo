@@ -1,6 +1,7 @@
-# Kuzzle - TODO List tutorial
+Kuzzle - TODO List tutorial
+===
 
-The main purpose of this file is to learn how to use Kuzzle by create a clone of this TODO list.  
+The main purpose of this file is to learn how to use Kuzzle by creating a clone of this TODO list.  
 In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-javascript).
 
 # Application initialization
@@ -8,13 +9,13 @@ In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-
 ## Angular initialization
 In Angular, for execute a function on initialization, we can add the `ng-init` attribute
 
-```
+```html
 <div class="container" ng-controller="todoCtrl" ng-init="init()">
 ```
 
 In `script.js`, line 13, we define a function `init`
 
-```
+```js
 $scope.init = function() {
     getAllTodo();
 }
@@ -22,7 +23,9 @@ $scope.init = function() {
 
 We also need an array with all TODO: we create an empty array `$scope.todos` line 8.
 
-    $scope.todos = [];
+```js
+$scope.todos = [];
+```
 
 ## Function getAllTodo 
 
@@ -32,7 +35,7 @@ For search, we can use the function `search` in the Javascript SDK. This functio
 * a query
 * a callback to execute when we have the result
  
-```
+```js
 kuzzle.search("todo", {}, function(error, response) {
 
 });
@@ -40,7 +43,7 @@ kuzzle.search("todo", {}, function(error, response) {
 
 In the callback we test if there is an error and display it in console.
 
-```
+```js
 kuzzle.search("todo", {}, function(error, response) {
     if (error) {
         console.error(error);
@@ -53,7 +56,7 @@ We add the line `return false;` for stoping the callback execution and prevent e
 
 Now, we are sure if the execution continue it's because we have a result, we can loop on all TODOs and add them to the `$scope.todos` array.
 
-```
+```js
 var getAllTodo = function() {
   kuzzle.search("todo", {}, function(error, response) {
     if (error) {
@@ -83,7 +86,7 @@ The line `$scope.$apply()` is added just for allow Angular to manually trigger l
 
 In Angular, when we change the model in javascript, the view is automatically updated. For display the TODO list we loop on all entries and display it with the attribute `ng-repeat`. For each we display a checkbox, the label, and an icon with a trash for delete it.
 
-```
+```html
 <tr ng-repeat="todo in todos" ng-class="{success: todo.done}">
     <td><input type="checkbox" ng-checked="todo.done"/></td>
     <td>{{ todo.label }}</td>
@@ -106,7 +109,7 @@ In Angular, when we change the model in javascript, the view is automatically up
 When the user type a new label in form and press enter, we add the new TODO to Kuzzle.  
 In Angular we can bind an input with a model in javascript with attribute `ng-model` and we can bind a function when the user click on button or press enter with attribute `ng-click`.
 
-```
+```html
 <form class="form-inline">
     <div class="form-group">
         <input type="text" class="form-control" ng-model="newTodo.label" placeholder="something to do..."/>
@@ -122,7 +125,8 @@ In Javascript we can now specify a function `addTodo` that using the function `c
 * an optionnal callback when the create is done
 
 We get information from variable `$scope.newTodo` for send the label typed by user and after that we can reset this variable.
-```
+
+```js
 $scope.addTodo = function() {
   kuzzle.create("todo", {type: "todo", label: $scope.newTodo.label, done: false}, true);
   $scope.newTodo = null;
@@ -133,13 +137,13 @@ $scope.addTodo = function() {
 
 When a TODO is in the list, the user can check it for mark as done. In the HTML, we add the action to execute:
 
-```
+```html
 <td><input type="checkbox" ng-checked="todo.done" ng-click="toggleDone($index)"/></td>
 ```
 
 And in the javascript, we can implement the function `toggleDone` that send the new TODO 'done' status to Kuzzle:
 
-```
+```js
 $scope.toggleDone = function(index) {
   kuzzle.update("todo", {_id: $scope.todos[index]._id, done: !$scope.todos[index].done});
 };
@@ -150,13 +154,13 @@ $scope.toggleDone = function(index) {
 When the user click on the trash, we send to Kuzzle that we want to delete the corresponding TODO.  
 First, we add an action on click with the attribute `ng-click`
 
-```
+```html
 <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Delete" ng-click="delete($index)">
 ```
 
 In javascript we can use the method `delete` from SDK for delete a document by its ID
 
-```
+```js
 $scope.delete = function(index) {
   kuzzle.delete("todo", $scope.todos[index]._id);
 };
@@ -168,7 +172,7 @@ We can list all existing TODO, create, update and delete a TODO. Now we want to 
 
 Above, in our document we had add a fake type 'todo' attribute for filter on it (because in Kuzzle version 0.2.0, we can't subscribe to a whole collection without apllying a filter). We can create a subscribe:
 
-```
+```js
 kuzzle.subscribe("todo", {term: {type:"todo"}}, function(error, response) {
     if (error) {
       console.error(error);
@@ -181,7 +185,7 @@ In the callback, the response parameter contain the document and also the action
 
 * If the action is `create`, we add the new TODO into the list
 
-    ```
+    ```js
     if(response.action === "create") {
       var newTodo = {
         _id: response._id,
@@ -194,7 +198,8 @@ In the callback, the response parameter contain the document and also the action
     ```
 
 * If the action is `delete`, we search the corresponding TODO in the list and we remove it
-    ```
+
+    ```js
     if(response.action === "delete") {
       $scope.todos.some(function(todo, index) {
         if(todo._id === response._id) {
@@ -206,7 +211,8 @@ In the callback, the response parameter contain the document and also the action
     ```
     
 * If the action id `update`, we search the corresponding TODO and we update it
-    ```
+
+    ```js
     if(response.action === "update") {
       $scope.todos.some(function(todo, index) {
         if(todo._id === response._id) {
