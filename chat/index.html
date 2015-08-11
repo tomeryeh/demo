@@ -16,29 +16,38 @@
     <h1>Kuzzle Chat Demo</h1>
   </div>
 </div>
-
 <div class="row">
-  <div class="large-12 columns">
-    <div class="content" id="panelChat">
-      <section class="row">
-        <div id="messageFlow" class="large-9 columns">
-          <div class="message">
-            <small>Welcome to the Kuzzle Chat Demo!</small>
-          </div>
-        </div>
-        <div class="large-3 columns">
-          <div id="userList" class="panel"></div>
-        </div>
-      </section>
-      <div class="large-9 columns">
-        <div class="row collapse postfix-round">
-          <div class="small-9 columns">
-            <input id="inputChatMessage" type="text" placeholder="Write a message here">
-          </div>
-          <div class="small-3 columns">
-            <a id="sendChatMessage" href="" class="button postfix">Send</a>
-          </div>
-        </div>
+  <div class="large-5 columns">
+    <ul class="button-group round">
+      <li><a id="deleteRoom" href="#" class="button alert small"><b>-</b></a></li>
+      <li><button id="switchRoom" href="#" data-dropdown="roomList" aria-controls="roomList" aria-expanded="false" class="button dropdown small secondary"></button><br/>
+        <ul id="roomList" data-dropdown-content class="f-dropdown" aria-hidden="true">
+        </ul>
+      </li>
+      <li><a id="createRoom" href="#" class="button success small"><b>+</b></a></li>
+    </ul>
+  </div>
+</div>
+<div class="row">
+  <small id='userCount'></small>
+  <div class="content" id="panelChat">
+    <div id="messageFlow">
+      <div class="message">
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row medium-uncollapse large-collapse">
+  <div class="large-9 columns">
+    <div class="row collapse postfix-round">
+      <div class="small-4 columns">
+        <a id="changeAlias" href="#" class="button secondary prefix"><img src="./document_edit.png" border="0" alt="change alias" width="20" height="20"/><span id="alias">foo</span></a>
+      </div>
+      <div class="small-4 columns">
+        <input id="inputChatMessage" type="text" placeholder="Write a message here">
+      </div>
+      <div class="small-1 columns end">
+        <a id="sendChatMessage" href="#" class="button postfix">Send</a>
       </div>
     </div>
   </div>
