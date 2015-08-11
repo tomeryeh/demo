@@ -167,13 +167,12 @@ function refreshRooms() {
           if (room._source.name === whoami.chatRoom) {
             $('#switchRoom').text(room._source.name);
           }
-          else {
-            if (room._source.name === GLOBAL_CHAT_ROOM) {
-              GLOBAL_CHAT_ROOMID = room._id;
-            }
 
-            addRoomSwitch(room._id, room._source.name);
+          if (room._source.name === GLOBAL_CHAT_ROOM) {
+            GLOBAL_CHAT_ROOMID = room._id;
           }
+
+          addRoomSwitch(room._id, room._source.name);
         });
       }
     }
