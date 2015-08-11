@@ -32,6 +32,12 @@ chooseYourDay.controller("ListEventController", ["$scope", "$location", function
         $scope.getAllEvents();
 
         $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { type: "chooseyourday_event" } }, function (error, response) {
+
+            if (error) {
+                console.error(error);
+                return false;
+            }
+
             if (response.action === "create") {
                 $scope.addToList(response._id, response._source);
             }
@@ -65,6 +71,11 @@ chooseYourDay.controller("ListEventController", ["$scope", "$location", function
 
     $scope.getAllEvents = function () {
         kuzzle.search(kuzzleChannel, { "filter": { "term": { type: "chooseyourday_event" } } }, function (error, response) {
+            if (error) {
+                console.error(error);
+                return false;
+            }
+
             response.hits.hits.forEach(function (event) {
                 $scope.addToList(event._id, event._source);
             });
@@ -109,6 +120,11 @@ chooseYourDay.controller("AddEventController", ["$scope", "$location", "$routePa
             $scope.addADay();
         } else {
             kuzzle.get(kuzzleChannel, $eventId, function (error, response) {
+                if (error) {
+                    console.error(error);
+                    return false;
+                }
+
                 $scope.newEvent = {
                     "_id": response._id,
                     "name": response._source.name,
@@ -173,6 +189,11 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
 
     $scope.init = function () {
         kuzzle.get(kuzzleChannel, $routeParams.eventId, function (error, response) {
+            if (error) {
+                console.error(error);
+                return false;
+            }
+
             $scope.currentEvent = {
                 "_id": response._id,
                 "type": response._source.type,
@@ -242,6 +263,11 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
         ]}};
 
         kuzzle.search(kuzzleChannel, filter, function (error, response) {
+            if (error) {
+                console.error(error);
+                return false;
+            }
+
             response.hits.hits.forEach(function (participant) {
                 $scope.addToParticipants(participant._id, participant._source);
             });
@@ -257,6 +283,11 @@ chooseYourDay.controller("OpenEventController", ["$scope", "$location", "$routeP
         ]};
 
         $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (error, response) {
+            if (error) {
+                console.error(error);
+                return false;
+            }
+
             if (response.action === "create") {
                 $scope.addToParticipants(response._id, response._source);
             }
