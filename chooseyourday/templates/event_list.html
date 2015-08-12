@@ -1,34 +1,4 @@
-<table class="table" ng-init="init()">
-    <thead>
-    <tr>
-        <th>Events</th>
-        <th>Edit</th>
-        <th>Delete</th>
-    </tr>
-    </thead>
-    <tbody>
-        <tr ng-repeat="event in events" ng-class="{success: event.done}">
-            <td ng-click="changeView('/OpenEvent/' + event._id)"><a href="#/OpenEvent/{{ event._id }}">{{ event.name }}</a></td>
-            <td>
-                <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Edit" ng-click="changeView('/EditEvent/' + event._id)">
-                    <button class="btn btn-info btn-md" data-title="Edit"">
-                        <span class="glyphicon glyphicon-pencil"></span>
-                        Edit
-                    </button>
-                </p>
-            </td>
-            <td>
-                <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Delete" ng-click="delete($index)">
-                    <button class="btn btn-danger btn-md" data-title="Delete">
-                        <span class="glyphicon glyphicon-trash"></span>
-                        Delete
-                    </button>
-                </p>
-            </td>
-        </tr>
-    </tbody>
-</table>
-<button type="submit" class="btn btn-primary" ng-click="changeView('/EditEvent/new')">
-    <span class="glyphicon glyphicon-plus"></span>
-    New event
-</button>
+<div ng-init="init()">
+  <div ng-hide="viewForm" ng-include="'templates/event_table.html'"></div>
+  <div ng-show="viewForm" ng-include="'templates/event_edit.html'"></div>
+</div>

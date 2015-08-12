@@ -1,12 +1,12 @@
 
-<div class="col-md-5" ng-init="init()">
+<div class="col-md-5">
     <ng-form name="eventForm">
         <div class="form-group">
             <label for="event-name">Event name</label>
-            <input type="text" id="event-name" class="form-control" ng-model="newEvent.name" placeholder="Name" required/>
+            <input type="text" id="event-name" class="form-control" ng-model="_event.name" placeholder="Name" required/>
         </div>
         <label>Dates</label>
-        <ng-form ng-repeat="date in newEvent.dates" name="dateFieldForm">
+        <ng-form ng-repeat="date in _event.dates" name="dateFieldForm">
             <div class="row form-group" ng-if="date.active">
                 <div class="col-md-11">
                     <div class="input-group date" date-time-picker>
@@ -32,9 +32,10 @@
         <div class="form-group">
             <button type="submit" ng-disabled="!eventForm.$valid" class="btn btn-success" ng-click="addEvent()">
                 <span class="glyphicon glyphicon-ok"></span>
-                Create
+                <span ng-show="isNew">Create</span>
+                <span ng-hide="isNew">Update</span>
             </button>
-            <button type="submit" class="btn btn-danger" ng-click="changeView('/ListEvent')"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+            <button type="submit" class="btn btn-danger" ng-click="viewList()"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
         </div>
     </ng-form>
 </div>
