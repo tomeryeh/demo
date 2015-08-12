@@ -1,0 +1,45 @@
+<div class="col-md-5">
+    <ng-form name="eventForm">
+        <div class="form-group">
+            <label for="event-name">Event name</label>
+            <input type="text" id="event-name" class="form-control" ng-model="_event.name" placeholder="Name" required/>
+        </div>
+        <label>Dates</label>
+        <ng-form ng-repeat="date in _event.dates" name="dateFieldForm">
+            <div class="row form-group" ng-if="date.active">
+                <div class="col-md-11">
+                    <div class="dropdown">
+                      <a class="dropdown-toggle" id="dropdown-{{ $index }}" role="button" data-toggle="dropdown" data-target="#" href>
+                        <div class="input-group">
+                            <input type="text" id="date-{{ $index }}" class="form-control" data-ng-model="date.value" placeholder="Date" required>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        </div>
+                      </a>
+                      <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                        <datetimepicker data-ng-model="date.value" data-datetimepicker-config="{ dropdownSelector: '#dropdown-{{ $index }}', minView: 'hour' }"/>
+                      </ul>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <button ng-if="$index != 0" ng-click="removeADay($index)" class="btn btn-danger btn-md" data-title="Remove">
+                        <span class="glyphicon glyphicon-remove"></span>
+                    </button>
+                </div>
+            </div>
+        </ng-form>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary" ng-click="addADay()">
+                <span class="glyphicon glyphicon-calendar"></span>
+                Add a day
+            </button>
+        </div>
+        <div class="form-group">
+            <button type="submit" ng-disabled="!eventForm.$valid" class="btn btn-success" ng-click="addEvent()">
+                <span class="glyphicon glyphicon-ok"></span>
+                <span ng-show="isNew">Create</span>
+                <span ng-hide="isNew">Update</span>
+            </button>
+            <button type="submit" class="btn btn-danger" ng-click="viewList()"><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+        </div>
+    </ng-form>
+</div>
