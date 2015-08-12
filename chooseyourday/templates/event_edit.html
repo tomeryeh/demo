@@ -1,4 +1,3 @@
-
 <div class="col-md-5">
     <ng-form name="eventForm">
         <div class="form-group">
@@ -9,11 +8,16 @@
         <ng-form ng-repeat="date in _event.dates" name="dateFieldForm">
             <div class="row form-group" ng-if="date.active">
                 <div class="col-md-11">
-                    <div class="input-group date" date-time-picker>
-                        <input type="text" id="date-{{ $index }}" class="form-control" ng-model="date.value" placeholder="Date" required/>
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
+                    <div class="dropdown">
+                      <a class="dropdown-toggle" id="dropdown-{{ $index }}" role="button" data-toggle="dropdown" data-target="#" href>
+                        <div class="input-group">
+                            <input type="text" id="date-{{ $index }}" class="form-control" data-ng-model="date.value" placeholder="Date" required>
+                            <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                        </div>
+                      </a>
+                      <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                        <datetimepicker data-ng-model="date.value" data-datetimepicker-config="{ dropdownSelector: '#dropdown-{{ $index }}', minView: 'hour' }"/>
+                      </ul>
                     </div>
                 </div>
                 <div class="col-md-1">

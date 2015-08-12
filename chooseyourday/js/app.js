@@ -1,7 +1,8 @@
 var kuzzle = Kuzzle.init("http://api.uat.kuzzle.io:7512");
 var kuzzleChannel = "chooseyourday";
 var chooseYourDay = angular.module("chooseyourday", [
-    "ngRoute"
+    "ngRoute",
+    "ui.bootstrap.datetimepicker"
 ]);
 
 chooseYourDay.config(["$routeProvider",
@@ -27,6 +28,7 @@ chooseYourDay.controller("ListEventController", ["$scope", "$location", function
 
     $scope.init = function () {
         $scope.getAllEvents();
+        moment.locale('en');
 
         $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { type: "chooseyourday_event" } }, function (error, response) {
 
@@ -331,25 +333,5 @@ chooseYourDay.controller("EventController", ["$scope", "$location", "$routeParam
 
     $scope.changeView = function (view) {
         $location.path(view);
-    };
-}]);
-
-chooseYourDay.directive("dateTimePicker", ["$timeout", function ($timeout) {
-    return {
-        link: function ($scope, element, attrs) {
-            $(element).datetimepicker({
-                locale: "en",
-                useCurrent: true,
-                sideBySide: true,
-                showClose: true,
-                minDate: moment()
-            }).on("dp.update", function () {
-                $scope.date.value = $(element).find("input").val();
-            }).on("dp.show", function () {
-                $scope.date.value = $(element).find("input").val();
-            }).on("dp.hide", function () {
-                $scope.date.value = $(element).find("input").val();
-            });
-        }
     };
 }]);
