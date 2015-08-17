@@ -1,5 +1,5 @@
 var
-  kuzzle,
+  kuzzle = Kuzzle.init('http://localhost:7512'),
   whoami = {},
   subcriptionId,
   CHAT_MSG_COLLECTION = 'demo-chat-messages',
@@ -7,9 +7,7 @@ var
   GLOBAL_CHAT_ROOMID = undefined,
   GLOBAL_CHAT_ROOM = 'main room';
 
-function startDemo(kuzzleUrl) {
-  kuzzle = Kuzzle.init(kuzzleUrl);
-
+function startDemo() {
   whoami = {
     userName: 'Anonymous',
     userColor: '#' + Math.floor(Math.random() * 16777215).toString(16),
