@@ -1,0 +1,113 @@
+header {
+    width: 100%;
+    background-color: #FFFFFF;
+    z-index: 999999;
+}
+
+header .wrapper {
+    padding: 25px 0;
+    text-align: center;
+}
+
+header #logo a {
+    display: block;
+    width:  150px;
+    height: 30px;
+    background-image: url("../img/kuzzle-logo.png");
+}
+
+header #title {
+    margin-left: 20px;
+    display: inline-block;
+    font-weight: bold;
+    font-size: 25px;
+    color: #004B52;
+}
+
+header nav ul {
+    display: block;
+    margin-top: 5px;
+
+}
+header nav ul li {
+    padding-left: 30px;
+    display: inline-block;
+}
+
+header nav ul li.github {
+  background-image: url('../img/github-logo.png');
+  background-repeat: no-repeat;
+}
+
+header nav ul li a {
+    font-family: 'Raleway', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #004B52;
+}
+
+footer {
+    width: 100%;
+    background-color: #004B52;
+    color: #FFFFFF;
+    height: 50px;
+    z-index: 999999;
+    padding: 20px;
+}
+
+footer a {
+    color: #FFFFFF;
+    font-weigh: bold;
+    display: inline-block;
+}
+footer a:hover {
+    color: #FFFFFF;
+    font-decoration: underline;
+}
+
+footer a.license {
+    float: right;
+}
+
+#democontainer {
+    margin-bottom: 20px;
+}
+
+@media screen and (max-width: 700px) {
+  header #logo {
+      display: block;
+      float: left;
+      margin-left: 10px;
+  }
+  header nav {
+      display: block;
+      float: right;
+      margin-right: 10px;
+  }
+}
+@media screen and (min-width: 700px) {
+  header {
+    position: fixed;
+    top: 0px;
+  }
+  header #logo {
+      display: inline-block;
+      position: absolute;
+      left: 20px;
+      top: 25px;
+  }
+  header nav {
+      position: absolute;
+      right: 40px;
+      display: inline-block;
+  }
+  footer {
+      position: fixed;
+      bottom: 0px;
+  }
+  #democontainer {
+      margin-top: 50px;
+      margin-bottom: 50px;
+      z-index: 0;
+  }
+}
