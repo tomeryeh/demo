@@ -5,15 +5,16 @@ This demo will show you how to create a simple chat program, with multi-rooms su
 This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
 
 **Table of content:**
-- [Tutorial structure](#)
-- [Connecting to Kuzzle](#)
-- [Listening to incoming messages](#)
-- [Sending messages to Kuzzle](#)
-- [Counting the number of users in our room](#)
-- [Multiple rooms support](#)
-	- [Getting all documents of a data collection](#)
-	- [Creating a new persisted document](#)
-	- [Deleting a persisted document](#)
+* [Tutorial structure](#tutorial-structure)
+* [Connecting to Kuzzle](#connecting-to-kuzzle)
+* [Listening to incoming messages](#listening-to-incoming-messages)
+* [Sending messages to Kuzzle](#sending-messages-to-kuzzle)
+* [Counting the number of users in our room](#counting-the-number-of-users-in-our-room)
+* [Multiple rooms support](#multiple-rooms-support)
+	* [Getting all documents of a data collection](#getting-all-documents-of-a-data-collection)
+	* [Creating a new persisted document](#creating-a-new-persisted-document)
+	* [Deleting a persisted document](#deleting-a-persisted-document)
+
 
 ## Tutorial structure
 
