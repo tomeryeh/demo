@@ -3,11 +3,11 @@ BootState.prototype = {
     preload: function() {
     },
     create: function() {
-
-        this.game.hasMusic = true;
+      console.dir(Configuration);
+        this.game.hasMusic = Configuration.music;
 
         this.game.scale.fullScreenScaleMode = Phaser.ScaleManager.EXACT_FIT;
-        this.game.isFullScreen = false;
+        this.game.isFullScreen = Configuration.fullscreen;
 
         this.game.minimumPlayersPerRoom = 2;
         this.game.maximumPlayersPerRoom = 8;
@@ -18,7 +18,7 @@ BootState.prototype = {
         checkThatPlayersAreAliveTimer = 0;
 
         // Change Kuzzle API URL here:
-        this.game.kuzzleUrl = 'http://api.uat.kuzzle.io:7512';
+        this.game.kuzzleUrl = Configuration.kuzzleUrl;
 
         /*this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.scale.pageAlignHorizontally = true;
