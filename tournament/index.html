@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+
+        <title>Kuzzle Tournament</title>
+
+        <style>
+            body {
+                background-color: #000000;
+                font-family: Arial;
+            }
+            #container {
+                width: 100%;
+                margin-top: 80px;
+            }
+            #kuzzle-fighters {
+                margin: 0 auto;
+            }
+            p.description {
+                color: white;
+                font-weight: bold;
+            }
+            small.how-to-play {
+                color: lightgray;
+            }
+        </style>
+
+        <script src="engine/phaser.min.js"></script>
+        <script src="engine/plugins/phaser-state-transition-plugin.min.js"></script>
+        <script src="engine/plugins/juicy.js"></script>
+
+        <script src="states/boot.js"></script>
+        <script src="states/preload.js"></script>
+        <script src="states/main-intro.js"></script>
+        <script src="states/main-menu.js"></script>
+        <script src="states/options.js"></script>
+        <script src="states/credits.js"></script>
+        <script src="states/connecting.js"></script>
+        <script src="states/lobby.js"></script>
+        <script src="states/game-init.js"></script>
+        <script src="states/game-round.js"></script>
+        <script src="states/game-round-no-monster.js"></script>
+        <script src="states/game-end.js"></script>
+        <script src="states/not-enough-players.js"></script>
+
+        <script src="app.js"></script>
+        <script src="main.js"></script>
+
+        <script src="socket.io-1.3.5.js"></script>
+        <script src="math.uuid.js"></script>
+        <script src="kuzzle.js"></script>
+    </head>
+    <body>
+        <div id="container">
+            <center>
+                <div id="kuzzle-tournament"></div>
+                <br>
+                <p class="description">
+                    Kuzzle Tournament. Copyright Samuel Bouic 2015
+                    <hr/>
+                    <small class="how-to-play">
+                        Use arrow keys to move around, arrow up to jump
+                        <br/>
+                        <br/>
+                        Use spacebar to fire some lasers!
+                        <br/>
+                        Use G to throw a grenade, you got 3 of 'em per round
+                        <br/>
+                        <br/>
+                        You can double jump using your jetpack
+                        <br/>
+                        When using your jetpack, use arrow down to
+                        <br/>
+                        smash the ground (and your opponents)
+                        <br/>
+                        <br/>
+                        Enjoy :)
+                    </small>
+                    <br/>
+                    <small>As you can see, I'm a real badass with CSS!</small>
+                </p>
+            </center>
+        </div>
+    </body>
+</html>
