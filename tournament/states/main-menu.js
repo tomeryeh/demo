@@ -120,14 +120,21 @@ MainMenuState.prototype = {
         menuItem[2]['sprite'].events.onInputDown.add(this.selectCredits, this);
     },
     updateMenu: function(ev) {
-        var selectedMenu = 0;
-        nextMenu = ev.event.keyIdentifier == 'Down' ? 1 : -1;
+        var
+          selectedMenu = 0,
+          nextMenu = ev.event.keyCode == 40 ? 1 : -1;
+          
         menuItem.forEach(function(e, i) {
-            if(e.selected) {
-                selectedMenu = typeof menuItem[i + (nextMenu)] === "undefined" ? ev.event.keyIdentifier == 'Down' ? 0 : 2 : i + (nextMenu);
-            }
+          if(e.selected) {
             e.selected = false;
             e.sprite.loadTexture(e.spriteIdentifier + '-unselected');
+
+            selectedMenu = (i + nextMenu) % menuItem.length;
+
+            if (selectedMenu < 0) {
+              selectedMenu = menuItem.length - 1;
+            }
+          }
         });
         menuItem[selectedMenu].sprite.loadTexture(menuItem[selectedMenu].spriteIdentifier + '-selected');
         menuItem[selectedMenu].selected = true;

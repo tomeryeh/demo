@@ -2,8 +2,6 @@ game = new Game();
 
 game.start();
 
-console.dir(game);
-
 room = {
     players: [],
     joiningPlayers : []

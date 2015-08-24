@@ -53,9 +53,9 @@ GameRoundNoMonsterState.prototype = {
             });
         }
 
-        roomIdGameUpdates = kuzzle.subscribe('kf-room-1', {"term": {"roomId": game.player.rid.toLowerCase()}}, function (dataGameUpdate) {
-            if (dataGameUpdate.body.pid != game.player.id && game.state.current == 'game-round-no-monster') {
-                self.updateFromKuzzle(dataGameUpdate.body);
+        roomIdGameUpdates = kuzzle.subscribe('kf-room-1', {"term": {"roomId": game.player.rid.toLowerCase()}}, function (error, dataGameUpdate) {
+            if (dataGameUpdate._source.pid != game.player.id && game.state.current == 'game-round-no-monster') {
+                self.updateFromKuzzle(dataGameUpdate._source);
             }
         });
         live = true;
@@ -66,7 +66,7 @@ GameRoundNoMonsterState.prototype = {
                 _id: game.player.rid,
                 roundReady: false
             };
-            kuzzle.update('kf-rooms', updateQueryFalseReady, function () {});
+            kuzzle.update('kf-rooms', updateQueryFalseReady);
         }
     },
     preload: function() {
@@ -373,7 +373,7 @@ GameRoundNoMonsterState.prototype = {
                 shoot    : shooted ? shootCoords : false,
                 damaged  : hasDamaged,
                 alive    : game.player.isAlive
-            }, false, function(r) { /*console.log(r);*/ });
+            }, false);
             if(hasDamaged.length > 0) {
                 hasDamaged = [];
             }
@@ -384,8 +384,7 @@ GameRoundNoMonsterState.prototype = {
 
         if(game.time.now > tellThatImConnectedTimer) {
             tellThatImConnectedTimer = game.time.now + tellThatImConnected;
-            kuzzle.update('kf-users', {_id: game.player.id, kflastconnected: game.time.now}, function() {
-            });
+            kuzzle.update('kf-users', {_id: game.player.id, kflastconnected: game.time.now});
             room.players.forEach(function(p) {
                if(p.id != game.player.id) {
                    p.kfconnected = p.kfconnected + tellThatImConnected;
@@ -402,13 +401,13 @@ GameRoundNoMonsterState.prototype = {
                     }
                 }
             };
-            kuzzle.search('kf-users', filterConnected, function(response) {
-                response.result.hits.hits.forEach(function(e, i) {
+            kuzzle.search('kf-users', filterConnected, function(error, response) {
+                response.hits.hits.forEach(function(e, i) {
                     if(e._id != game.player.id) {
                         room.players.forEach(function (p) {
                             if(p.id == e._id && (p.kfconnected - p.kflastconnected > 6000)) {
                                 self.handleDisconnect(p);
-                                kuzzle.delete('kf-users', p.id, function() { });
+                                kuzzle.delete('kf-users', p.id);
                                 if(roomMasterId == p.id) {
                                     game.player.isMaster = true;
                                     console.log('You are now the new master of the room');
@@ -416,7 +415,7 @@ GameRoundNoMonsterState.prototype = {
                                         _id: game.player.rid,
                                         masterId: game.player.id
                                     };
-                                    kuzzle.update('kf-rooms', updateQuery, function() { });
+                                    kuzzle.update('kf-rooms', updateQuery);
                                 }
                             }
                         });

@@ -168,8 +168,7 @@ GameEndState.prototype = {
     update: function() {
         if(game.time.now > tellThatImConnectedTimer) {
             tellThatImConnectedTimer = game.time.now + tellThatImConnected;
-            kuzzle.update('kf-users', {_id: game.player.id, kflastconnected: game.time.now}, function() {
-            });
+            kuzzle.update('kf-users', {_id: game.player.id, kflastconnected: game.time.now});
             room.players.forEach(function(p) {
                 if(typeof p.kfconnected == "undefined" || isNaN(p.kfconnected)) {
                     p.kfconnected = 0;
@@ -192,13 +191,13 @@ GameEndState.prototype = {
                     }
                 }
             };
-            kuzzle.search('kf-users', filterConnected, function(response) {
-                response.result.hits.hits.forEach(function(e, i) {
+            kuzzle.search('kf-users', filterConnected, function(error, response) {
+                response.hits.hits.forEach(function(e, i) {
                     if(e._id != game.player.id) {
                         room.players.forEach(function (p) {
                             if(p.id == e._id && (p.kfconnected - p.kflastconnected > 6000)) {
                                 self.handleDisconnect(p);
-                                kuzzle.delete('kf-users', p.id, function() { });
+                                kuzzle.delete('kf-users', p.id);
                                 if(roomMasterId == p.id) {
                                     game.player.isMaster = true;
                                     console.log('You are now the new master of the room');

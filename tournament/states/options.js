@@ -124,17 +124,24 @@ OptionsState.prototype = {
         menuItemOptions[3]['sprite'].events.onInputDown.add(this.selectBack, this);
     },
     updateMenu: function(ev) {
-        var selectedMenu = 0;
-        nextMenu = ev.event.keyIdentifier == 'Down' ? 1 : -1;
-        menuItemOptions.forEach(function(e, i) {
-            if(e.selected) {
-                selectedMenu = typeof menuItemOptions[i + (nextMenu)] === "undefined" ? ev.event.keyIdentifier == 'Down' ? 0 : 3 : i + (nextMenu);
-            }
-            e.selected = false;
-            e.sprite.loadTexture(e.spriteIdentifier + '-unselected');
-        });
-        menuItemOptions[selectedMenu].sprite.loadTexture(menuItemOptions[selectedMenu].spriteIdentifier + '-selected');
-        menuItemOptions[selectedMenu].selected = true;
+      var
+        selectedMenu = 0,
+        nextMenu = ev.event.keyCode == 40 ? 1 : -1;
+        
+      menuItemOptions.forEach(function(e, i) {
+        if(e.selected) {
+          e.selected = false;
+          e.sprite.loadTexture(e.spriteIdentifier + '-unselected');
+
+          selectedMenu = (i + nextMenu) % menuItemOptions.length;
+
+          if (selectedMenu < 0) {
+            selectedMenu = menuItemOptions.length - 1;
+          }
+        }
+      });
+      menuItemOptions[selectedMenu].sprite.loadTexture(menuItemOptions[selectedMenu].spriteIdentifier + '-selected');
+      menuItemOptions[selectedMenu].selected = true;
     },
     selectMenuITem: function() {
         switch(this.getSelectedMenu().id) {

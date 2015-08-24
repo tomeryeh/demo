@@ -15,7 +15,6 @@ LobbyState.prototype = {
 
         game.player = this.initData.player;
 
-        //kuzzle = new Kuzzle(game.kuzzleUrl);
         kuzzleGame = this.game;
 
         game.stage.backgroundColor = 0x000000;
@@ -36,10 +35,10 @@ LobbyState.prototype = {
 
         self.lobbyDrawables = [];
 
-        kuzzle.search('kf-users', filtersSearchLobby, function(response) {
+        kuzzle.search('kf-users', filtersSearchLobby, function(error, response) {
             console.log('Users:');
             console.log(response);
-            response.result.hits.hits.forEach(function(e, i) {
+            response.hits.hits.forEach(function(e, i) {
                 room.players.push({
                     id: e._id,
                     username: e._source.username,
@@ -288,8 +287,8 @@ LobbyState.prototype = {
                     }
                 }
             };
-            kuzzle.search('kf-users', filterConnected, function(response) {
-                response.result.hits.hits.forEach(function(e, i) {
+            kuzzle.search('kf-users', filterConnected, function(error, response) {
+                response.hits.hits.forEach(function(e, i) {
                     if(e._id != game.player.id) {
                         room.players.forEach(function (p) {
                             if(p.id == e._id && (p.kfconnected - p.kflastconnected > 6000)) {
