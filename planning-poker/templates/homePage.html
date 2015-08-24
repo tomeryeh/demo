@@ -1,0 +1,35 @@
+
+<div class="panel-poker small">
+    <div class="panel-poker-heading"><span class="glyphicon glyphicon-chevron-right"></span> Choose an existing session</div>
+    <div class="panel-poker-body list">
+        <ul class="rooms">
+            <!-- <li><a href="#">Name of the room</a></li> -->
+        </ul>
+    </div>
+    <div class="panel-poker-footer">
+        <a class="link-open-room-form" data-toggle="modal" data-target="#createSessionModal" href="#"><span class="glyphicon glyphicon-plus"></span> or create a new one</a>
+    </div>
+
+</div>
+
+<div class="modal fade" id="createSessionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Create a new session</h4>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-room">
+                    <input type="text" class="form-control" id="roomName" placeholder="Enter a session name...">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="$('#form-create-room').submit(); return false;">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+

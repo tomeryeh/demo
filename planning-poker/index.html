@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <title>Kuzzle planning poker</title>
+
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+        <meta name="viewport" content="width=device-width" />
+
+        <link rel="stylesheet" href="stylesheets/bootstrap/bootstrap.css">
+        <link rel="stylesheet" href="stylesheets/bootstrap/bootstrap-theme.css">
+        <link rel="stylesheet" href="stylesheets/styles.css">
+
+        <link rel="icon" type="image/png" href="images/favicon.png" />
+
+    </head>
+    <body>
+
+        <!-- header -->
+        <div id="header">
+            <!--img class="logo-kuzzle" src="images/logo.png" alt="Kuzzle" /-->
+
+            <h1>Kuzzle poker planning</h1>
+
+            <p class="user-nickname"></p>
+        </div>
+
+        <div class="menu-container">
+            <div class="menu">
+                <ul>
+                    <li><a title="back to session list" data-toggle="tooltip" data-placement="bottom" data-action="back" href="#"><span class="glyphicon glyphicon-arrow-left"></span></a></li>
+                    <li><a title="launch a vote" data-action="vote" href="#" data-toggle="tooltip" data-placement="bottom"><span class="glyphicon glyphicon-send"></span></a></li>
+                    <li><a title="invite a member" data-action="invite" href="#" data-toggle="tooltip" data-placement="bottom"><span class="glyphicon glyphicon-envelope"></span></a></li>
+                    <li><a title="remove this session" data-action="remove" data-toggle="tooltip" data-placement="bottom" href="#"><span class="glyphicon glyphicon-trash"></span></a></li>
+                    <li><a title="disconnect" data-action="quit" href="#" data-toggle="tooltip" data-placement="bottom"><span class="glyphicon glyphicon-off"></span></a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="content">
+
+        </div>
+
+        <script src="javascript/jquery-2.1.4.min.js"></script>
+        <script src="javascript/bootstrap.min.js"></script>
+        <script src="https://cdn.socket.io/socket.io-1.3.4.js"></script>
+        <script type="text/javascript" src="javascript/kuzzle/kuzzle.min.js"></script>
+        <script type="text/javascript" src="javascript/Poker.planning.js"></script>
+        <script type="text/javascript" src="javascript/classes/Room.js"></script>
+        <script type="text/javascript" src="javascript/classes/RoomManager.js"></script>
+        <script type="text/javascript" src="javascript/controllers/loginPage.js"></script>
+        <script type="text/javascript" src="javascript/controllers/homePage.js"></script>
+        <script type="text/javascript" src="javascript/controllers/pokerPage.js"></script>
+
+    </body>
+</html>

@@ -1,0 +1,83 @@
+
+<div id="pokerPage">
+
+    <div class="col-users">
+        <h2>Members</h2>
+
+        <div class="users">
+            <ul>
+
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-poker">
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                You are in a planning poker session, you can launch a vote by clicking <span class="glyphicon glyphicon-send"></span> button, or wait for someone launch it. <br>
+                If you want to pause the vote, press the "Pause" card. To restart the vote, simply press the <span class="glyphicon glyphicon-send"></span> button.<br>
+                Use the field below to share the URL of a user story for example.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="url">Copy here an URL to share it with other members</label>
+            <input id="url" class="form-control" type="text" name="iframeURL" value="" placeholder="http://...">
+        </div>
+        <button id="openLinkButton" class="btn btn-default">Open link in a new tab</button>
+
+        <div class="cards">
+
+            <h3>Remaining time</h3>
+            <div class="progress remaining-time">
+                <div class="progress-bar progress-bar-success time" role="progressbar"></div>
+            </div>
+
+            <ul>
+                <li><a href="#">0</a></li>
+                <li><a href="#">1/2</a></li>
+                <li><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+                <li><a href="#">5</a></li>
+                <li><a href="#">8</a></li>
+                <li><a href="#">13</a></li>
+                <li><a href="#">20</a></li>
+                <li><a href="#">40</a></li>
+                <li><a href="#">100</a></li>
+                <li><a href="#">?</a></li>
+                <li><a href="#">Pause</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- modal for invite a member feature -->
+<div class="modal fade" id="inviteFriendModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Invite a friend</h4>
+            </div>
+            <div class="modal-body">
+                <form id="form-invite-friend">
+                    <div class="form-group">
+                        <label for="friendName">My awesome friend nickname</label>
+                        <input type="text" class="form-control" id="friendName" placeholder="Enter a nickname..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="friendEmail">My friend email</label>
+                        <input type="email" class="form-control" id="friendEmail" placeholder="sam.fisher@kaliop.com" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a id="sendInviteLink" href="#" class="btn btn-primary">Send invite</a>
+            </div>
+        </div>
+    </div>
+</div>
+

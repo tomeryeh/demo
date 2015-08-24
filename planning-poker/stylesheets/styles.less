@@ -1,0 +1,249 @@
+
+@main_bg_color: #f2f2f2;
+@panel_color: #34495e;
+@form_color: #2c3e50;
+
+@import url(http://fonts.googleapis.com/css?family=Ubuntu);
+
+body {
+    background: @main_bg_color;
+    font-family: 'Ubuntu', sans-serif;
+
+    &.login {
+        background: url(../images/bg.png) no-repeat;
+        background-size: cover;
+    }
+}
+
+@import "header";
+
+#content {
+    //clear: both;
+    //background-color: #f2f2f2;
+}
+
+.panel-poker {
+    border: solid 1px @panel_color;
+    background-color: #FFFFFF;
+    clear: both;
+    max-width: 100%;
+
+    .panel-poker-heading {
+        background-color: @panel_color;
+        color: #FFFFFF;
+        padding: 10px 20px;
+        font-size: 20px;
+    }
+
+    .panel-poker-body {
+        padding: 20px;
+
+        &.list {
+            padding: 0;
+
+            ul {
+                margin: 0;
+                padding: 0;
+
+                li {
+                    list-style: none;
+                    border-bottom: solid 1px @panel_color;
+
+                    a {
+                        position: relative;
+                        padding: 10px 10px;
+                        display: block;
+                        text-decoration: none;
+                        color: @panel_color;
+                        font-size: 15px;
+
+                        span.user-list {
+                            display: block;
+                            font-size: 0.9em;
+                        }
+
+                        span.remove {
+                            position: absolute;
+                            right: 0;
+                            top: 0;
+                            padding: 5px;
+                            z-index: 10;
+                            cursor: pointer;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    &.small {
+        width: 400px;
+        margin: 40px auto;
+    }
+
+    .panel-poker-footer {
+        text-align: center;
+        color: #FFFFFF;
+        background-color: @panel_color;
+        font-size: 17px;
+        padding: 8px;
+
+        a {
+            color: #FFFFFF;
+        }
+    }
+}
+
+
+#pokerPage {
+    overflow: hidden;
+
+    .col-users {
+        float: left;
+        width: 25%;
+        background-color: #FFFFFF;
+        border-bottom: solid 1px #DDDDDD;
+        border-right: solid 1px #DDDDDD;
+        padding: 20px;
+        min-height: 500px;
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .users {
+            ul {
+                margin: 0;
+                padding: 0;
+                margin-top: 20px;
+
+                li {
+                    list-style: none;
+                    margin-bottom: 10px;
+                    overflow: hidden;
+                    min-height: 60px;
+                }
+            }
+        }
+    }
+
+    .col-poker {
+        float: left;
+        width: 75%;
+        padding: 60px 20px 20px 20px;
+    }
+}
+
+.cards {
+    width: 100%;
+    display: none;
+
+    .remaining-time {
+        margin-bottom: 20px;
+        width: 300px;
+
+        .time {
+            width: 300px;
+            transition: width 10s;
+            -webkit-transition: width 10s;
+            transition-timing-function: linear;
+
+            &.active {
+                width: 0;
+            }
+        }
+    }
+
+    &.active {
+        display: block;
+    }
+
+    ul {
+        margin: 0;
+        padding: 0;
+
+        li {
+            list-style: none;
+            float: left;
+
+            a {
+                color: #FFFFFF;
+                background-color: @form_color;
+                height: 150px;
+                width: 110px;
+                display: block;
+                line-height: 150px;
+                text-align: center;
+                margin-right: 5px;
+                margin-bottom: 5px;
+                font-size: 35px;
+                border-radius: 10px;
+
+                &:focus {
+                    text-decoration: none;
+                }
+
+                &:hover {
+                    text-decoration: none;
+                }
+
+                &.active {
+                    background-color: #0f0f0f;
+                }
+            }
+        }
+    }
+}
+
+.user-picture {
+    background-color: #34495e;
+    color: #FFF;
+    padding: 20px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+
+.user-card {
+    display: none;
+    color: #fff;
+    background-color: #2c3e50;
+    margin-left: 15px;
+    text-align: center;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 13px;
+    float: right;
+    border-radius: 10px;
+    height: 60px;
+    width: 45px;
+    line-height: 60px;
+
+    &.active {
+        display: inline;
+    }
+}
+
+/* room creation form */
+.room-creation-container {
+    height: 0;
+    padding: 0;
+    overflow: hidden;
+    transition: height 1s;
+
+    &.open {
+        height: auto;
+    }
+
+    form {
+        padding: 20px;
+    }
+}
+
+#pokerPage {
+
+}
+
+@media screen and (max-width: 1000px) {
+    @import "devices/mobile";
+}
