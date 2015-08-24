@@ -4,7 +4,6 @@ var app = {
 	userController: {},
 
 	init: function() {
-		//this.initUI();
 
 		//everybody know app
 		this.gisController.app = app;
@@ -33,7 +32,6 @@ var app = {
 ////////////////////////user module/////////////////
 (function UserModule(app) {
 
-	//////////////////privates attributes///////////////////////
 	var user = {
 		userId: null,
 		whoami: {
@@ -44,13 +42,9 @@ var app = {
 
 	var app = app;
 
-	//////////////////privates methods///////////////////////
-	/**
-	 * Create myself in Kuzzle or update my position in it.
-	 *
-	 */
 	function sendMyPosition() {
 		var userPosition = app.gisController.getUserPosition();
+
 		if (!userPosition) {
 			console.log("no position for user");
 			return;
@@ -60,20 +54,18 @@ var app = {
 			userId: user.whoami._id,
 			type: user.whoami.type,
 			position: {
-				lat: userPosition.lat(),
-				lon: userPosition.lng()
+				lat: userPosition.lat,
+				lon: userPosition.lng
 			}
 		});
 	};
-
-	//////////////////public methods (i.e exposed) ///////////////////////
 
 	app.userController = {
 		init: function() {
 			console.log("user controller creation...");
 			return new Promise(
 				function(resolve, reject) {
-					app.userController.getUserLocally().then(function(value) {
+					app.userController.fetchFromLocalStorage().then(function(value) {
 						if (value)
 							user = value;
 						console.log("...user controller ended");
@@ -86,7 +78,7 @@ var app = {
 		getUser: function() {
 			return user;
 		},
-		getUserLocally: function() {
+		fetchFromLocalStorage: function() {
 			return new Promise(
 				function(resolve, reject) {
 					var resolver = Promise.pending();
@@ -97,7 +89,7 @@ var app = {
 				});
 
 		},
-		setUserLocally: function() {
+		setInLocalStorage: function() {
 			var resolver = Promise.pending();
 			localforage.setItem('cable_user', JSON.stringify(user))
 				.then(function() {
@@ -149,7 +141,7 @@ var app = {
 							} else {
 								app.userController.getUser().userId = response.result._id;
 								app.userController.getUser().whoami._id = response.result._id;
-								app.userController.setUserLocally().then(
+								app.userController.setInLocalStorage().then(
 									function() {
 										app.kuzzleController.listenToRidesProposals();
 										console.log("...kuzzle controller ended");
@@ -193,12 +185,12 @@ var app = {
 						geoBoundingBox: {
 							position: {
 								top_left: {
-									lat: bound.neCorner.lat(),
-									lon: bound.swCorner.lng()
+									lat: bound.neCorner.lat,
+									lon: bound.swCorner.lng
 								},
 								bottom_right: {
-									lat: bound.swCorner.lat(),
-									lon: bound.neCorner.lng()
+									lat: bound.swCorner.lat,
+									lon: bound.neCorner.lng
 								}
 							}
 						}
@@ -257,7 +249,7 @@ var app = {
 
 			app.userController.getUser().whoami.type = userType;
 			//return;
-			app.userController.setUserLocally().then(function() {
+			app.userController.setInLocalStorage().then(function() {
 				kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
 
 				if (userType === 'customer') {

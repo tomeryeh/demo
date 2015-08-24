@@ -72,11 +72,12 @@
 			return new Promise(
 				function(resolve, reject) {
 					var coordinates = [position.coords.latitude, position.coords.longitude];
-					this.map.setView(coordinates, 15);
+					map.setView(coordinates, 15);
+
 					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
 					window.setTimeout(function() {
-						this.map.setView(coordinates, 15);
+						map.setView(coordinates, 15);
 					}, 3000);
 
 					var contentString = "";
@@ -114,12 +115,11 @@
 
 					var popup = L.popup().setContent(contentString);
 
-					var marker = L.marker(coordinates, {
+					userMarker = L.marker(coordinates, {
 						icon: icon
 					});
 
-					var map = this.map;
-					this.map.on("popupopen", function(eventPopup) {
+					map.on("popupopen", function(eventPopup) {
 						var popup = eventPopup.popup;
 						console.log(popup);
 						var left_cabble = document.querySelector("#left_cabble");
@@ -135,7 +135,7 @@
 						}
 
 						left_cabble.addEventListener("click", function() {
-							marker.setIcon(userIcon);
+							userMarker.setIcon(userIcon);
 							app.kuzzleController.setUserType("customer");
 							left_cabble.innerHTML = customerSearchText;
 							right_cabble.innerHTML = wanabeTaxiForCustomer;
@@ -145,7 +145,7 @@
 						});
 
 						right_cabble.addEventListener("click", function() {
-							marker.setIcon(taxiIcon);
+							userMarker.setIcon(taxiIcon);
 							app.kuzzleController.setUserType("taxi");
 							left_cabble.innerHTML = wanabeCustomerTextForTaxi
 							right_cabble.innerHTML = taxiSearchText;
@@ -156,7 +156,7 @@
 
 					});
 
-					marker.addTo(this.map)
+					userMarker.addTo(map)
 						.bindPopup(popup)
 						.openPopup();
 					resolve();
@@ -301,12 +301,10 @@
 				//getBestCandidate();
 			},
 			getUserPosition: function() {
-				return userPosition;
+				return userMarker.getLatLng();
 			},
 			getMapBounds: function() {
-				console.log("get bonuds");
-				console.log(this.map);
-				var mapBounds = this.map.getBounds();
+				var mapBounds = map.getBounds();
 				return {
 					swCorner: mapBounds.getSouthWest(),
 					neCorner: mapBounds.getNorthEast()
@@ -316,7 +314,7 @@
 
 				return new Promise(
 					function(resolve, reject) {
-						this.map = L.map('map-canvas').setView([51.505, -0.09], 13);
+						map = L.map('map-canvas').setView([51.505, -0.09], 13);
 						http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
 							L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
 								//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
@@ -325,7 +323,7 @@
 									'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
 									'Imagery © <a href="http://mapbox.com">Mapbox</a>',
 								id: 'mapbox.streets'
-							}).addTo(this.map);
+							}).addTo(map);
 						resolve();
 					});
 			},
