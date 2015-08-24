@@ -23,3 +23,7 @@ APPLICATION_URL: "http://my-domain/index.html"
 
 Jérôme Lecocq
 jlecocq@kaliop.com
+
+## Licene
+
+This demo is published under the terms of the [MIT license](LICENSE).
