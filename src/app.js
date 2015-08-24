@@ -3,34 +3,7 @@ var app = {
 	kuzzleController: {},
 	userController: {},
 
-	/*
-		initUI: function() {
-			window.addEventListener('load', function() {
-				///kick and dirty ui logic !
-				var user_cabble = document.querySelector("#user_cabble");
-				var cab_cabble = document.querySelector("#cab_cabble");
-
-				user_cabble.addEventListener("click", function(event) {
-					user_cabble.innerHTML = "Cabble is looking for your ride";
-					app.kuzzleController.setUserType("customer");
-					cab_cabble.innerHTML = "I'm looking for a customer";
-				});
-
-				cab_cabble.addEventListener("click", function() {
-					cab_cabble.innerHTML = "Cabble is looking for a customer for you";
-					app.kuzzleController.setUserType("taxi");
-					user_cabble.innerHTML = "I need a ride";
-				});
-
-			});
-		},
-
-		*/
 	init: function() {
-
-		//simulate taxi and customer not in the same position, and moving
-		app.simulate = true;
-
 		//this.initUI();
 
 		//everybody know app
@@ -46,8 +19,6 @@ var app = {
 			//	.then(app.kuzzleController.init) //kuzzle listen to our app
 			.then(
 				function() {
-					if (app.simulate)
-						setInterval(app.gisController.moveSlowly, 10000);
 					console.log("##############Cabble initialisation ENDED !#######################");
 					//default type user (must be remove and change by modal dialog)
 					//this.kuzzleController.setUserType("customer");
@@ -56,7 +27,6 @@ var app = {
 		catch(function(e) {
 			console.error(e);
 		});
-
 	}
 };
 

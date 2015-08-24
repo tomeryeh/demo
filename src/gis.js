@@ -20,15 +20,19 @@
 
 		var assocIdToOtherItemsMark = {};
 
-		function getIcon(userType) {
-			var image = "unknown.jpg";
-			if (userType === "taxi")
-				image = "imagen-taxi.jpg";
-			if (userType === "customer")
-				image = "meeple2.png";
+		var iconSize = [38, 38];
+		var popupAnchor = [0, -22];
+		var taxiIcon = L.icon({
+			iconUrl: "assets/img/imagen-taxi.jpg",
+			iconSize: iconSize,
+			popupAnchor: popupAnchor
+		});
 
-			return "assets/img/" + image;
-		}
+		var userIcon = L.icon({
+			iconUrl: "assets/img/meeple2.png",
+			iconSize: iconSize,
+			popupAnchor: popupAnchor
+		});
 
 		function CenterControl(controlDiv, map) {
 
@@ -85,16 +89,19 @@
 
 					var leftText;
 					var rightText;
+					var icon;
 
 					if (userType) {
 						if (userType === "taxi") {
 							leftText = wanabeCustomerTextForTaxi;
 							rightText = taxiSearchText;
+							icon = taxiIcon;
 						}
 
 						if (userType === "customer") {
 							leftText = customerSearchText;
 							rightText = wanabeTaxiForCustomer;
+							icon = userIcon;
 						}
 					} else {
 						leftText = "i need a ride";
@@ -102,38 +109,19 @@
 					}
 
 					var contentString = "Hello from Cabble ! what can i do for you ?";
-					contentString += '<div class="btn-group btn-group-justified" role="group" aria-label="...">';
-					contentString = '<div class="btn-group" role="group">';
-					contentString = '<button id="left_cabble" type="button" class="btn btn-default">' + leftText + '</button>';
-					contentString += '</div>';
+					contentString += '<button id="left_cabble">' + leftText + '</button>';
+					contentString += '<button id="right_cabble" >' + rightText + '</button>';
 
-					contentString += '<div class="btn-group" role="group">'
-					contentString += '<button id="right_cabble"  type="button" class="btn btn-default">' + rightText + '</button>';
-					contentString += '</div>'
-					contentString += '</div>';
+					var popup = L.popup().setContent(contentString);
 
-					taxiIcon = L.icon({
-						iconUrl: getIcon(userType),
-						iconSize: [38, 38],
-						iconAnchor: [22, 94],
-						popupAnchor: [3]
+					var marker = L.marker(coordinates, {
+						icon: icon
 					});
 
-					L.marker(coordinates, {
-							icon: taxiIcon
-						}).addTo(this.map)
-						.bindPopup(contentString)
-						.openPopup();
-
-					/*
-
-					var infowindow = new google.maps.InfoWindow({
-						content: contentString
-					});
-
-					google.maps.event.addListener(infowindow, 'domready', function() {
-
-						///kick and dirty ui logic !
+					var map = this.map;
+					this.map.on("popupopen", function(eventPopup) {
+						var popup = eventPopup.popup;
+						console.log(popup);
 						var left_cabble = document.querySelector("#left_cabble");
 						var right_cabble = document.querySelector("#right_cabble");
 
@@ -146,66 +134,32 @@
 							left_cabble.disabled = !(userType == "taxi");
 						}
 
-						left_cabble.addEventListener("click", function(event) {
-							userMarker.setIcon(getIcon("customer"));
+						left_cabble.addEventListener("click", function() {
+							marker.setIcon(userIcon);
 							app.kuzzleController.setUserType("customer");
 							left_cabble.innerHTML = customerSearchText;
 							right_cabble.innerHTML = wanabeTaxiForCustomer;
 							right_cabble.disabled = false;
 							left_cabble.disabled = true;
-
-							resolve();
+							map.closePopup(popup);
 						});
 
 						right_cabble.addEventListener("click", function() {
-							userMarker.setIcon(getIcon("taxi"));
+							marker.setIcon(taxiIcon);
 							app.kuzzleController.setUserType("taxi");
 							left_cabble.innerHTML = wanabeCustomerTextForTaxi
 							right_cabble.innerHTML = taxiSearchText;
 							right_cabble.disabled = true;
 							left_cabble.disabled = false;
-
-							resolve();
+							map.closePopup(popup);
 						});
 
 					});
 
-*/
-					return;
-
-					var visible = !userType;
-
-					google.maps.event.addListener(userMarker, 'click', function() {
-						if (visible) {
-							if (currentWindowClose)
-								currentWindowClose();
-							//infowindow.close(map, userMarker);
-							//currentWindowOpen = null;
-						} else {
-							if (currentWindowClose)
-								currentWindowClose();
-							infowindow.open(map, userMarker);
-
-							currentWindowClose = function() {
-								infowindow.close(map, userMarker)
-							};
-						}
-						visible = !visible;
-					});
-
-					if (!userType) {
-						if (currentWindowClose)
-							currentWindowClose();
-						infowindow.open(map, userMarker);
-
-						currentWindowClose = function() {
-							infowindow.close(map, userMarker)
-						};
-					} else {
-						//console.log("we have a type " + userType);
-						app.kuzzleController.setUserType(userType);
-						resolve();
-					}
+					marker.addTo(this.map)
+						.bindPopup(popup)
+						.openPopup();
+					resolve();
 				}
 			);
 		};
@@ -350,23 +304,14 @@
 				return userPosition;
 			},
 			getMapBounds: function() {
-				var mapBounds = map.getBounds();
+				console.log("get bonuds");
+				console.log(this.map);
+				var mapBounds = this.map.getBounds();
 				return {
 					swCorner: mapBounds.getSouthWest(),
 					neCorner: mapBounds.getNorthEast()
 				};
 			},
-			moveSlowly: function() {
-				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-				if (userType !== "taxi")
-					return;
-				userPosition = new google.maps.LatLng(userMarker.position.lat() - -(Math.random() - 0.5) / 1000, userMarker.position.lng() - -(Math.random() - 0.5) / 1000);
-				userMarker.position = userPosition;
-
-				userMarker.setMap(null);
-				userMarker.setMap(map);
-			},
-
 			init: function() {
 
 				return new Promise(
