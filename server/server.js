@@ -20,7 +20,7 @@ app.use("/src/", function(req, res, next) {
 });
 
 app.use("/bower_components/", function(req, res, next) {
-	res.sendFile(appsDir +  req.client._httpMessage.req.originalUrl);
+	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
 
 app.use("/css/", function(req, res, next) {

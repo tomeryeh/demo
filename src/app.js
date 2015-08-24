@@ -43,7 +43,7 @@ var app = {
 		this.gisController.init() //create the map with nothing on it
 			.then(app.userController.init) //get user info from local storage
 			.then(app.gisController.resetAllMarks) //get the GPS user location add the user marker with position and type  (show "?" icon" if no type)
-			.then(app.kuzzleController.init) //kuzzle listen to our app
+			//	.then(app.kuzzleController.init) //kuzzle listen to our app
 			.then(
 				function() {
 					if (app.simulate)
@@ -54,7 +54,6 @@ var app = {
 				}
 			).
 		catch(function(e) {
-			console.error("ERRRRRRRROR during Cabble initialisation ");
 			console.error(e);
 		});
 
@@ -147,15 +146,15 @@ var app = {
 	//////////////////(wanabee) static  privates attributes///////////////////////
 
 	var
-		//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
-		KUZZLE_URL = 'http://localhost:8081',
+	//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
+		KUZZLE_URL = 'http://localhost:7512',
 		CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions',
 		CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users',
 		CABBLE_COLLECTION_RIDES = 'coding-challenge-cabble-rides';
 
 	//////////////////privates attributes///////////////////////
 	var
-		kuzzle = new Kuzzle(KUZZLE_URL),
+		kuzzle = Kuzzle.init(KUZZLE_URL),
 		refreshFilterTimer,
 		positionsRoom,
 		ridesRoom,
@@ -238,8 +237,8 @@ var app = {
 
 			// If a currentRide has been accepted, we only want to subscribe to the other person position
 			if (currentRide) {
-					console.log("ride");
-					console.log(currentRide);
+				console.log("ride");
+				console.log(currentRide);
 			}
 			if (currentRide && currentRide.status && currentRide.status.indexOf('accepted') !== -1) {
 				filter.and.push({
@@ -253,9 +252,9 @@ var app = {
 				kuzzle.unsubscribe(positionsRoom);
 			}
 
-			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(message) {
-				if (message.error) {
-					console.error(message.error);
+			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
+				if (error) {
+					console.error(error);
 				}
 				//console.log("we've got position  ");
 				//console.log(message);
@@ -263,9 +262,12 @@ var app = {
 					var data = message.data;
 					if (!data)
 						data = message;
-					var userPosition = data.body.position;
-					var userType = data.body.type;
-					var userId = data.body.userId;
+
+					console.log("message");
+					console.log(message);
+					var userPosition = data._source.position;
+					var userType = data._source.type;
+					var userId = data._source.userId;
 					app.gisController.addPosition(userPosition, userType, userId);
 				} else {
 					//console.log("we've got a strange message ");
@@ -339,17 +341,16 @@ var app = {
 			console.log("filter for ride prop");
 			console.log(filter);
 
-			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(message) {
+			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
 				//console.log("recive prop");
 				//console.log(message);
-				if (message.error) {
-					console.error(message.error);
+				if (error) {
+					console.error(error);
 					return false;
 				}
 
 				console.log("recive a ride ");
 				console.log(message);
-
 
 				app.kuzzleController.manageRideProposal(message.result ? message.result : message);
 			});
@@ -359,9 +360,8 @@ var app = {
 
 			var rideInfo = rideProposal.body;
 			//._source;
-			if(!rideInfo)
+			if (!rideInfo)
 				rideInfo = rideProposal._source;
-
 
 			console.log(rideInfo);
 			if (!rideInfo) {

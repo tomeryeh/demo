@@ -14,14 +14,11 @@
 
 		var controlUI;
 
-		var defaultCoord = new google.maps.LatLng(40.69847032728747, -73.9514422416687); //NewYork
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
 		var currentWindowClose = null;
 
 		var assocIdToOtherItemsMark = {};
-
-		var bias; //a bias from long and lat to simulated differnt positions.
 
 		function getIcon(userType) {
 			var image = "unknown.jpg";
@@ -31,82 +28,6 @@
 				image = "meeple2.png";
 
 			return "assets/img/" + image;
-		}
-
-		//////////////////privates methodes///////////////////////
-
-		function generateRandomItems(type, nbRandomItems) {
-			var otherItemsCoord = [];
-			otherItemsMark = [];
-			//You must recive an json with arrayTaxiMarker in it
-
-			//this is what we must get from a first call to Kuzzle :
-
-			//get random positions for taxi arround my position
-			if (!nbRandomItems)
-				nbRandomItems = 10;
-			for (var i = 0; i < nbRandomItems; i++) {
-				otherItemsCoord.push(new google.maps.LatLng(userPosition.lat() + (Math.random() - 0.5) / 100, userPosition.lng() + (Math.random() - 0.5) / 100));
-			}
-
-		};
-
-		function getBestCandidate() {
-
-			var nearestDist = 99999;
-			var nearestItem = null;
-
-			otherItemsMark.forEach(function(n) {
-				var distCur = Math.pow(
-						userPosition.lat() -
-						n.position.lat(), 2) +
-					Math.pow(userPosition.lng() - n.position.lng(), 2);
-
-				if (distCur < nearestDist
-					//&& nearestDist > 0.0001
-				) {
-					nearestDist = distCur;
-					nearestItem = n;
-				}
-			}.bind(this));
-
-			//console.log("distCur" + Math.sqrt(nearestDist));
-
-			var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-
-			var contentString = "";
-			if (userType === "customer") {
-				contentString = '<div id="content_info_item"><div id="siteNotice"></div>' +
-					'<h1 id="firstHeading" class="firstHeading">I am available ! </h1>' +
-					'<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>' +
-					'<p><a href="tel:[phone number]"><span class="bottom">Call us now</span></a></p>' +
-					'</div></div>';
-
-			} else {
-				contentString = '<div id="content_info_item"><div id="siteNotice"></div>' +
-					'<h1 id="firstHeading" class="firstHeading">I need a ride ! </h1>' +
-					'<p><a href="tel:[phone number]"><span class="bottom">Yes, i pick you up !</span></a></p>' +
-					'<p><a href="tel:[phone number]"><span class="bottom">No, Sorry.</span></a></p>' +
-					'</div></div>';
-			}
-
-			var infowindow = new google.maps.InfoWindow({
-				content: contentString
-			});
-			google.maps.event.addListener(infowindow, 'domready', function() {
-				document.querySelector("#content_info_item").parentNode.parentNode.parentNode.parentNode.style.opacity = 0.8;
-			});
-
-			if (nearestItem) {
-
-				if (currentWindowClose)
-					currentWindowClose();
-				infowindow.open(map, nearestItem);
-
-				currentWindowClose = function() {
-					infowindow.close(map, nearestItem);
-				}
-			}
 		}
 
 		function CenterControl(controlDiv, map) {
@@ -144,28 +65,15 @@
 		}
 
 		function createUserMark(position) {
-
-			if (app.simulate) {
-
-				if (!bias)
-					bias = [(Math.random() - 0.5) / 100, (Math.random() - 0.5) / 100];
-				else
-					bias = [bias[0] - (Math.random() - 0.5) / 1000, bias[1] - (Math.random() - 0.5) / 1000];
-			} else {
-				bias = [0, 0];
-			}
-
 			return new Promise(
 				function(resolve, reject) {
+					var coordinates = [position.coords.latitude, position.coords.longitude];
+					this.map.setView(coordinates, 15);
 					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-					userPosition = new google.maps.LatLng(position.coords.latitude - bias[0], position.coords.longitude - bias[1]);
-					map.setCenter(userPosition);
 
-					userMarker = new google.maps.Marker({
-						position: userPosition,
-						title: 'You!',
-						icon: getIcon(userType)
-					});
+					window.setTimeout(function() {
+						this.map.setView(coordinates, 15);
+					}, 3000);
 
 					var contentString = "";
 
@@ -193,8 +101,6 @@
 						rightText = "i'm looking for a customer";
 					}
 
-					userMarker.setMap(map);
-
 					var contentString = "Hello from Cabble ! what can i do for you ?";
 					contentString += '<div class="btn-group btn-group-justified" role="group" aria-label="...">';
 					contentString = '<div class="btn-group" role="group">';
@@ -205,6 +111,21 @@
 					contentString += '<button id="right_cabble"  type="button" class="btn btn-default">' + rightText + '</button>';
 					contentString += '</div>'
 					contentString += '</div>';
+
+					taxiIcon = L.icon({
+						iconUrl: getIcon(userType),
+						iconSize: [38, 38],
+						iconAnchor: [22, 94],
+						popupAnchor: [3]
+					});
+
+					L.marker(coordinates, {
+							icon: taxiIcon
+						}).addTo(this.map)
+						.bindPopup(contentString)
+						.openPopup();
+
+					/*
 
 					var infowindow = new google.maps.InfoWindow({
 						content: contentString
@@ -249,15 +170,8 @@
 
 					});
 
-					// 3 seconds after the center of the map has changed, pan back to the
-					// marker.
-					/*
-					google.maps.event.addListener(map, 'center_changed', function() {
-						window.setTimeout(function() {
-							map.panTo(userMarker.getPosition());
-						}, 3000);
-					});
 */
+					return;
 
 					var visible = !userType;
 
@@ -346,8 +260,7 @@
 					if (visible) {
 						if (currentWindowClose)
 							currentWindowClose();
-					}
-					else {
+					} else {
 						if (currentWindowClose)
 							currentWindowClose();
 						infowindow.open(map, otherMarker);
@@ -456,29 +369,20 @@
 
 			init: function() {
 
-				console.log("gis controller creation...");
 				return new Promise(
 					function(resolve, reject) {
-						google.maps.event.addDomListener(window, 'load', function() {
-							var mapOptions = {
-								zoom: 16,
-								panControl: false,
-								zoomControl: false,
-								streetViewControl: false,
-								scaleControl: false
-							};
-
-							map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-
-							var centerControlDiv = document.createElement('div');
-							var centerControl = new CenterControl(centerControlDiv, map);
-
-							centerControlDiv.index = 1;
-							map.controls[google.maps.ControlPosition.TOP_LEFT].push(centerControlDiv);
-							console.log("...gis controller ended");
-							resolve();
-						})
-					})
+						this.map = L.map('map-canvas').setView([51.505, -0.09], 13);
+						http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
+							L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
+								//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
+								maxZoom: 18,
+								attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+									'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+									'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+								id: 'mapbox.streets'
+							}).addTo(this.map);
+						resolve();
+					});
 			},
 
 			showCenterControl: function() {
