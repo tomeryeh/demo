@@ -28,6 +28,12 @@
 			popupAnchor: popupAnchor
 		});
 
+		var unknowIcon = L.icon({
+			iconUrl: "assets/img/unknown.jpg",
+			iconSize: iconSize,
+			popupAnchor: popupAnchor
+		});
+
 		var userIcon = L.icon({
 			iconUrl: "assets/img/meeple2.png",
 			iconSize: iconSize,
@@ -61,11 +67,12 @@
 			controlUI.style.display = "none";
 			controlUI.appendChild(controlText);
 
+			/*
 			google.maps.event.addDomListener(controlUI, 'click', function() {
 				app.kuzzleController.finishRide();
 				controlUI.style.display = "none";
-				//map.setCenter(chicago)
 			});
+			*/
 		}
 
 		function createUserMark(position) {
@@ -90,7 +97,7 @@
 
 					var leftText;
 					var rightText;
-					var icon;
+					var icon = unknowIcon;
 
 					if (userType) {
 						if (userType === "taxi") {
@@ -114,10 +121,6 @@
 					contentString += '<button id="right_cabble" >' + rightText + '</button>';
 
 					var popup = L.popup().setContent(contentString);
-
-					userMarker = L.marker(coordinates, {
-						icon: icon
-					});
 
 					map.on("popupopen", function(eventPopup) {
 						var popup = eventPopup.popup;
@@ -156,7 +159,9 @@
 
 					});
 
-					userMarker.addTo(map)
+					userMarker = L.marker(coordinates, {
+							icon: icon
+						}).addTo(map)
 						.bindPopup(popup)
 						.openPopup();
 					resolve();
@@ -177,7 +182,7 @@
 							function(marker) {
 								marker.setMap(null);
 								console.dir(marker.infowindow);
-								google.maps.event.clearListeners(marker.infowindow, 'click');
+								//google.maps.event.clearListeners(marker.infowindow, 'click');
 							}
 						);
 
@@ -204,27 +209,8 @@
 			},
 
 			addPosition: function(position, type, id) {
-
 				var contentString;
 				var otherMarker;
-				var infowindow;
-				var gmapPos = new google.maps.LatLng(position.lat, position.lon);
-
-				function toggleVisible() {
-					if (visible) {
-						if (currentWindowClose)
-							currentWindowClose();
-					} else {
-						if (currentWindowClose)
-							currentWindowClose();
-						infowindow.open(map, otherMarker);
-
-						currentWindowClose = function() {
-							infowindow.close(map, userMarker)
-						};
-					}
-					visible = !visible;
-				};
 
 				//update 
 				if (assocIdToOtherItemsMark[id]) {
@@ -234,11 +220,15 @@
 				}
 				//creation
 				else {
-					otherMarker = new google.maps.Marker({
-						position: gmapPos,
-						icon: getIcon(type),
-						animation: google.maps.Animation.DROP
-					});
+
+					var icon = unknowIcon;
+					if (type === "taxi") {
+						icon = taxiIcon;
+					}
+
+					if (type === "customer") {
+						icon = userIcon;
+					}
 
 					var proposeText = '<p><a class="propose_cabble" ><span class="bottom">Ask for a ride</span></a></p>';
 					var cancelText = '<p><a class="cancel_cabble" ><span class="bottom">Cancel</span></a></p>';
@@ -254,14 +244,16 @@
 
 					var contentInfoNode = document.createElement('div');
 					contentInfoNode.innerHTML = contentString;
-					var infowindow = new google.maps.InfoWindow({
-						content: contentInfoNode
-					});
 
-					google.maps.event.addListener(infowindow, 'domready', function() {
+					otherMarker = L.marker([position.lat, position.lon], {
+							icon: icon
+						}).addTo(map)
+						.bindPopup(contentInfoNode)
+						.openPopup();
+
+					map.on("popupopen", function(eventPopup) {
 						var propose_cabble = contentInfoNode.querySelector(".propose_cabble");
 						propose_cabble.addEventListener("click", function(event) {
-							console.log("proposed to " + id);
 							//we are not already sending a request to this taxi/customer
 							if (!contentInfoNode.querySelector(".propose_cabble .loader")) {
 								var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
@@ -272,33 +264,10 @@
 
 						var cancel_cabble = contentInfoNode.querySelector(".cancel_cabble");
 						cancel_cabble.addEventListener("click", function() {
-							toggleVisible();
-							//otherMarker.setMap(null);
+							otherMarker.closePopup();
 						});
 					});
-
-					otherMarker.infowindow = infowindow;
-					otherMarker.setMap(map);
-
-					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-
-					var visible = (type === userType);
-					var visible = true;
-					toggleVisible();
-
-					google.maps.event.addListener(otherMarker, 'click', function() {
-						toggleVisible();
-					});
-
-					google.maps.event.addListener(infowindow, 'closeclick', function() {
-						visible = !visible;
-					});
-
-					otherItemsMark.push(otherMarker);
-					assocIdToOtherItemsMark[id] = otherMarker;
 				}
-
-				//getBestCandidate();
 			},
 			getUserPosition: function() {
 				return userMarker.getLatLng();
@@ -341,7 +310,6 @@
 					console.log("a ride with a ghost" + source);
 					return;
 				}
-				markerSource.setAnimation(google.maps.Animation.BOUNCE);
 
 				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
@@ -363,26 +331,14 @@
 
 				var contentInfoNode = document.createElement('div');
 				contentInfoNode.innerHTML = contentString;
-				var rideinfowindow = new google.maps.InfoWindow({
-					content: contentInfoNode
-				});
 
-				if (currentWindowClose)
-					currentWindowClose();
-				rideinfowindow.open(map, markerSource);
-
-				currentWindowClose = function() {
-					rideinfowindow.close(map, markerSource);
-				}
-
-				google.maps.event.addListener(rideinfowindow, 'closeclick', function() {
-					markerSource.setAnimation(null);
-				});
+				markerSource.bindPopup(contentInfoNode)
+					.openPopup();
 
 				return new Promise(
 					function(resolve, reject) {
 
-						google.maps.event.addListener(rideinfowindow, 'domready', function() {
+						map.on("popupopen", function(eventPopup) {
 							var propose_cabble = contentInfoNode.querySelector(".accept_cabble");
 							var cancel_cabble = contentInfoNode.querySelector(".decline_cabble");
 
