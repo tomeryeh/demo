@@ -858,7 +858,7 @@ GameRoundNoMonsterState.prototype = {
             if(enemy.id == game.player.id) {
                 var messages = ["You killed yourself\nstupid idiot..\nGame Over!"];
             } else {
-                var messages = ["You have been detroyed\nby" + enemy.username + "\nGame Over!"];
+                var messages = ["You have been destroyed\nby " + enemy.username + "\nGame Over!"];
             }
             gameOverMessage.text = messages[Math.floor(Math.random() * messages.length)];
             game.add.tween(gameOverMessage.scale).to({x: 2.0, y: 2.0}, 1500, 'Elastic', true);

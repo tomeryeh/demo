@@ -245,8 +245,8 @@ ConnectingState.prototype = {
         var look = looks[Math.floor(Math.random() * looks.length)];
         kuzzle.create("kf-users", {username: kuzzleGame.name, color: randColor, look: look}, true, function(error, createdData) {
             game.player = {id: createdData._id, username: kuzzleGame.name, color: randColor, hp: 50, look: look, status: 'joining'};
-            kuzzle.count('kf-rooms', {"filter": {"exists": {"field": "connectedPlayers"}}}, function (error, totalRooms) {
-                if(totalRooms == 0) {
+            kuzzle.count('kf-rooms', {"query": { "filtered": { "filter": {"exists": {"field": "connectedPlayers"}}}}}, function (error, totalRooms) {
+                if(totalRooms.count == 0) {
                     console.log('No room found, creating..');
                     kuzzle.create("kf-rooms", {connectedPlayers: 1, master: game.player.id, status: 'waiting'}, true, function (error, roomData) {
                         console.log('Created room #' + roomData._id);
@@ -261,7 +261,7 @@ ConnectingState.prototype = {
                         });
                     });
                 } else {
-                    console.log('Found ' + totalRooms + ' rooms');
+                    console.log('Found ' + totalRooms.count + ' rooms');
                     // Cleaning empty rooms
                     emptyRoomsFilter = {
                         "filter": {
