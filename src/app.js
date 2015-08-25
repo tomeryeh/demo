@@ -52,6 +52,8 @@ var app = {
 					app.userController.fetchFromLocalStorage().then(function(value) {
 						if (value)
 							user = value;
+						console.log("user type  " + user.whoami.type);
+						app.kuzzleController.setUserType(user.whoami.type);
 						console.log("...user controller ended");
 						resolve();
 					});
@@ -225,8 +227,6 @@ var app = {
 					if (!data)
 						data = message;
 
-					console.log("message");
-					console.log(message);
 					var userPosition = data._source.position;
 					var userType = data._source.type;
 					var userId = data._source.userId;
@@ -253,9 +253,9 @@ var app = {
 				kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
 
 				if (userType === 'customer') {
-					refreshInterval = 60000;
+					refreshInterval = 6000;
 				} else if (userType === 'taxi') {
-					refreshInterval = 10000;
+					refreshInterval = 1000;
 				}
 
 				//app.gisController.resetAllMarks();
@@ -304,7 +304,7 @@ var app = {
 			console.log(filter);
 
 			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
-				console.log("recive prop");
+				//console.log("recive prop");
 				//console.log(message);
 				if (error) {
 					console.error(error);
