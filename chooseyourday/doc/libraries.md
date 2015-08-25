@@ -1,8 +1,8 @@
-# Datetimepicker for Bootstrap 3
+# Angular bootstrap date & time picker
 
-* Version: 4.14.30
-* Copyright: 2015 Jonathan Peterson
-* License: MIT
+* Version: 0.3.13
+* Copyright: 2013-2014 Dale Lotts
+* License: MIT complient
 
 # Bootstrap 3
 
@@ -18,7 +18,7 @@
 
 # Angular.js
 
-* Version: 1.4.1 
+* Version: 1.4.1
 * Copyright: 2010-2015 Google, Inc.
 * License: MIT
 
@@ -30,7 +30,7 @@
 
 # Socket.io
 
-* Version: 1.3.4 
+* Version: 1.3.4
 * Copyright: 2014-2015 Automattic
 * License: MIT
 
