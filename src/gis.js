@@ -181,78 +181,62 @@
 
 		};
 
-		function createUserMark(position) {
+		function getGeoLoc() {
 			return new Promise(
 				function(resolve, reject) {
-					var coordinates = [position.coords.latitude, position.coords.longitude];
-					map.setView(coordinates, 15);
-
-					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-
-					window.setTimeout(function() {
-						map.setView(coordinates, 15);
-					}, 3000);
-
-					var popup = createUserPopup(userType);
-
-					var icon = unknowIcon;
-					if (userType) {
-						if (userType === "taxi") {
-							icon = taxiIcon;
-						}
-						if (userType === "customer") {
-							icon = userIcon;
-						}
+					if (navigator.geolocation) {
+						browserSupportFlag = true;
+						navigator.geolocation.getCurrentPosition(function(position) {
+							resolve([position.coords.latitude, position.coords.longitude]);
+						}, function() {
+							reject();
+						});
 					}
-
-					userMarker = L.marker(coordinates, {
-							icon: icon
-						}).addTo(map)
-						.bindPopup(popup)
-						.openPopup();
-
-					resolve();
 				}
 			);
 		};
 
 		//////////////////public methodes (i.e exposed) ///////////////////////
 		return {
+
+			createUserMark: function(position) {
+
+				return new Promise(
+					function(resolve, reject) {
+						var coordinates = [position[0], position[1]];
+						map.setView(coordinates, 15);
+
+						var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+
+						window.setTimeout(function() {
+							map.setView(coordinates, 15);
+						}, 3000);
+
+						var popup = createUserPopup(userType);
+
+						userMarker = L.marker(coordinates, {}).addTo(map)
+							.bindPopup(popup)
+							.openPopup();
+
+						userMarker.setIcon(this.getIcon(userType));
+						resolve();
+					}.bind(this)
+				);
+			},
+
 			resetAllMarks: function() {
-
-				console.log("reset all marks ...");
-
 				return new Promise(
 					function(resolve, reject) {
 						var resolver = Promise.pending();
 						otherItemsMark.forEach(
 							function(marker) {
 								marker.setMap(null);
-								console.dir(marker.infowindow);
-								//google.maps.event.clearListeners(marker.infowindow, 'click');
 							}
 						);
 
 						assocIdToOtherItemsMark = {};
-
-						if (userMarker)
-							userMarker.setMap(null);
-
-						if (navigator.geolocation) {
-							browserSupportFlag = true;
-							navigator.geolocation.getCurrentPosition(function(position) {
-								createUserMark(position).then(function() {
-									console.log("...reset all marks ended");
-									resolve();
-								});
-							}, function() {
-								map.setCenter(defaultCoord);
-								console.log("...reset all marks ended");
-								resolve();
-							});
-						}
-					}
-				);
+						resolve();
+					}.bind(this));
 			},
 
 			addMarker: function(position, type, id) {
@@ -267,28 +251,37 @@
 				}
 				//creation
 				else {
-					var icon = unknowIcon;
-					if (type === "taxi") {
-						icon = taxiIcon;
-					}
-					if (type === "customer") {
-						icon = userIcon;
-					}
-
 					var popup = createProposeRidePopup(type);
-					marker = L.marker([position.lat, position.lon], {
-							icon: icon
-						}).addTo(map)
+					marker = L.marker([position.lat, position.lon], {}).addTo(map)
 						.bindPopup(popup)
 						.openPopup();
+
+					marker.setIcon(this.getIcon(type));
 
 					assocIdToOtherItemsMark[id] = marker;
 
 				}
 			},
+
 			getUserPosition: function() {
 				return userMarker.getLatLng();
 			},
+
+			setUserType: function(type) {
+				userMarker.setIcon(this.getIcon(type));
+			},
+
+			getIcon: function(type) {
+				var icon = unknowIcon;
+				if (type === "taxi") {
+					icon = taxiIcon;
+				}
+				if (type === "customer") {
+					icon = userIcon;
+				}
+				return icon;
+			},
+
 			getMapBounds: function() {
 				var mapBounds = map.getBounds();
 				return {
@@ -296,11 +289,14 @@
 					neCorner: mapBounds.getNorthEast()
 				};
 			},
-			init: function() {
 
+			createMap: function(position) {
 				return new Promise(
 					function(resolve, reject) {
-						map = L.map('map-canvas').setView([51.505, -0.09], 13);
+						map = L.map('map-canvas').setView(position, 13);
+						setInterval(function() {
+							map.panTo(L.latLng(position));
+						}, 3000);
 						http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
 							L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
 								//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
@@ -310,13 +306,17 @@
 									'Imagery © <a href="http://mapbox.com">Mapbox</a>',
 								id: 'mapbox.streets'
 							}).addTo(map);
-						resolve();
-					});
+						resolve(position);
+					}).bind(this);
+			},
+			init: function() {
+				return getGeoLoc().
+				then(this.createMap).
+				then(this.createUserMark.bind(this));
 			},
 
 			showCenterControl: function() {
 				controlUI.style.display = "";
-
 			},
 			showPopupRideProposal: function(source, target) {
 

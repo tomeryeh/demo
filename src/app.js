@@ -11,11 +11,13 @@ var app = {
 		this.kuzzleController.app = app;
 
 		console.log("##############Cabble initialisation START !#######################");
-
-		this.gisController.init() //create the map with nothing on it
-			.then(app.userController.init) //get user info from local storage
-			.then(app.gisController.resetAllMarks) //get the GPS user location add the user marker with position and type  (show "?" icon" if no type)
-			.then(app.kuzzleController.init) //kuzzle listen to our app
+		//
+		this.gisController.init()
+			.then(app.userController.init)
+			//get the GPS user location add the user marker with position and type  (show "?" icon" if no type)
+			.then(app.gisController.resetAllMarks.bind(app.gisController))
+			//kuzzle listen to our app
+			.then(app.kuzzleController.init)
 			.then(
 				function() {
 
@@ -28,6 +30,7 @@ var app = {
 		catch(function(e) {
 			console.error(e);
 		});
+
 	}
 };
 
@@ -46,15 +49,14 @@ var app = {
 
 	app.userController = {
 		init: function() {
-			console.log("user controller creation...");
 			return new Promise(
 				function(resolve, reject) {
 					app.userController.fetchFromLocalStorage().then(function(value) {
 						if (value)
 							user = value;
-						console.log("user type  " + user.whoami.type);
+
 						app.kuzzleController.setUserType(user.whoami.type);
-						console.log("...user controller ended");
+						app.gisController.setUserType(user.whoami.type);
 						resolve();
 					});
 				});
@@ -117,15 +119,12 @@ var app = {
 				function(resolve, reject) {
 					// TODO: retrieve userId from localstorage
 					var user = app.userController.getUser();
-
 					if (!user.userId) {
 						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(error, response) {
 							if (error) {
 								console.error(error);
 								reject();
 							} else {
-								console.log("respose user ");
-								console.log(response);
 								app.userController.getUser().userId = response._id;
 								app.userController.getUser().whoami._id = response._id;
 								app.userController.setInLocalStorage().then(
@@ -279,21 +278,23 @@ var app = {
 				},
 				rideFilter = {
 					term: {}
-				},
-				// we don't want to listen to our own actions
-				statusFilter = {
-					not: {
-						terms: {
-							status: [
-								'proposed_by_' + app.userController.getUser().whoami.type,
-								'refused_by_' + app.userController.getUser().whoami.type,
-								'accepted_by_' + app.userController.getUser().whoami.type
-							]
-						}
-					}
 				};
 
-			rideFilter.term[app.userController.getUser().whoami.type] = app.userController.getUser().whoami._id;
+			var user = app.userController.getUser();
+			// we don't want to listen to our own actions
+			statusFilter = {
+				not: {
+					terms: {
+						status: [
+							'proposed_by_' + user.whoami.type,
+							'refused_by_' + user.whoami.type,
+							'accepted_by_' + user.whoami.type
+						]
+					}
+				}
+			};
+
+			rideFilter.term[user.whoami.type] = user.whoami._id;
 			filter.and = [rideFilter, statusFilter];
 
 			if (ridesRoom) {
