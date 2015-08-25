@@ -16,8 +16,6 @@
 
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
-		var currentWindowClose = null;
-
 		var assocIdToOtherItemsMark = {};
 
 		var iconSize = [38, 38];
@@ -73,6 +71,10 @@
 						userMarker.openPopup();
 
 					userMarker.setIcon(getIcon(userType));
+
+					if(!position){
+						map.fitWorld();
+					}
 					resolve();
 				}.bind(this)
 			);
@@ -290,6 +292,7 @@
 						navigator.geolocation.getCurrentPosition(function(position) {
 							resolve([position.coords.latitude, position.coords.longitude]);
 						}, function() {
+							//TODO ask for user to give it a position
 							reject();
 						});
 					}
@@ -300,15 +303,18 @@
 		//////////////////public methods (i.e exposed) ///////////////////////
 		return {
 			resetAllMarks: function() {
+				console.log("allmarks");
+				console.log(otherItemsMark);
 				return new Promise(
 					function(resolve, reject) {
 						var resolver = Promise.pending();
 						otherItemsMark.forEach(
 							function(marker) {
-								marker.setMap(null);
+								marker.closePopup();
+								map.removeLayer(marker);
 							}
 						);
-
+						otherItemsMark = [];
 						assocIdToOtherItemsMark = {};
 						resolve();
 					}.bind(this));
@@ -333,6 +339,7 @@
 
 					marker.setIcon(getIcon(type));
 					assocIdToOtherItemsMark[id] = marker;
+					otherItemsMark.push(marker);
 				}
 			},
 
@@ -354,6 +361,10 @@
 				return getGeoLoc().
 				then(createMap).
 				then(createUserMarker);
+			},
+
+			closePopupForUser: function(){
+				userMarker.closePopup();
 			},
 
 			showCenterControl: function() {

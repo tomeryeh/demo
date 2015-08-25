@@ -22,6 +22,9 @@ window.userController = (function() {
 							app.gisController.setUserType(user.whoami.type);
 						}
 						console.log("##############User initialisation ENDED !#######################");
+
+						if(user.whoami.type)
+							app.gisController.closePopupForUser();
 						resolve();
 					});
 				});
