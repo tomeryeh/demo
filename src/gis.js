@@ -1,4 +1,8 @@
-//IIFE, module partern,...
+/**
+ *	GIS module
+ *	all the GIS specific code (here we use Leaflet) http://leafletjs.com/
+ *
+ **/
 
 (function() {
 
@@ -7,7 +11,6 @@
 
 	function GisModule() {
 
-		//////////////////privates attributes///////////////////////
 		var map;
 		var userMarker;
 		var userPosition;
@@ -72,7 +75,7 @@
 
 					userMarker.setIcon(getIcon(userType));
 
-					if(!position){
+					if (!position) {
 						map.fitWorld();
 					}
 					resolve();
@@ -198,6 +201,50 @@
 			return L.popup().setContent(contentPop);
 		};
 
+		function createPopupRideProposal(source, target, rideProposal) {
+
+			var popupProposeRide = null;
+
+			var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+
+			var titleText = 'You have a ride proposition from this taxi';
+			var acceptMessage = "Yes, pick me up!";
+			var cancelMessage = "No, thank you.";
+
+			if (userType === "taxi") {
+				titleText = 'You have a ride proposition from this customer';
+				acceptMessage = 'Yes, I pick you up!';
+				cancelMessage = 'No, sorry.';
+			}
+
+			var contentPopup = document.createElement("div");
+
+			var header = document.createElement("h1");
+			header.appendChild(document.createTextNode(titleText));
+
+			var acceptCabble = document.createElement("p");
+			var acceptCabbleButton = document.createElement("button");
+			acceptCabbleButton.appendChild(document.createTextNode(acceptMessage));
+			acceptCabbleButton.addEventListener("click", function(event) {
+				map.closePopup(popupProposeRide);
+				app.kuzzleController.acceptRideProposal(rideProposal);
+			});
+
+			var cancelCabble = document.createElement("p");
+			var cancelCabbleButton = document.createElement("button");
+			cancelCabbleButton.appendChild(document.createTextNode(cancelMessage));
+			cancelCabbleButton.addEventListener("click", function(event) {
+				map.closePopup(popupProposeRide);
+				app.kuzzleController.declineRideProposal(rideProposal);
+			});
+
+			contentPopup.appendChild(header);
+			contentPopup.appendChild(acceptCabbleButton);
+			contentPopup.appendChild(cancelCabbleButton);
+
+			return L.popup().setContent(contentPopup);
+		};
+
 		function createProposeRidePopup(type, id) {
 			var popupProposeRide = null;
 
@@ -206,12 +253,7 @@
 			proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
 			proposeCabble.appendChild(proposeCabbleButton);
 			proposeCabble.addEventListener("click", function(event) {
-				//we are not already sending a request to this taxi/customer
-				//if (!contentInfoNode.querySelector(".propose_cabble .loader")) {
-				//	var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
-				//	propose_cabble.innerHTML = propose_cabble.innerHTML + loaderText;
 				app.kuzzleController.sendRideProposal(id);
-				//}
 			});
 
 			var cancelCabble = document.createElement("p");
@@ -299,8 +341,6 @@
 				}
 			);
 		};
-
-		//////////////////public methods (i.e exposed) ///////////////////////
 		return {
 			resetAllMarks: function() {
 				console.log("allmarks");
@@ -324,23 +364,24 @@
 				var contentString;
 				var marker;
 
-				//update  position
+				//update marker
 				if (assocIdToOtherItemsMark[id]) {
 					marker = assocIdToOtherItemsMark[id];
 					marker.setLatLng(L.latLng(position.lat, position.lon));
 					infowindow = marker.infowindow;
 				}
-				//creation
+				//create marker
 				else {
 					var popup = createProposeRidePopup(type, id);
 					marker = L.marker([position.lat, position.lon], {}).addTo(map)
 						.bindPopup(popup)
 						.openPopup();
 
-					marker.setIcon(getIcon(type));
 					assocIdToOtherItemsMark[id] = marker;
 					otherItemsMark.push(marker);
 				}
+
+				marker.setIcon(getIcon(type));
 			},
 
 			getUserPosition: function() {
@@ -363,65 +404,24 @@
 				then(createUserMarker);
 			},
 
-			closePopupForUser: function(){
+			closePopupForUser: function() {
 				userMarker.closePopup();
 			},
 
 			showCenterControl: function() {
+				//TODO show central control
 				//controlUI.style.display = "";
 			},
 			showPopupRideProposal: function(source, target, rideProposal) {
-
-				var popupProposeRide = null;
-
+				var popupProposeRide = createPopupRideProposal(source, target, rideProposal);
 				var markerSource = assocIdToOtherItemsMark[source];
 				if (!markerSource) {
 					console.log("a ride with a ghost" + source);
 					return;
 				}
-
-				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-
-				var titleText = 'You have a ride proposition from this taxi';
-				var acceptMessage = "Yes, pick me up!";
-				var cancelMessage = "No, thank you.";
-
-				if (userType === "taxi") {
-					titleText = 'You have a ride proposition from this customer';
-					acceptMessage = 'Yes, I pick you up!';
-					cancelMessage = 'No, sorry.';
-				}
-
-				var contentPopup = document.createElement("div");
-
-				var header = document.createElement("h1");
-				header.appendChild(document.createTextNode(titleText));
-
-				var acceptCabble = document.createElement("p");
-				var acceptCabbleButton = document.createElement("button");
-				acceptCabbleButton.appendChild(document.createTextNode(acceptMessage));
-				acceptCabbleButton.addEventListener("click", function(event) {
-					map.closePopup(popupProposeRide);
-					app.kuzzleController.acceptRideProposal(rideProposal);
-				});
-
-				var cancelCabble = document.createElement("p");
-				var cancelCabbleButton = document.createElement("button");
-				cancelCabbleButton.appendChild(document.createTextNode(cancelMessage));
-				cancelCabbleButton.addEventListener("click", function(event) {
-					map.closePopup(popupProposeRide);
-					app.kuzzleController.declineRideProposal(rideProposal);
-				});
-
-				contentPopup.appendChild(header);
-				contentPopup.appendChild(acceptCabbleButton);
-				contentPopup.appendChild(cancelCabbleButton);
-
-				popupProposeRide = L.popup().setContent(contentPopup);
-
-				markerSource.bindPopup(popupProposeRide)
+				markerSource
+					.bindPopup(popupProposeRide)
 					.openPopup();
-
 			}
 		};
 	};

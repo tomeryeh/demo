@@ -1,4 +1,9 @@
-////////////////////////user module/////////////////
+/**
+ *	User module
+ *	Model user (type and id)
+ *  fetch user data from localstorage
+ *
+ **/
 
 window.userController = (function() {
 
@@ -23,7 +28,7 @@ window.userController = (function() {
 						}
 						console.log("##############User initialisation ENDED !#######################");
 
-						if(user.whoami.type)
+						if (user.whoami.type)
 							app.gisController.closePopupForUser();
 						resolve();
 					});
