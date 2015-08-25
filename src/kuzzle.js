@@ -124,15 +124,11 @@ window.kuzzleController = (function() {
 				kuzzle.unsubscribe(positionsRoom);
 			}
 
-			//console.log("filter for position  ");
-			//console.log(filter);
-
 			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
 				if (error) {
 					console.error(error);
+					return;
 				}
-				//console.log("we've got position  ");
-				//console.log(message);
 
 				if (message.action == "create") {
 					var data = message.data;
@@ -143,19 +139,12 @@ window.kuzzleController = (function() {
 					var userType = data._source.type;
 					var userId = data._source.userId;
 					app.gisController.addMarker(userPosition, userType, userId);
-				} else {
-					//console.log("we've got a strange message ");
-					//console.log(message);
-
 				}
-
 			});
-			//console.log("we subscribe to ");
-			//console.log(positionsRoom);
 		},
 
 		setUserType: function(userType) {
-			console.log("set user type " + userType);
+			//console.log("set user type " + userType);
 			var refreshInterval = 5000;
 
 			app.userController.getUser().whoami.type = userType;
@@ -165,7 +154,6 @@ window.kuzzleController = (function() {
 
 			app.kuzzleController.listenToRidesProposals();
 
-			//return;
 			app.userController.setInLocalStorage().then(function() {
 				kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
 
@@ -181,7 +169,6 @@ window.kuzzleController = (function() {
 				}
 
 				refreshFilterTimer = setInterval(function() {
-					//console.log("refresh filter");
 					app.kuzzleController.refreshKuzzleFilter()
 				}.bind(this), refreshInterval);
 			});
@@ -226,23 +213,13 @@ window.kuzzleController = (function() {
 					console.error(error);
 					return false;
 				}
-				console.log("recive a ride ");
-				console.log(message);
-
 				app.kuzzleController.manageRideProposal(message.result ? message.result : message);
 			});
 		},
 
 		manageRideProposal: function(rideProposal) {
-			//console.log("manage ride proposal");
-			//console.log(rideProposal);
+			rideInfo = rideProposal._source;
 
-			var rideInfo = rideProposal.body;
-			//._source;
-			if (!rideInfo)
-				rideInfo = rideProposal._source;
-
-			console.log(rideInfo);
 			if (!rideInfo) {
 				console.log("no ride info");
 				return;
@@ -261,16 +238,13 @@ window.kuzzleController = (function() {
 					var proposedByTaxy = (rideInfo.status === "proposed_by_taxi");
 					var target = proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 					var source = !proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
-
 					app.gisController.showPopupRideProposal(source, target, rideProposal);
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
 				currentRide = null;
-				// TODO: ride declined
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				currentRide = rideProposal;
 				app.gisController.showCenterControl();
-				// TODO: ride accepted
 			}
 		},
 
