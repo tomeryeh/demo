@@ -205,7 +205,7 @@ chooseYourDay.controller("EventController", ["$scope", "$location", "$routeParam
         kuzzle.create(kuzzleChannel, {
             "type": "chooseyourday_p",
             "name": $scope.newParticipant.name,
-            "dates": $scope.newParticipant.dates,
+            "answers": $scope.newParticipant.answers,
             "event": $scope.newParticipant.event
         }, true);
         $scope.initNewParticipant();
@@ -219,13 +219,13 @@ chooseYourDay.controller("EventController", ["$scope", "$location", "$routeParam
         $scope.newParticipant = {
                 "type": "chooseyourday_p",
                 "name": "",
-                "dates": [],
+                "answers": [],
                 "event": $scope.currentEvent._id
         };
 
         angular.forEach($scope.currentEvent.dates, function (value, key) {
-            var i = $scope.newParticipant.dates.length;
-            $scope.newParticipant.dates[i] = { "value": false };
+            var i = $scope.newParticipant.answers.length;
+            $scope.newParticipant.answers[i] = { "value": false };
         });
     };
 
@@ -237,7 +237,7 @@ chooseYourDay.controller("EventController", ["$scope", "$location", "$routeParam
         kuzzle.update(kuzzleChannel, {
             "_id": participant._id,
             "name": participant.name,
-            "dates": participant.dates
+            "answers": participant.answers
         });
 
         $scope.editingParticipant = 'new';
@@ -296,7 +296,7 @@ chooseYourDay.controller("EventController", ["$scope", "$location", "$routeParam
                 $scope.participants.some(function (participant, index) {
                     if (participant._id === response._id) {
                         $scope.participants[index].name = response._source.name;
-                        $scope.participants[index].dates = response._source.dates;
+                        $scope.participants[index].answers = response._source.answers;
                         return true;
                     }
                 });
@@ -315,17 +315,17 @@ chooseYourDay.controller("EventController", ["$scope", "$location", "$routeParam
             "type": "chooseyourday_p",
             "_id": id,
             "name": data.name,
-            "dates": data.dates,
+            "answers": data.answers,
             "event": data.event
         };
 
-        if (typeof newParticipant.dates == "undefined") {
-            newParticipant.dates = [];
+        if (typeof newParticipant.answers == "undefined") {
+            newParticipant.answers = [];
         }
 
-        while (newParticipant.dates.length < $scope.currentEvent.dates.length) {
-            var i = newParticipant.dates.length;
-            newParticipant.dates[i] = { "value": false };
+        while (newParticipant.answers.length < $scope.currentEvent.dates.length) {
+            var i = newParticipant.answers.length;
+            newParticipant.answers[i] = { "value": false };
         }
 
         $scope.participants.push(newParticipant);

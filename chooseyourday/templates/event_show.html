@@ -26,7 +26,7 @@
                     </button>
                 </div>
             </td>
-		    <td ng-repeat="date in participant.dates" ng-if="currentEvent.dates[$index].active" class="text-center">
+		    <td ng-repeat="date in participant.answers" ng-if="currentEvent.dates[$index].active" class="text-center">
                 <input ng-if="editingParticipant == key" type="checkbox" ng-click='toggleDate(date)' ng-checked="date.value" />
                 <div ng-class="date.value ? bg-success : bg-danger" ng-if="editingParticipant != key" type="checkbox">
                     <span ng-if="date.value" ng-if="editingParticipant != key" class="glyphicon glyphicon-ok"></span>
@@ -47,7 +47,7 @@
                 </div>
             </td>
 		    <td ng-repeat="date in currentEvent.dates" ng-if="date.active" class="text-center">
-                <input type="checkbox" ng-click='toggleDate(newParticipant.dates[$index])' ng-checked="newParticipant.dates[$index].value" ng-disabled="newParticipant.name == ''" />
+                <input type="checkbox" ng-click='toggleDate(newParticipant.answers[$index])' ng-checked="newParticipant.answers[$index].value" ng-disabled="newParticipant.name == ''" />
             </td>
             <td class="text-center">
                 <button ng-if="editingParticipant == 'new'" ng-disabled="newParticipant.name == ''" type="submit" class="btn btn-success" ng-click="createParticipant()">
