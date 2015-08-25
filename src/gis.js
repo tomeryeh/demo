@@ -40,6 +40,62 @@
 			popupAnchor: popupAnchor
 		});
 
+		function getIcon(type) {
+			var icon = unknowIcon;
+			if (type === "taxi") {
+				icon = taxiIcon;
+			}
+			if (type === "customer") {
+				icon = userIcon;
+			}
+			return icon;
+		};
+
+		function createUserMarker(position) {
+
+			return new Promise(
+				function(resolve, reject) {
+					var coordinates = [position[0], position[1]];
+					map.setView(coordinates, 15);
+
+					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+
+					window.setTimeout(function() {
+						map.setView(coordinates, 15);
+					}, 3000);
+
+					var popup = createUserPopup(userType);
+
+					userMarker = L.marker(coordinates, {}).addTo(map)
+						.bindPopup(popup)
+						.openPopup();
+
+					userMarker.setIcon(getIcon(userType));
+					resolve();
+				}.bind(this)
+			);
+		};
+
+		function createMap(position) {
+			return new Promise(
+				function(resolve, reject) {
+					map = L.map('map-canvas').setView(position, 13);
+					setInterval(function() {
+						map.panTo(L.latLng(position));
+					}, 3000);
+					http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
+						L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
+							//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
+							maxZoom: 18,
+							attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+								'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+								'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+							id: 'mapbox.streets'
+						}).addTo(map);
+					resolve(position);
+				}).bind(this);
+		};
+
 		function CenterControl(controlDiv, map) {
 
 			// Set CSS for the control border
@@ -196,34 +252,8 @@
 			);
 		};
 
-		//////////////////public methodes (i.e exposed) ///////////////////////
+		//////////////////public methods (i.e exposed) ///////////////////////
 		return {
-
-			createUserMark: function(position) {
-
-				return new Promise(
-					function(resolve, reject) {
-						var coordinates = [position[0], position[1]];
-						map.setView(coordinates, 15);
-
-						var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-
-						window.setTimeout(function() {
-							map.setView(coordinates, 15);
-						}, 3000);
-
-						var popup = createUserPopup(userType);
-
-						userMarker = L.marker(coordinates, {}).addTo(map)
-							.bindPopup(popup)
-							.openPopup();
-
-						userMarker.setIcon(this.getIcon(userType));
-						resolve();
-					}.bind(this)
-				);
-			},
-
 			resetAllMarks: function() {
 				return new Promise(
 					function(resolve, reject) {
@@ -256,7 +286,7 @@
 						.bindPopup(popup)
 						.openPopup();
 
-					marker.setIcon(this.getIcon(type));
+					marker.setIcon(getIcon(type));
 
 					assocIdToOtherItemsMark[id] = marker;
 
@@ -266,22 +296,9 @@
 			getUserPosition: function() {
 				return userMarker.getLatLng();
 			},
-
 			setUserType: function(type) {
-				userMarker.setIcon(this.getIcon(type));
+				userMarker.setIcon(getIcon(type));
 			},
-
-			getIcon: function(type) {
-				var icon = unknowIcon;
-				if (type === "taxi") {
-					icon = taxiIcon;
-				}
-				if (type === "customer") {
-					icon = userIcon;
-				}
-				return icon;
-			},
-
 			getMapBounds: function() {
 				var mapBounds = map.getBounds();
 				return {
@@ -290,29 +307,10 @@
 				};
 			},
 
-			createMap: function(position) {
-				return new Promise(
-					function(resolve, reject) {
-						map = L.map('map-canvas').setView(position, 13);
-						setInterval(function() {
-							map.panTo(L.latLng(position));
-						}, 3000);
-						http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
-							L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
-								//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
-								maxZoom: 18,
-								attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-									'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-									'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-								id: 'mapbox.streets'
-							}).addTo(map);
-						resolve(position);
-					}).bind(this);
-			},
 			init: function() {
 				return getGeoLoc().
-				then(this.createMap).
-				then(this.createUserMark.bind(this));
+				then(createMap).
+				then(createUserMarker.bind(this));
 			},
 
 			showCenterControl: function() {
