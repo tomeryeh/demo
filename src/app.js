@@ -13,6 +13,7 @@ var app = {
 		console.log("##############Cabble initialisation START !#######################");
 		//
 		this.gisController.init()
+			//get user info from localstorage
 			.then(app.userController.init)
 			//get the GPS user location add the user marker with position and type  (show "?" icon" if no type)
 			.then(app.gisController.resetAllMarks.bind(app.gisController))

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
@@ -15,20 +16,33 @@
 			</div>
 
 		</div>
-	
-		<script src="./bower_components/lodash/lodash.min.js"></script>
+		<!-- for Promise -->
 		<script src="./bower_components/bluebird/js/browser/bluebird.min.js"></script>
+
+		<!-- for Kuzzle -->
 		<script src="./bower_components/socket.io-client/socket.io.js"></script>
+		<script type="text/javascript" src="./lib/kuzzle.min.js"></script>
+
+		<!-- for local save user info -->
 		<script src="./bower_components/localforage/dist/localforage.js"></script>
 
+		<!-- GIS vendor solution : leaflet -->
 		<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
-		<script type="text/javascript" src="./lib/kuzzle.min.js"></script>
+
+		<!-- gis code for Cabble-->
 		<script src="./src/gis.js"></script>
+
+		<!-- user info from locla storage-->
 		<script src="./src/user.js"></script>
+
+		<!-- Kuzzle code-->
 		<script src="./src/kuzzle.js"></script>
+
+		<!-- entry point-->
 		<script src="./src/app.js"></script>
 
 		<script src="//localhost:35729/livereload.js"></script>
 
 </body>
+
 </html>

@@ -67,8 +67,10 @@
 					var popup = createUserPopup(userType);
 
 					userMarker = L.marker(coordinates, {}).addTo(map)
-						.bindPopup(popup)
-						.openPopup();
+						.bindPopup(popup);
+
+					if (!userType)
+						userMarker.openPopup();
 
 					userMarker.setIcon(getIcon(userType));
 					resolve();
@@ -194,7 +196,8 @@
 			return L.popup().setContent(contentPop);
 		};
 
-		function createProposeRidePopup(type) {
+		function createProposeRidePopup(type, id) {
+			var popupProposeRide = null;
 
 			var proposeCabble = document.createElement("p");
 			var proposeCabbleButton = document.createElement("button");
@@ -214,7 +217,7 @@
 			cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
 			cancelCabble.appendChild(cancelCabbleButton);
 			cancelCabble.addEventListener("click", function() {
-				otherMarker.closePopup();
+				map.closePopup(popupProposeRide);
 			});
 
 			var contentPopup = document.createElement("div");
@@ -230,10 +233,52 @@
 			contentPopup.appendChild(header);
 			contentPopup.appendChild(proposeCabble);
 			contentPopup.appendChild(cancelCabble);
+			popupProposeRide = L.popup().setContent(contentPopup);
 
-			return L.popup().setContent(contentPopup);
+			return popupProposeRide;
 
-			//contentString += '<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>';
+		};
+
+		function createProposeRidePopup(type, id) {
+			var popupProposeRide = null;
+
+			var proposeCabble = document.createElement("p");
+			var proposeCabbleButton = document.createElement("button");
+			proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
+			proposeCabble.appendChild(proposeCabbleButton);
+			proposeCabble.addEventListener("click", function(event) {
+				//we are not already sending a request to this taxi/customer
+				//if (!contentInfoNode.querySelector(".propose_cabble .loader")) {
+				//	var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
+				//	propose_cabble.innerHTML = propose_cabble.innerHTML + loaderText;
+				app.kuzzleController.sendRideProposal(id);
+				//}
+			});
+
+			var cancelCabble = document.createElement("p");
+			var cancelCabbleButton = document.createElement("button");
+			cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
+			cancelCabble.appendChild(cancelCabbleButton);
+			cancelCabble.addEventListener("click", function() {
+				map.closePopup(popupProposeRide);
+			});
+
+			var contentPopup = document.createElement("div");
+
+			var header = document.createElement("h1");
+			var contentHeader = "";
+			if (type === "customer")
+				contentHeader += 'Propose this customer a ride';
+			else
+				contentHeader += 'Ask this taxi for a ride';
+			header.appendChild(document.createTextNode(contentHeader));
+
+			contentPopup.appendChild(header);
+			contentPopup.appendChild(proposeCabble);
+			contentPopup.appendChild(cancelCabble);
+			popupProposeRide = L.popup().setContent(contentPopup);
+
+			return popupProposeRide;
 
 		};
 
@@ -281,15 +326,13 @@
 				}
 				//creation
 				else {
-					var popup = createProposeRidePopup(type);
+					var popup = createProposeRidePopup(type, id);
 					marker = L.marker([position.lat, position.lon], {}).addTo(map)
 						.bindPopup(popup)
 						.openPopup();
 
 					marker.setIcon(getIcon(type));
-
 					assocIdToOtherItemsMark[id] = marker;
-
 				}
 			},
 
@@ -310,15 +353,15 @@
 			init: function() {
 				return getGeoLoc().
 				then(createMap).
-				then(createUserMarker.bind(this));
+				then(createUserMarker);
 			},
 
 			showCenterControl: function() {
-				controlUI.style.display = "";
+				//controlUI.style.display = "";
 			},
-			showPopupRideProposal: function(source, target) {
+			showPopupRideProposal: function(source, target, rideProposal) {
 
-				console.log("we got a rpoposale from gis");
+				var popupProposeRide = null;
 
 				var markerSource = assocIdToOtherItemsMark[source];
 				if (!markerSource) {
@@ -329,48 +372,45 @@
 				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
 				var titleText = 'You have a ride proposition from this taxi';
-				var acceptText = '<p><a class="accept_cabble" ><span class="bottom">Yes, pick me up!</span></a></p>';
-				var declineText = '<p><a class="decline_cabble" ><span class="bottom">No, thank you.</span></a></p>';
+				var acceptMessage = "Yes, pick me up!";
+				var cancelMessage = "No, thank you.";
 
 				if (userType === "taxi") {
 					titleText = 'You have a ride proposition from this customer';
-					acceptText = '<p><a class="accept_cabble" ><span class="bottom">Yes, I pick you up!</span></a></p>';
-					declineText = '<p><a class="decline_cabble" ><span class="bottom">No, sorry.</span></a></p>';
+					acceptMessage = 'Yes, I pick you up!';
+					cancelMessage = 'No, sorry.';
 				}
 
-				contentString = '<div id="content_info_item"><div id="siteNotice"></div>';
-				contentString += '<h1 id="firstHeading" class="firstHeading">' + titleText + '</h1>';
-				contentString += acceptText;
-				contentString += declineText;
-				//contentString += '<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>';
+				var contentPopup = document.createElement("div");
 
-				var contentInfoNode = document.createElement('div');
-				contentInfoNode.innerHTML = contentString;
+				var header = document.createElement("h1");
+				header.appendChild(document.createTextNode(titleText));
 
-				markerSource.bindPopup(contentInfoNode)
+				var acceptCabble = document.createElement("p");
+				var acceptCabbleButton = document.createElement("button");
+				acceptCabbleButton.appendChild(document.createTextNode(acceptMessage));
+				acceptCabbleButton.addEventListener("click", function(event) {
+					map.closePopup(popupProposeRide);
+					app.kuzzleController.acceptRideProposal(rideProposal);
+				});
+
+				var cancelCabble = document.createElement("p");
+				var cancelCabbleButton = document.createElement("button");
+				cancelCabbleButton.appendChild(document.createTextNode(cancelMessage));
+				cancelCabbleButton.addEventListener("click", function(event) {
+					map.closePopup(popupProposeRide);
+					app.kuzzleController.declineRideProposal(rideProposal);
+				});
+
+				contentPopup.appendChild(header);
+				contentPopup.appendChild(acceptCabbleButton);
+				contentPopup.appendChild(cancelCabbleButton);
+
+				popupProposeRide = L.popup().setContent(contentPopup);
+
+				markerSource.bindPopup(popupProposeRide)
 					.openPopup();
 
-				return new Promise(
-					function(resolve, reject) {
-
-						map.on("popupopen", function(eventPopup) {
-							//console.log("popup open from ride proposal ");
-							var propose_cabble = contentInfoNode.querySelector(".accept_cabble");
-							var cancel_cabble = contentInfoNode.querySelector(".decline_cabble");
-
-							propose_cabble.addEventListener("click", function(event) {
-								rideinfowindow.close(map, markerSource);
-								markerSource.setAnimation(null);
-								resolve("accept");
-							});
-
-							cancel_cabble.addEventListener("click", function() {
-								rideinfowindow.close(map, markerSource);
-								markerSource.setAnimation(null);
-								resolve("refused");
-							});
-						});
-					});
 			}
 		};
 	};

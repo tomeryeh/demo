@@ -12,14 +12,16 @@ window.userController = (function() {
 
 	return {
 		init: function() {
+			console.log("##############User initialisation START !#######################");
 			return new Promise(
 				function(resolve, reject) {
 					app.userController.fetchFromLocalStorage().then(function(value) {
-						if (value)
+						if (value) {
 							user = value;
-
-						app.kuzzleController.setUserType(user.whoami.type);
-						app.gisController.setUserType(user.whoami.type);
+							app.kuzzleController.setUserType(user.whoami.type);
+							app.gisController.setUserType(user.whoami.type);
+						}
+						console.log("##############User initialisation ENDED !#######################");
 						resolve();
 					});
 				});

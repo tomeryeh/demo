@@ -19,7 +19,7 @@ window.kuzzleController = (function() {
 	return {
 		init: function() {
 
-			console.log("kuzzle controller creation...");
+			console.log("##############KUZZLE initialisation START !#######################");
 			return new Promise(
 				function(resolve, reject) {
 					// TODO: retrieve userId from localstorage
@@ -35,19 +35,17 @@ window.kuzzleController = (function() {
 								app.userController.setInLocalStorage().then(
 									function() {
 										app.kuzzleController.listenToRidesProposals();
-										console.log("...kuzzle controller ended");
+										console.log("##############KUZZLE initialisation END !#######################");
 										resolve();
 									}
 								);
-
-								console.log("cannot save user  locally");
-								return;
 							}
 						});
+					} else {
+						app.kuzzleController.listenToRidesProposals();
 					}
-
-					app.kuzzleController.listenToRidesProposals();
 					console.log("...kuzzle controller ended");
+					console.log("##############KUZZLE initialisation END !#######################");
 					resolve();
 				});
 		},
@@ -60,6 +58,8 @@ window.kuzzleController = (function() {
 				console.log("no position for user");
 				return;
 			}
+			if (!user.whoami.type)
+				return;
 			//console.log("send myposition");
 			kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
 				userId: user.whoami._id,
@@ -80,8 +80,12 @@ window.kuzzleController = (function() {
 		refreshKuzzleFilter: function() {
 			var
 				bound = app.gisController.getMapBounds(),
-				user = app.userController.getUser(),
-				filterUserType = user.whoami.type === 'taxi' ? 'customer' : 'taxi',
+				user = app.userController.getUser();
+
+			if (!user.whoami.type)
+				return;
+
+			var filterUserType = user.whoami.type === 'taxi' ? 'customer' : 'taxi',
 				filter = {
 					and: [{
 						term: {
@@ -120,12 +124,16 @@ window.kuzzleController = (function() {
 				kuzzle.unsubscribe(positionsRoom);
 			}
 
+			//console.log("filter for position  ");
+			//console.log(filter);
+
 			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
 				if (error) {
 					console.error(error);
 				}
 				//console.log("we've got position  ");
 				//console.log(message);
+
 				if (message.action == "create") {
 					var data = message.data;
 					if (!data)
@@ -147,11 +155,16 @@ window.kuzzleController = (function() {
 		},
 
 		setUserType: function(userType) {
-
-			//console.log("set user type " + userType);
-			var refreshInterval;
+			console.log("set user type " + userType);
+			var refreshInterval = 5000;
 
 			app.userController.getUser().whoami.type = userType;
+
+			if (!userType)
+				return;
+
+			app.kuzzleController.listenToRidesProposals();
+
 			//return;
 			app.userController.setInLocalStorage().then(function() {
 				kuzzle.update(CABBLE_COLLECTION_USERS, app.userController.getUser().whoami);
@@ -163,14 +176,12 @@ window.kuzzleController = (function() {
 				}
 
 				//app.gisController.resetAllMarks();
-
 				if (refreshFilterTimer) {
 					clearInterval(refreshFilterTimer);
 				}
-				app.kuzzleController.refreshKuzzleFilter();
 
 				refreshFilterTimer = setInterval(function() {
-					//console.log("refresh inter " + userType);
+					//console.log("refresh filter");
 					app.kuzzleController.refreshKuzzleFilter()
 				}.bind(this), refreshInterval);
 			});
@@ -186,6 +197,10 @@ window.kuzzleController = (function() {
 				};
 
 			var user = app.userController.getUser();
+
+			if (!user.whoami.type)
+				return;
+
 			// we don't want to listen to our own actions
 			statusFilter = {
 				not: {
@@ -206,17 +221,11 @@ window.kuzzleController = (function() {
 				kuzzle.unsubscribe(ridesRoom);
 			}
 
-			console.log("filter for ride prop");
-			console.log(filter);
-
 			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
-				//console.log("recive prop");
-				//console.log(message);
 				if (error) {
 					console.error(error);
 					return false;
 				}
-
 				console.log("recive a ride ");
 				console.log(message);
 
@@ -225,6 +234,8 @@ window.kuzzleController = (function() {
 		},
 
 		manageRideProposal: function(rideProposal) {
+			//console.log("manage ride proposal");
+			//console.log(rideProposal);
 
 			var rideInfo = rideProposal.body;
 			//._source;
@@ -251,16 +262,7 @@ window.kuzzleController = (function() {
 					var target = proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 					var source = !proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 
-					app.gisController.showPopupRideProposal(source, target).then(function(response) {
-						if (response === "accept") {
-							app.kuzzleController.acceptRideProposal(rideProposal);
-							return;
-						}
-						if (response === "decline") {
-							app.kuzzleController.declineRideProposal(rideProposal);
-							return;
-						}
-					});
+					app.gisController.showPopupRideProposal(source, target, rideProposal);
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
 				currentRide = null;
@@ -278,8 +280,6 @@ window.kuzzleController = (function() {
 		 * @param userId User Id of the *OTHER* person we wish to contact
 		 */
 		sendRideProposal: function(userId) {
-
-			console.log("send ride porposal");
 			var
 				rideProposal = {},
 				myUserType = app.userController.getUser().whoami.type;
@@ -296,13 +296,11 @@ window.kuzzleController = (function() {
 				this.declineRideProposal(currentRide._id);
 			}
 
-			kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, function(response) {
-				if (response.error) {
-					console.error(response.error);
+			kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, function(error, response) {
+				if (error) {
+					console.error(error);
 					return false;
 				}
-				//console.log("response from sending ");
-				//console.log(response);
 				currentRide = response.result;
 			});
 		},
@@ -312,6 +310,7 @@ window.kuzzleController = (function() {
 		 *
 		 */
 		acceptRideProposal: function(rideProposal) {
+			console.log("accept ride proposal");
 			var
 				myUserType = app.userController.getUser().whoami.type,
 				acceptedRide = {
@@ -352,15 +351,13 @@ window.kuzzleController = (function() {
 			So here we list these potential proposals and gracefully decline these
 			 */
 			console.log('=== LISTPROPOSAL FILTER:', listProposal);
-			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(searchResult) {
-				if (searchResult.error) {
-					console.log(new Error(searchResult.error));
+			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(error, searchResult) {
+				if (error) {
+					console.log(error);
 					return false;
 				}
-				console.log("searresult ");
-				console.log(searchResult);
 
-				searchResult.result.hits.hits.forEach(function(element) {
+				searchResult.hits.hits.forEach(function(element) {
 					// element is not a ride document, but it contains the _id element we need to decline the ride
 					app.kuzzleController.declineRideProposal(element);
 				});
