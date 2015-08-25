@@ -73,7 +73,113 @@
 				controlUI.style.display = "none";
 			});
 			*/
-		}
+		};
+
+		function createUserPopup(userType) {
+
+			var contentString = "";
+
+			var taxiSearchText = "looking for a customer...";
+			var customerSearchText = "looking for a taxi...";
+
+			var wanabeCustomerTextForTaxi = "No ! I need a ride";
+			var wanabeTaxiForCustomer = "No ! i'm looking for a customer";
+
+			var customerText;
+			var taxiText;
+
+			if (userType) {
+				if (userType === "taxi") {
+					customerText = wanabeCustomerTextForTaxi;
+					taxiText = taxiSearchText;
+				}
+
+				if (userType === "customer") {
+					customerText = customerSearchText;
+					taxiText = wanabeTaxiForCustomer;
+				}
+			} else {
+				customerText = "i need a ride";
+				taxiText = "i'm looking for a customer";
+			}
+
+			var contentPop = document.createElement("div");
+			contentPop.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
+
+			var btnCustomer = document.createElement("BUTTON");
+			btnCustomer.appendChild(document.createTextNode(customerText));
+
+			var btnTaxi = document.createElement("BUTTON");
+			btnTaxi.appendChild(document.createTextNode(taxiText));
+
+			contentPop.appendChild(btnCustomer); // Append the text to <button>
+			contentPop.appendChild(btnTaxi); // Append the text to <button>
+
+			btnCustomer.addEventListener("click", function(event) {
+				userMarker.setIcon(userIcon);
+				app.kuzzleController.setUserType("customer");
+				btnCustomer.innerHTML = customerSearchText;
+				btnTaxi.innerHTML = wanabeTaxiForCustomer;
+				btnTaxi.disabled = false;
+				btnCustomer.disabled = true;
+				map.closePopup(event.popup);
+			});
+
+			btnTaxi.addEventListener("click", function() {
+				userMarker.setIcon(taxiIcon);
+				app.kuzzleController.setUserType("taxi");
+				btnCustomer.innerHTML = wanabeCustomerTextForTaxi
+				btnTaxi.innerHTML = taxiSearchText;
+				btnTaxi.disabled = true;
+				btnCustomer.disabled = false;
+				map.closePopup(event.popup);
+			});
+
+			return L.popup().setContent(contentPop);
+		};
+
+		function createProposeRidePopup(type) {
+
+			var proposeCabble = document.createElement("p");
+			var proposeCabbleButton = document.createElement("button");
+			proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
+			proposeCabble.appendChild(proposeCabbleButton);
+			proposeCabble.addEventListener("click", function(event) {
+				//we are not already sending a request to this taxi/customer
+				//if (!contentInfoNode.querySelector(".propose_cabble .loader")) {
+				//	var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
+				//	propose_cabble.innerHTML = propose_cabble.innerHTML + loaderText;
+				app.kuzzleController.sendRideProposal(id);
+				//}
+			});
+
+			var cancelCabble = document.createElement("p");
+			var cancelCabbleButton = document.createElement("button");
+			cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
+			cancelCabble.appendChild(cancelCabbleButton);
+			cancelCabble.addEventListener("click", function() {
+				otherMarker.closePopup();
+			});
+
+			var contentPopup = document.createElement("div");
+
+			var header = document.createElement("h1");
+			var contentHeader = "";
+			if (type === "customer")
+				contentHeader += 'Propose this customer a ride';
+			else
+				contentHeader += 'Ask this taxi for a ride';
+			header.appendChild(document.createTextNode(contentHeader));
+
+			contentPopup.appendChild(header);
+			contentPopup.appendChild(proposeCabble);
+			contentPopup.appendChild(cancelCabble);
+
+			return L.popup().setContent(contentPopup);
+
+			//contentString += '<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>';
+
+		};
 
 		function createUserMark(position) {
 			return new Promise(
@@ -87,83 +193,24 @@
 						map.setView(coordinates, 15);
 					}, 3000);
 
-					var contentString = "";
+					var popup = createUserPopup(userType);
 
-					var taxiSearchText = "looking for a customer...";
-					var customerSearchText = "looking for a taxi...";
-
-					var wanabeCustomerTextForTaxi = "No ! I need a ride";
-					var wanabeTaxiForCustomer = "No ! i'm looking for a customer";
-
-					var leftText;
-					var rightText;
 					var icon = unknowIcon;
-
 					if (userType) {
 						if (userType === "taxi") {
-							leftText = wanabeCustomerTextForTaxi;
-							rightText = taxiSearchText;
 							icon = taxiIcon;
 						}
-
 						if (userType === "customer") {
-							leftText = customerSearchText;
-							rightText = wanabeTaxiForCustomer;
 							icon = userIcon;
 						}
-					} else {
-						leftText = "i need a ride";
-						rightText = "i'm looking for a customer";
 					}
-
-					var contentString = "Hello from Cabble ! what can i do for you ?";
-					contentString += '<button id="left_cabble">' + leftText + '</button>';
-					contentString += '<button id="right_cabble" >' + rightText + '</button>';
-
-					var popup = L.popup().setContent(contentString);
-
-					map.on("popupopen", function(eventPopup) {
-						var popup = eventPopup.popup;
-						console.log(popup);
-						var left_cabble = document.querySelector("#left_cabble");
-						var right_cabble = document.querySelector("#right_cabble");
-
-						var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
-						if (!userType) {
-							right_cabble.disabled = false;
-							left_cabble.disabled = false;
-						} else {
-							right_cabble.disabled = (userType == "taxi");
-							left_cabble.disabled = !(userType == "taxi");
-						}
-
-						left_cabble.addEventListener("click", function() {
-							userMarker.setIcon(userIcon);
-							app.kuzzleController.setUserType("customer");
-							left_cabble.innerHTML = customerSearchText;
-							right_cabble.innerHTML = wanabeTaxiForCustomer;
-							right_cabble.disabled = false;
-							left_cabble.disabled = true;
-							map.closePopup(popup);
-						});
-
-						right_cabble.addEventListener("click", function() {
-							userMarker.setIcon(taxiIcon);
-							app.kuzzleController.setUserType("taxi");
-							left_cabble.innerHTML = wanabeCustomerTextForTaxi
-							right_cabble.innerHTML = taxiSearchText;
-							right_cabble.disabled = true;
-							left_cabble.disabled = false;
-							map.closePopup(popup);
-						});
-
-					});
 
 					userMarker = L.marker(coordinates, {
 							icon: icon
 						}).addTo(map)
 						.bindPopup(popup)
 						.openPopup();
+
 					resolve();
 				}
 			);
@@ -208,65 +255,35 @@
 				);
 			},
 
-			addPosition: function(position, type, id) {
+			addMarker: function(position, type, id) {
 				var contentString;
-				var otherMarker;
+				var marker;
 
-				//update 
+				//update  position
 				if (assocIdToOtherItemsMark[id]) {
-					otherMarker = assocIdToOtherItemsMark[id];
-					otherMarker.setPosition(gmapPos);
-					infowindow = otherMarker.infowindow;
+					marker = assocIdToOtherItemsMark[id];
+					marker.setLatLng(L.latLng(position.lat, position.lon));
+					infowindow = marker.infowindow;
 				}
 				//creation
 				else {
-
 					var icon = unknowIcon;
 					if (type === "taxi") {
 						icon = taxiIcon;
 					}
-
 					if (type === "customer") {
 						icon = userIcon;
 					}
 
-					var proposeText = '<p><a class="propose_cabble" ><span class="bottom">Ask for a ride</span></a></p>';
-					var cancelText = '<p><a class="cancel_cabble" ><span class="bottom">Cancel</span></a></p>';
-
-					contentString = '<div id="content_info_item"><div id="siteNotice"></div>';
-					if (type === "customer")
-						contentString += '<h1 id="firstHeading" class="firstHeading">Propose this customer a ride</h1>';
-					else
-						contentString += '<h1 id="firstHeading" class="firstHeading">Ask this taxi for a ride</h1>';
-					contentString += proposeText;
-					contentString += cancelText;
-					contentString += '<div id="bodyContent"><p><b>time estimated to meet you : 5 min !</b></p>';
-
-					var contentInfoNode = document.createElement('div');
-					contentInfoNode.innerHTML = contentString;
-
-					otherMarker = L.marker([position.lat, position.lon], {
+					var popup = createProposeRidePopup(type);
+					marker = L.marker([position.lat, position.lon], {
 							icon: icon
 						}).addTo(map)
-						.bindPopup(contentInfoNode)
+						.bindPopup(popup)
 						.openPopup();
 
-					map.on("popupopen", function(eventPopup) {
-						var propose_cabble = contentInfoNode.querySelector(".propose_cabble");
-						propose_cabble.addEventListener("click", function(event) {
-							//we are not already sending a request to this taxi/customer
-							if (!contentInfoNode.querySelector(".propose_cabble .loader")) {
-								var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
-								propose_cabble.innerHTML = propose_cabble.innerHTML + loaderText;
-								app.kuzzleController.sendRideProposal(id);
-							}
-						});
+					assocIdToOtherItemsMark[id] = marker;
 
-						var cancel_cabble = contentInfoNode.querySelector(".cancel_cabble");
-						cancel_cabble.addEventListener("click", function() {
-							otherMarker.closePopup();
-						});
-					});
 				}
 			},
 			getUserPosition: function() {
@@ -339,6 +356,7 @@
 					function(resolve, reject) {
 
 						map.on("popupopen", function(eventPopup) {
+							//console.log("popup open from ride proposal ");
 							var propose_cabble = contentInfoNode.querySelector(".accept_cabble");
 							var cancel_cabble = contentInfoNode.querySelector(".decline_cabble");
 

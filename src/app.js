@@ -53,9 +53,7 @@ var app = {
 						if (value)
 							user = value;
 						console.log("...user controller ended");
-						//setInterval(sendMyPosition.bind(app.kuzzleController), 3000);
 						resolve();
-
 					});
 				});
 		},
@@ -156,7 +154,7 @@ var app = {
 				console.log("no position for user");
 				return;
 			}
-
+			//console.log("send myposition");
 			kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
 				userId: user.whoami._id,
 				type: user.whoami.type,
@@ -232,7 +230,7 @@ var app = {
 					var userPosition = data._source.position;
 					var userType = data._source.type;
 					var userId = data._source.userId;
-					app.gisController.addPosition(userPosition, userType, userId);
+					app.gisController.addMarker(userPosition, userType, userId);
 				} else {
 					//console.log("we've got a strange message ");
 					//console.log(message);
