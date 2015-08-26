@@ -251,6 +251,7 @@
 				loader.setAttribute("class", "loader");
 				loader.src = "/assets/img/loading.gif";
 				proposeCabble.appendChild(loader);
+				proposeCabbleButton.disabled = true;
 				app.kuzzleController.sendRideProposal(id);
 			});
 
@@ -262,6 +263,7 @@
 				if (loader) {
 					loader.remove();
 				}
+				proposeCabbleButton.disabled = false;
 				map.closePopup(popupProposeRide);
 			});
 
