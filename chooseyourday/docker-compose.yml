@@ -23,4 +23,4 @@ redis:
 
 elasticsearch:
   image: elasticsearch:1.5.2
-  command: elasticsearch --cluster.name=todolist
+  command: elasticsearch --cluster.name=chooseyourday
