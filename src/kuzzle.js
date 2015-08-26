@@ -109,8 +109,8 @@ window.kuzzleController = (function() {
 
 			// If a currentRide has been accepted, we only want to subscribe to the other person position
 			if (currentRide) {
-				console.log("ride");
-				console.log(currentRide);
+				//console.log("ride");
+				//console.log(currentRide);
 			}
 			if (currentRide && currentRide.status && currentRide.status.indexOf('accepted') !== -1) {
 				filter.and.push({
@@ -232,7 +232,7 @@ window.kuzzleController = (function() {
 
 			if (rideInfo && rideInfo.status.indexOf('proposed_by') !== -1) {
 				if (!app.userController.getUser().whoami.available === undefined && !app.userController.getUser().whoami.available) {
-					this.declineRideProposal(rideProposal._id);
+					this.declineRideProposal(rideProposal);
 					return;
 				} else {
 					var proposedByTaxy = (rideInfo.status === "proposed_by_taxi");
@@ -244,7 +244,7 @@ window.kuzzleController = (function() {
 				currentRide = null;
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				currentRide = rideProposal;
-				app.gisController.acceptRide(rideProposal);
+				app.gisController.onRideAccepted(rideProposal);
 			} else if (rideInfo.status.indexOf('completed') !== -1) {
 				currentRide = null;
 				app.gisController.endRide();
@@ -270,7 +270,7 @@ window.kuzzleController = (function() {
 			  create another ride while still in the middle of a ride transaction
 			*/
 			if (currentRide) {
-				this.declineRideProposal(currentRide._id);
+				this.declineRideProposal(currentRide);
 			}
 
 			kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, function(error, response) {
@@ -320,7 +320,7 @@ window.kuzzleController = (function() {
 			app.userController.getUser().whoami.available = false;
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
 			currentRide = rideProposal;
-			app.gisController.acceptRide(currentRide);
+			app.gisController.onRideAccepted(currentRide);
 
 			/*
 			At this point, we have 1 accepted ride proposal, and possibly multiple

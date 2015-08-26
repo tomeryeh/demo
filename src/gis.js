@@ -13,6 +13,7 @@
 
 		var map;
 		var userMarker;
+		var userPopup;
 		var userPosition;
 
 		var rideControl; //use to manage current ride accepted
@@ -65,10 +66,10 @@
 						map.setView(coordinates, 15);
 					}, 3000);
 
-					var popup = createUserPopup(userType);
+					userPopup = createUserPopup(userType);
 
 					userMarker = L.marker(coordinates, {}).addTo(map)
-						.bindPopup(popup);
+						.bindPopup(userPopup);
 
 					if (!userType)
 						userMarker.openPopup();
@@ -87,9 +88,9 @@
 			return new Promise(
 				function(resolve, reject) {
 					map = L.map('map-canvas').setView(position, 13);
-					setInterval(function() {
-						map.panTo(L.latLng(position));
-					}, 3000);
+					//setInterval(function() {
+					//	map.panTo(L.latLng(position));
+					//}, 3000);
 					http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
 						L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
 							//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
@@ -119,7 +120,7 @@
 						});
 
 					var text = 'End the ride';
-					var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
+					var controlUI = L.DomUtil.create('div', 'leaflet-draw-edit-remove', controlDiv);
 					controlUI.innerHTML = text;
 					controlUI.title = text;
 					controlUI.href = '#';
@@ -161,9 +162,11 @@
 			contentPop.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
 
 			var btnCustomer = document.createElement("BUTTON");
+			btnCustomer.setAttribute("class", "chooseCustomer")
 			btnCustomer.appendChild(document.createTextNode(customerText));
 
 			var btnTaxi = document.createElement("BUTTON");
+			btnTaxi.setAttribute("class", "chooseTaxi")
 			btnTaxi.appendChild(document.createTextNode(taxiText));
 
 			contentPop.appendChild(btnCustomer); // Append the text to <button>
@@ -176,7 +179,7 @@
 				btnTaxi.innerHTML = wanabeTaxiForCustomer;
 				btnTaxi.disabled = false;
 				btnCustomer.disabled = true;
-				map.closePopup(event.popup);
+				map.closePopup(popupChooseUserType);
 			});
 
 			btnTaxi.addEventListener("click", function() {
@@ -186,7 +189,7 @@
 				btnTaxi.innerHTML = taxiSearchText;
 				btnTaxi.disabled = true;
 				btnCustomer.disabled = false;
-				map.closePopup(event.popup);
+				map.closePopup(popupChooseUserType);
 			});
 
 			return L.popup().setContent(contentPop);
@@ -219,6 +222,7 @@
 			acceptCabbleButton.addEventListener("click", function(event) {
 				map.closePopup(popupProposeRide);
 				app.kuzzleController.acceptRideProposal(rideProposal);
+				acceptCabbleButton.disabled = true;
 			});
 
 			var cancelCabble = document.createElement("p");
@@ -227,6 +231,7 @@
 			cancelCabbleButton.addEventListener("click", function(event) {
 				map.closePopup(popupProposeRide);
 				app.kuzzleController.declineRideProposal(rideProposal);
+				acceptCabbleButton.disabled = false;
 			});
 
 			contentPopup.appendChild(header);
@@ -348,7 +353,10 @@
 				return userMarker.getLatLng();
 			},
 			setUserType: function(type) {
+				console.log("set user type " + type);
 				userMarker.setIcon(getIcon(type));
+				userPopup.getContent().querySelector(".chooseTaxi").disabled = (type ==="taxi");
+				userPopup.getContent().querySelector(".chooseCustomer").disabled = (type ==="customer");
 			},
 			getMapBounds: function() {
 				var mapBounds = map.getBounds();
@@ -367,18 +375,18 @@
 			closePopupForUser: function() {
 				userMarker.closePopup();
 			},
-			acceptRide: function(ride) {
-
+			onRideAccepted: function(ride) {
 				var rideInfo = ride._source;
-				console.log(rideInfo);
 
 				var marker = assocIdToOtherItemsMark[rideInfo.customer];
 				if (!marker)
-					assocIdToOtherItemsMark[rideInfo.taxi];
+					marker = assocIdToOtherItemsMark[rideInfo.taxi];
 
 				if (marker) {
 					var popup = marker.getPopup();
-					popup.getContent().querySelector(".loader").remove();
+					var loader = popup.getContent().querySelector(".loader");
+					if(loader)
+						loader.remove();
 					marker.closePopup();
 				}
 
@@ -387,9 +395,8 @@
 				map.addControl(rideControl);
 			},
 			endRide: function(ride) {
-				if (!rideControl)
-					createRideControl();
 				rideControl.removeFrom(map);
+				rideControl = null;
 			},
 			showPopupRideProposal: function(source, target, rideProposal) {
 				var popupProposeRide = createPopupRideProposal(source, target, rideProposal);
