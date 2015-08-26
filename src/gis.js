@@ -248,6 +248,7 @@
 			proposeCabble.addEventListener("click", function(event) {
 				popupContent = popupProposeRide.getContent();
 				loader = document.createElement("img");
+				loader.setAttribute("class", "loader");
 				loader.src = "/assets/img/loading.gif";
 				proposeCabble.appendChild(loader);
 				app.kuzzleController.sendRideProposal(id);
@@ -364,12 +365,26 @@
 			closePopupForUser: function() {
 				userMarker.closePopup();
 			},
-			acceptRide: function() {
+			acceptRide: function(ride) {
+
+				var rideInfo = ride._source;
+				console.log(rideInfo);
+
+				var marker = assocIdToOtherItemsMark[rideInfo.customer];
+				if (!marker)
+					assocIdToOtherItemsMark[rideInfo.taxi];
+
+				if (marker) {
+					var popup = marker.getPopup();
+					popup.getContent().querySelector(".loader").remove();
+					marker.closePopup();
+				}
+
 				if (!rideControl)
 					createRideControl();
 				map.addControl(rideControl);
 			},
-			endRide: function() {
+			endRide: function(ride) {
 				if (!rideControl)
 					createRideControl();
 				rideControl.removeFrom(map);

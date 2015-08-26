@@ -244,7 +244,7 @@ window.kuzzleController = (function() {
 				currentRide = null;
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				currentRide = rideProposal;
-				app.gisController.acceptRide();
+				app.gisController.acceptRide(rideProposal);
 			} else if (rideInfo.status.indexOf('completed') !== -1) {
 				currentRide = null;
 				app.gisController.endRide();
@@ -320,7 +320,7 @@ window.kuzzleController = (function() {
 			app.userController.getUser().whoami.available = false;
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
 			currentRide = rideProposal;
-			app.gisController.acceptRide();
+			app.gisController.acceptRide(currentRide);
 
 			/*
 			At this point, we have 1 accepted ride proposal, and possibly multiple
