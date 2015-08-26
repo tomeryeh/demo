@@ -15,7 +15,7 @@
 		var userMarker;
 		var userPosition;
 
-		var controlUI;
+		var rideControl; //use to manage current ride accepted
 
 		var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
@@ -103,39 +103,30 @@
 				}).bind(this);
 		};
 
-		function CenterControl(controlDiv, map) {
+		function createRideControl() {
+			L.Control.RideControl = L.Control.extend({
+				options: {
+					position: 'topright',
+				},
+				onAdd: function(map) {
+					var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
+					L.DomEvent
+						.addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
+						.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
+						.addListener(controlDiv, 'click', function() {
+							app.kuzzleController.finishRide();
+							rideControl.removeFrom(map);
+						});
 
-			// Set CSS for the control border
-			controlUI = document.createElement('div');
-			controlUI.style.backgroundColor = '#fff';
-			controlUI.style.border = '2px solid #fff';
-			controlUI.style.borderRadius = '3px';
-			controlUI.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
-			controlUI.style.cursor = 'pointer';
-			//controlUI.style.marginBottom = '22px';
-			controlUI.style.textAlign = 'center';
-			controlUI.title = 'options for Cabble';
-			controlDiv.appendChild(controlUI);
-
-			// Set CSS for the control interior
-			var controlText = document.createElement('div');
-			controlText.style.color = 'rgb(25,25,25)';
-			controlText.style.fontFamily = 'Roboto,Arial,sans-serif';
-			controlText.style.fontSize = '16px';
-			controlText.style.lineHeight = '38px';
-			controlText.style.paddingLeft = '5px';
-			controlText.style.paddingRight = '5px';
-			controlText.innerHTML = 'End the ride';
-
-			controlUI.style.display = "none";
-			controlUI.appendChild(controlText);
-
-			/*
-			google.maps.event.addDomListener(controlUI, 'click', function() {
-				app.kuzzleController.finishRide();
-				controlUI.style.display = "none";
+					var text = 'End the ride';
+					var controlUI = L.DomUtil.create('a', 'leaflet-draw-edit-remove', controlDiv);
+					controlUI.innerHTML = text;
+					controlUI.title = text;
+					controlUI.href = '#';
+					return controlDiv;
+				}
 			});
-			*/
+			rideControl = new L.Control.RideControl();
 		};
 
 		function createUserPopup(userType) {
@@ -267,7 +258,7 @@
 			cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
 			cancelCabble.appendChild(cancelCabbleButton);
 			cancelCabble.addEventListener("click", function() {
-				if(loader){
+				if (loader) {
 					loader.remove();
 				}
 				map.closePopup(popupProposeRide);
@@ -373,10 +364,15 @@
 			closePopupForUser: function() {
 				userMarker.closePopup();
 			},
-
-			showCenterControl: function() {
-				//TODO show central control
-				//controlUI.style.display = "";
+			acceptRide: function() {
+				if (!rideControl)
+					createRideControl();
+				map.addControl(rideControl);
+			},
+			endRide: function() {
+				if (!rideControl)
+					createRideControl();
+				rideControl.removeFrom(map);
 			},
 			showPopupRideProposal: function(source, target, rideProposal) {
 				var popupProposeRide = createPopupRideProposal(source, target, rideProposal);
