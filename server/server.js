@@ -31,10 +31,6 @@ app.use("/lib/", function(req, res, next) {
 	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
 
-app.use("/assets/", function(req, res, next) {
-	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
-});
-
 app.use(function(req, res, next) {
 	res.setHeader('Content-Type', 'text/plain');
 	console.log("not found " + req.client._httpMessage.req.originalUrl);

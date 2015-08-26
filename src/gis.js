@@ -92,6 +92,8 @@
 					//	map.panTo(L.latLng(position));
 					//}, 3000);
 					http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
+
+						//L.tileLayer('http://maps.stamen.com/js/tile.stamen.js?v1.2.3', {
 						L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
 							//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
 							maxZoom: 18,
@@ -120,7 +122,8 @@
 						});
 
 					var text = 'End the ride';
-					var controlUI = L.DomUtil.create('div', 'leaflet-draw-edit-remove', controlDiv);
+					var controlUI = L.DomUtil.create('button', 'leaflet-draw-edit-remove', controlDiv);
+					controlUI.setAttribute("class","info_button");
 					controlUI.innerHTML = text;
 					controlUI.title = text;
 					controlUI.href = '#';
@@ -162,11 +165,11 @@
 			contentPop.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
 
 			var btnCustomer = document.createElement("BUTTON");
-			btnCustomer.setAttribute("class", "chooseCustomer")
+			btnCustomer.setAttribute("class", "chooseCustomer ok_button")
 			btnCustomer.appendChild(document.createTextNode(customerText));
 
 			var btnTaxi = document.createElement("BUTTON");
-			btnTaxi.setAttribute("class", "chooseTaxi")
+			btnTaxi.setAttribute("class", "chooseTaxi button")
 			btnTaxi.appendChild(document.createTextNode(taxiText));
 
 			contentPop.appendChild(btnCustomer); // Append the text to <button>
@@ -219,6 +222,7 @@
 			var acceptCabble = document.createElement("p");
 			var acceptCabbleButton = document.createElement("button");
 			acceptCabbleButton.appendChild(document.createTextNode(acceptMessage));
+			acceptCabbleButton.setAttribute("class","ok_button");
 			acceptCabbleButton.addEventListener("click", function(event) {
 				map.closePopup(popupProposeRide);
 				app.kuzzleController.acceptRideProposal(rideProposal);
@@ -227,6 +231,7 @@
 
 			var cancelCabble = document.createElement("p");
 			var cancelCabbleButton = document.createElement("button");
+			cancelCabbleButton.setAttribute("class","cancel_button");
 			cancelCabbleButton.appendChild(document.createTextNode(cancelMessage));
 			cancelCabbleButton.addEventListener("click", function(event) {
 				map.closePopup(popupProposeRide);
@@ -246,6 +251,7 @@
 
 			var proposeCabble = document.createElement("p");
 			var proposeCabbleButton = document.createElement("button");
+			proposeCabbleButton.setAttribute("class","ok_button");
 			var loader;
 
 			proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
@@ -262,6 +268,7 @@
 
 			var cancelCabble = document.createElement("p");
 			var cancelCabbleButton = document.createElement("button");
+			cancelCabbleButton.setAttribute("class","cancel_button");
 			cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
 			cancelCabble.appendChild(cancelCabbleButton);
 			cancelCabble.addEventListener("click", function() {
@@ -297,6 +304,11 @@
 					if (navigator.geolocation) {
 						browserSupportFlag = true;
 						navigator.geolocation.getCurrentPosition(function(position) {
+
+							var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
+							console.log(window.navigator.userAgent);
+							if(window.navigator.userAgent.indexOf("Chrome") > 0)
+								console.log("on chrome");
 							resolve([position.coords.latitude, position.coords.longitude]);
 						}, function() {
 							//TODO ask for user to give it a position
