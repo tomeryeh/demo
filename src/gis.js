@@ -250,14 +250,15 @@
 
 			var proposeCabble = document.createElement("p");
 			var proposeCabbleButton = document.createElement("button");
-			//proposeCabbleButton.setAttribute("id", "acceptCabbleButton");
+			var loader;
+
 			proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
 			proposeCabble.appendChild(proposeCabbleButton);
 			proposeCabble.addEventListener("click", function(event) {
 				popupContent = popupProposeRide.getContent();
-				var loader = document.createElement("img");
+				loader = document.createElement("img");
 				loader.src = "/assets/img/loading.gif";
-				proposeCabbleButton.appendChild(loader);
+				proposeCabble.appendChild(loader);
 				app.kuzzleController.sendRideProposal(id);
 			});
 
@@ -266,6 +267,9 @@
 			cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
 			cancelCabble.appendChild(cancelCabbleButton);
 			cancelCabble.addEventListener("click", function() {
+				if(loader){
+					loader.remove();
+				}
 				map.closePopup(popupProposeRide);
 			});
 
