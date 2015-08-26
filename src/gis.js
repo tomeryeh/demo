@@ -250,53 +250,15 @@
 
 			var proposeCabble = document.createElement("p");
 			var proposeCabbleButton = document.createElement("button");
+			//proposeCabbleButton.setAttribute("id", "acceptCabbleButton");
 			proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
 			proposeCabble.appendChild(proposeCabbleButton);
 			proposeCabble.addEventListener("click", function(event) {
+				popupContent = popupProposeRide.getContent();
+				var loader = document.createElement("img");
+				loader.src = "/assets/img/loading.gif";
+				proposeCabbleButton.appendChild(loader);
 				app.kuzzleController.sendRideProposal(id);
-			});
-
-			var cancelCabble = document.createElement("p");
-			var cancelCabbleButton = document.createElement("button");
-			cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
-			cancelCabble.appendChild(cancelCabbleButton);
-			cancelCabble.addEventListener("click", function() {
-				map.closePopup(popupProposeRide);
-			});
-
-			var contentPopup = document.createElement("div");
-
-			var header = document.createElement("h1");
-			var contentHeader = "";
-			if (type === "customer")
-				contentHeader += 'Propose this customer a ride';
-			else
-				contentHeader += 'Ask this taxi for a ride';
-			header.appendChild(document.createTextNode(contentHeader));
-
-			contentPopup.appendChild(header);
-			contentPopup.appendChild(proposeCabble);
-			contentPopup.appendChild(cancelCabble);
-			popupProposeRide = L.popup().setContent(contentPopup);
-
-			return popupProposeRide;
-
-		};
-
-		function createProposeRidePopup(type, id) {
-			var popupProposeRide = null;
-
-			var proposeCabble = document.createElement("p");
-			var proposeCabbleButton = document.createElement("button");
-			proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
-			proposeCabble.appendChild(proposeCabbleButton);
-			proposeCabble.addEventListener("click", function(event) {
-				//we are not already sending a request to this taxi/customer
-				//if (!contentInfoNode.querySelector(".propose_cabble .loader")) {
-				//	var loaderText = '(request send, waiting for response...<img class="loader" src="assets/img/loading.gif"></img>)';
-				//	propose_cabble.innerHTML = propose_cabble.innerHTML + loaderText;
-				app.kuzzleController.sendRideProposal(id);
-				//}
 			});
 
 			var cancelCabble = document.createElement("p");
