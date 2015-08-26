@@ -138,6 +138,9 @@ window.kuzzleController = (function() {
 					var userPosition = data._source.position;
 					var userType = data._source.type;
 					var userId = data._source.userId;
+
+					//console.log("add user " + userId + " , current ride  ");
+					//console.log(currentRide);
 					app.gisController.addMarker(userPosition, userType, userId);
 				}
 			});
@@ -218,7 +221,7 @@ window.kuzzleController = (function() {
 		},
 
 		manageRideProposal: function(rideProposal) {
-			rideInfo = rideProposal._source;
+			var rideInfo = rideProposal._source;
 
 			if (!rideInfo) {
 				console.log("no ride info");
@@ -264,6 +267,7 @@ window.kuzzleController = (function() {
 			rideProposal['customer'] = myUserType === 'taxi' ? userId : app.userController.getUser().whoami._id;
 			rideProposal['taxi'] = myUserType === 'customer' ? userId : app.userController.getUser().whoami._id;
 			rideProposal['status'] = 'proposed_by_' + myUserType;
+			rideProposal['position'] = app.gisController.getUserPosition();
 
 			/*
 			 foolproof check: cleanly decline the previous proposal if somehow a user manages to
