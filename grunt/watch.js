@@ -1,11 +1,9 @@
 module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-contrib-watch');
-
 	return {
 		html: {
 			files: ['index.html'],
-			//tasks: ['handlebars'],
 			options: {
 				debounceDelay: 250,
 				spawn: true

@@ -27,6 +27,10 @@ app.use("/css/", function(req, res, next) {
 	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
 
+app.use("/assets/", function(req, res, next) {
+	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
+});
+
 app.use("/lib/", function(req, res, next) {
 	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
