@@ -15,6 +15,9 @@ window.gis = (function() {
 
 	var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 
+	var candidatesLayer = L.layerGroup([]);
+	var currentRideLayer = L.layerGroup([]);
+
 	var assocIdToOtherItemsMark = {};
 
 	var iconSize = [38, 38];
@@ -105,21 +108,36 @@ window.gis = (function() {
 	function createMap(position) {
 		return new Promise(
 			function(resolve, reject) {
-				map = L.map('map-canvas').setView(position, 13);
+
 				//setInterval(function() {
 				//	map.panTo(L.latLng(position));
 				//}, 3000);
-				http: //a.basemaps.cartocdn.com/light_all/$%7Bz%7D/$%7Bx%7D/$%7By%7D.png
 
-					//L.tileLayer('http://maps.stamen.com/js/tile.stamen.js?v1.2.3', {
-					L.tileLayer('http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png', {
-						//L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ', {
-						maxZoom: 18,
-						attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-							'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
-							'Imagery © <a href="http://mapbox.com">Mapbox</a>',
-						id: 'mapbox.streets'
-					}).addTo(map);
+				var tileURL = 'http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png';
+				//'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ'
+
+				candidatesLayer = L.layerGroup([]);
+				currentRideLayer = L.layerGroup([]);
+
+				map = L.map('map-canvas', {
+					layers: [candidatesLayer]
+				}).setView(position, 13);
+
+				L.tileLayer(tileURL, {
+					maxZoom: 18,
+					attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+						'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+						'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+					id: 'mapbox.streets'
+				}).addTo(map);
+
+				var baseMaps = {};
+				var overlayMaps = {
+					"candidates": candidatesLayer,
+					"currentRide": currentRideLayer
+				};
+				L.control.layers(baseMaps, overlayMaps).addTo(map);
+
 				resolve(position);
 			}).bind(this);
 	};
@@ -127,7 +145,7 @@ window.gis = (function() {
 	function createRideControl() {
 		L.Control.RideControl = L.Control.extend({
 			options: {
-				position: 'topright',
+				position: 'bottormlealight',
 			},
 			onAdd: function(map) {
 				var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
@@ -371,21 +389,25 @@ window.gis = (function() {
 				marker = L.marker([position.lat, position.lon], {
 						icon: getIcon(type)
 					})
-					.addTo(map)
+					.addTo(candidatesLayer)
 					.bindPopup(popup);
 
 				marker.on("click", function() {
 					marker.openPopup();
 				});
 
+				//we must choose between adding popup and thumble element.
+				//adding popup
 				//marker.openPopup();
 
+				//thumble element.
 				var iconForMarker = getIcon(type);
 				//iconForMarker.options.className = "animated bounce";
 				marker.setIcon(iconForMarker);
 
 				assocIdToOtherItemsMark[id] = marker;
 				otherItemsMark.push(marker);
+				return marker;
 			}
 		},
 
@@ -456,9 +478,9 @@ window.gis = (function() {
 					markerId = rideProposal._source.customer;
 				}
 
-				this.addMarker(markerPosition, markerType, markerId);
-			}
+				markerSource = this.addMarker(markerPosition, markerType, markerId);
 
+			}
 			var popupProposeRide = createPopupRideProposal(source, target, rideProposal);
 			markerSource
 				.bindPopup(popupProposeRide)
