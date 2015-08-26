@@ -145,7 +145,7 @@ window.gis = (function() {
 	function createRideControl() {
 		L.Control.RideControl = L.Control.extend({
 			options: {
-				position: 'bottormlealight',
+				position: 'bottomright',
 			},
 			onAdd: function(map) {
 				var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
@@ -197,7 +197,7 @@ window.gis = (function() {
 			taxiText = "i'm looking for a customer";
 		}
 
-		var contentPop = document.createElement("div");
+		var contentPop = document.createElement("h1");
 		contentPop.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
 
 		var btnCustomer = document.createElement("BUTTON");
@@ -205,7 +205,7 @@ window.gis = (function() {
 		btnCustomer.appendChild(document.createTextNode(customerText));
 
 		var btnTaxi = document.createElement("BUTTON");
-		btnTaxi.setAttribute("class", "chooseTaxi button")
+		btnTaxi.setAttribute("class", "chooseTaxi cancel_button")
 		btnTaxi.appendChild(document.createTextNode(taxiText));
 
 		contentPop.appendChild(btnCustomer); // Append the text to <button>
@@ -230,8 +230,8 @@ window.gis = (function() {
 			btnCustomer.disabled = false;
 			map.closePopup(popupChooseUserType);
 		});
-
-		return L.popup().setContent(contentPop);
+		var popupChooseUserType = L.popup().setContent(contentPop);
+		return popupChooseUserType;
 	};
 
 	function createPopupRideProposal(source, target, rideProposal) {
@@ -364,7 +364,7 @@ window.gis = (function() {
 					otherItemsMark.forEach(
 						function(marker) {
 							marker.closePopup();
-							map.removeLayer(marker);
+							//map.removeLayer(marker);
 						}
 					);
 					otherItemsMark = [];
@@ -450,6 +450,9 @@ window.gis = (function() {
 				if (loader)
 					loader.remove();
 				marker.closePopup();
+
+				candidatesLayer.removeLayer(marker);
+				marker.addTo(currentRideLayer);
 			}
 
 			if (!rideControl)
