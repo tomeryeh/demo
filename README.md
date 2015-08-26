@@ -4,7 +4,8 @@ These demos show how to use [Kuzzle](https://github.com/kuzzleio/kuzzle) to mana
 You will also find a step by step tutorial for some demos:
 
 * [chat](chat/tutorial.md)
-* [todolist](todolist/tutorial.md)
+* [Todo list](todolist/tutorial.md)
+* [Choose your day](chooseyourday/tutorial.md)
  
 # What is Kuzzle
 

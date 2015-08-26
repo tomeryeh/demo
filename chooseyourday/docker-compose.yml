@@ -1,0 +1,26 @@
+demo:
+  image: nginx
+  volumes:
+    - ".:/usr/share/nginx/html"
+  ports:
+    - "80:80"
+
+kuzzle:
+  image: kuzzleio/kuzzle:0.1.12
+  volumes:
+    - "./defaultMapping.json:/defaultMapping.json"
+  ports:
+    - "7512:7512"
+  links:
+    - elasticsearch
+    - redis
+  environment:
+    - LIKE_A_VIRGIN=1
+    - DEFAULT_MAPPING=/defaultMapping.json
+
+redis:
+  image: redis:3.0.2
+
+elasticsearch:
+  image: elasticsearch:1.5.2
+  command: elasticsearch --cluster.name=todolist
