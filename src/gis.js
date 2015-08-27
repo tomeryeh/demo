@@ -399,7 +399,7 @@ window.gis = (function() {
 			return userMarker.getLatLng();
 		},
 		setUserType: function(type) {
-			console.log("set user type " + type);
+			//console.log("set user type " + type);
 			userMarker.setIcon(getIcon(type));
 			userPopup.getContent().querySelector(".chooseTaxi").disabled = (type === "taxi");
 			userPopup.getContent().querySelector(".chooseCustomer").disabled = (type === "customer");
