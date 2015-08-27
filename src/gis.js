@@ -344,11 +344,8 @@ window.gis = (function() {
 				if (navigator.geolocation) {
 					browserSupportFlag = true;
 					navigator.geolocation.getCurrentPosition(function(position) {
-
-						var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
-						console.log(window.navigator.userAgent);
-						if (window.navigator.userAgent.indexOf("Chrome") > 0)
-							console.log("on chrome");
+						//var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
+						//resolve([position.coords.latitude + (chrome ? 0.05 : 0), position.coords.longitude]);
 						resolve([position.coords.latitude, position.coords.longitude]);
 					}, function() {
 						//TODO ask for user to give it a position
