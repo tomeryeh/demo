@@ -18,6 +18,7 @@ window.gis = (function() {
 
 	var candidatesLayer = L.layerGroup([]);
 	var currentRideLayer = L.layerGroup([]);
+	var currentRideMarker = null; //the candidate choosen for the ride
 
 	var iconSize = [38, 38];
 	var popupAnchor = [0, -22];
@@ -85,9 +86,9 @@ window.gis = (function() {
 				userPopup = createUserPopup(userType);
 
 				userMarker = L.marker(coordinates, {})
-				//	.addTo(map)
-					.addTo(candidatesLayer)
-				//	.addTo(currentRideLayer)
+					.addTo(map)
+					//	.addTo(candidatesLayer)
+					//	.addTo(currentRideLayer)
 					.bindPopup(userPopup);
 
 				if (!userType)
@@ -156,9 +157,6 @@ window.gis = (function() {
 					.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
 					.addListener(controlDiv, 'click', function() {
 						app.kuzzleController.finishRide();
-						rideControl.removeFrom(map);
-						map.removeLayer(currentRideLayer);
-						map.addLayer(candidatesLayer);
 					});
 
 				var text = 'End the ride';
@@ -344,9 +342,9 @@ window.gis = (function() {
 				if (navigator.geolocation) {
 					browserSupportFlag = true;
 					navigator.geolocation.getCurrentPosition(function(position) {
-						//var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
-						//resolve([position.coords.latitude + (chrome ? 0.05 : 0), position.coords.longitude]);
-						resolve([position.coords.latitude, position.coords.longitude]);
+						var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
+						resolve([position.coords.latitude + (chrome ? 0.05 : 0), position.coords.longitude]);
+						//resolve([position.coords.latitude, position.coords.longitude]);
 					}, function() {
 						//TODO ask for user to give it a position
 						reject();
@@ -356,23 +354,6 @@ window.gis = (function() {
 		);
 	};
 	return {
-		resetAllMarks: function() {
-			console.log("allmarks");
-			console.log(otherItemsMark);
-			return new Promise(
-				function(resolve, reject) {
-					var resolver = Promise.pending();
-					otherItemsMark.forEach(
-						function(marker) {
-							marker.closePopup();
-							//map.removeLayer(marker);
-						}
-					);
-					otherItemsMark = [];
-					assocIdToOtherItemsMark = {};
-					resolve();
-				}.bind(this));
-		},
 
 		addMarker: function(position, type, id) {
 			var contentString;
@@ -438,6 +419,31 @@ window.gis = (function() {
 		closePopupForUser: function() {
 			userMarker.closePopup();
 		},
+
+		onRideRefused: function(ride) {
+			var rideInfo = ride._source;
+
+			var marker = assocIdToOtherItemsMark[rideInfo.customer];
+			if (!marker)
+				marker = assocIdToOtherItemsMark[rideInfo.taxi];
+
+			if (marker) {
+				var popup = marker.getPopup();
+
+				var contentPopup = document.createElement("div");
+				var titleText = "the ride has been refused !";
+
+				var header = document.createElement("h1");
+				header.appendChild(document.createTextNode(titleText));
+				contentPopup.appendChild(header);
+
+				popup.setContent(contentPopup);
+				setTimeout(function(){
+					marker.closePopup();
+				},3000);
+				
+			}
+		},
 		onRideAccepted: function(ride) {
 			var rideInfo = ride._source;
 
@@ -450,10 +456,18 @@ window.gis = (function() {
 				var loader = popup.getContent().querySelector(".loader");
 				if (loader)
 					loader.remove();
+
+				var okButton = popup.getContent().querySelector(".ok_button");
+				okButton.disabled = false;
+
+				var cancelButton = popup.getContent().querySelector(".cancel_button");
+				cancelButton.disabled = false;
+
 				marker.closePopup();
 
 				candidatesLayer.removeLayer(marker);
 				marker.addTo(currentRideLayer);
+				currentRideMarker = marker;
 				//toggle layer to ride one (hide all other candidates for ride)
 				map.removeLayer(candidatesLayer);
 				map.addLayer(currentRideLayer);
@@ -463,8 +477,22 @@ window.gis = (function() {
 				createRideControl();
 			map.addControl(rideControl);
 		},
-		endRide: function(ride) {
-			rideControl.removeFrom(map);
+		onRideEnded: function(ride) {
+			if(rideControl)
+				rideControl.removeFrom(map);
+
+			currentRideLayer.removeLayer(currentRideMarker);
+			currentRideMarker.addTo(candidatesLayer);
+			map.removeLayer(currentRideLayer);
+			map.addLayer(candidatesLayer);
+
+			///Get popup from marker
+			var popup = currentRideMarker.getPopup();
+			//rearm ok button for popup.
+			var okButton = popup.getContent().querySelector(".ok_button");
+			okButton.disabled = false;
+
+			currentRideMarker = null;
 			rideControl = null;
 		},
 		showPopupRideProposal: function(source, target, rideProposal) {
@@ -488,11 +516,13 @@ window.gis = (function() {
 				markerSource = this.addMarker(markerPosition, markerType, markerId);
 
 				var positions = [];
-				for(var i =0; i<otherItemsMark.length; i++){
-					positions.push([otherItemsMark[i].getLatLng().lat,otherItemsMark[i].getLatLng().lng]);
+				for (var i = 0; i < otherItemsMark.length; i++) {
+					positions.push([otherItemsMark[i].getLatLng().lat, otherItemsMark[i].getLatLng().lng]);
 				}
-				positions.push([userMarker.getLatLng().lat,userMarker.getLatLng().lng])
-				map.fitBounds(positions, {padding:L.point(200, 200)});
+				positions.push([userMarker.getLatLng().lat, userMarker.getLatLng().lng])
+				map.fitBounds(positions, {
+					padding: L.point(200, 200)
+				});
 
 			}
 			var popupProposeRide = createPopupRideProposal(source, target, rideProposal);

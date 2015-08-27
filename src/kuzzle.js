@@ -244,13 +244,14 @@ window.kuzzleController = (function() {
 					app.gisController.showPopupRideProposal(source, target, rideProposal);
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
+				app.gisController.onRideRefused(rideProposal);
 				currentRide = null;
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				currentRide = rideProposal;
 				app.gisController.onRideAccepted(rideProposal);
 			} else if (rideInfo.status.indexOf('completed') !== -1) {
 				currentRide = null;
-				app.gisController.endRide();
+				app.gisController.onRideEnded();
 			}
 		},
 
