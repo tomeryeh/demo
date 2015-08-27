@@ -228,12 +228,16 @@ window.kuzzleController = (function() {
 					return false;
 				}
 
-				if (data.action === 'create') {
-					app.kuzzleController.manageRideProposal(message.result ? message.result : message);
+				if (message.action === 'create') {
+					app.kuzzleController.manageRideProposal(message);
 				}
-				else if (data.action === 'off') {
+				if (message.action === 'update') {
+					app.kuzzleController.manageRideProposal(message);
+				}
+				else if (message.action === 'off') {
+					console.log("offf ");
 					//delete user corresponding to roomname (suppose you have corespond )
-					//see the TWO  TODO REMOVE depcrecated
+					//see the TWO TODO REMOVE deprecated
 				}
 			});
 		},
