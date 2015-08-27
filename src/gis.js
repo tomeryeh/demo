@@ -216,6 +216,7 @@ window.gis = (function() {
 		btnCustomer.addEventListener("click", function(event) {
 			userMarker.setIcon(userIcon);
 			app.kuzzleController.setUserType("customer");
+			app.gisController.setUserType("customer");
 			btnCustomer.innerHTML = customerSearchText;
 			btnTaxi.innerHTML = wanabeTaxiForCustomer;
 			btnTaxi.disabled = false;
@@ -226,6 +227,7 @@ window.gis = (function() {
 		btnTaxi.addEventListener("click", function() {
 			userMarker.setIcon(taxiIcon);
 			app.kuzzleController.setUserType("taxi");
+			app.gisController.setUserType("taxi");
 			btnCustomer.innerHTML = wanabeCustomerTextForTaxi
 			btnTaxi.innerHTML = taxiSearchText;
 			btnTaxi.disabled = true;
@@ -401,6 +403,20 @@ window.gis = (function() {
 			userMarker.setIcon(getIcon(type));
 			userPopup.getContent().querySelector(".chooseTaxi").disabled = (type === "taxi");
 			userPopup.getContent().querySelector(".chooseCustomer").disabled = (type === "customer");
+
+			for (var i =0; i <otherItemsMark.length;i++){
+				candidatesLayer.removeLayer(otherItemsMark[i]);
+			}
+			assocIdToOtherItemsMark = {};
+
+			if(rideControl)
+				rideControl.removeFrom(map);
+
+			map.removeLayer(currentRideLayer);
+			map.addLayer(candidatesLayer);
+
+			currentRideMarker = null;
+			rideControl = null;
 		},
 		getMapBounds: function() {
 			var mapBounds = map.getBounds();

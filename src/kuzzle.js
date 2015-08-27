@@ -60,14 +60,15 @@ window.kuzzleController = (function() {
 			}
 			if (!user.whoami.type)
 				return;
-			//console.log("send myposition");
+
 			kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
 				userId: user.whoami._id,
 				type: user.whoami.type,
 				position: {
 					lat: userPosition.lat,
 					lon: userPosition.lng
-				}
+				},
+				positionsRoom : positionsRoom
 			}, false);
 		},
 
@@ -130,18 +131,26 @@ window.kuzzleController = (function() {
 					return;
 				}
 
+				if (message.action !== "create") {
+					console.log("recive action " + message.action);
+					console.dir(message);
+				}
 				if (message.action == "create") {
 					var data = message.data;
 					if (!data)
 						data = message;
 
-					var userPosition = data._source.position;
-					var userType = data._source.type;
-					var userId = data._source.userId;
+					var candidatePosition = data._source.position;
+					var candidateType = data._source.type;
+					var candidateId = data._source.userId;
 
-					//console.log("add user " + userId + " , current ride  ");
-					//console.log(currentRide);
-					app.gisController.addMarker(userPosition, userType, userId);
+					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+
+					//user has change his state between the last time he listening to ride
+					if(candidateType === userType)
+						return;
+
+					app.gisController.addMarker(candidatePosition, candidateType, candidateId);
 				}
 			});
 		},
@@ -166,10 +175,11 @@ window.kuzzleController = (function() {
 					refreshInterval = 1000;
 				}
 
-				//app.gisController.resetAllMarks();
 				if (refreshFilterTimer) {
 					clearInterval(refreshFilterTimer);
 				}
+
+				app.kuzzleController.refreshKuzzleFilter()
 
 				refreshFilterTimer = setInterval(function() {
 					app.kuzzleController.refreshKuzzleFilter()
@@ -211,12 +221,20 @@ window.kuzzleController = (function() {
 				kuzzle.unsubscribe(ridesRoom);
 			}
 
+
 			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;
 				}
-				app.kuzzleController.manageRideProposal(message.result ? message.result : message);
+
+				if (data.action === 'create') {
+					app.kuzzleController.manageRideProposal(message.result ? message.result : message);
+				}
+				else if (data.action === 'off') {
+					//delete user corresponding to roomname (suppose you have corespond )
+					//see the TWO  TODO REMOVE depcrecated
+				}
 			});
 		},
 
@@ -239,6 +257,14 @@ window.kuzzleController = (function() {
 					return;
 				} else {
 					var proposedByTaxy = (rideInfo.status === "proposed_by_taxi");
+
+					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+
+					//TODO REMOVE user has change his state between the last time he listening to ride
+					if(proposedByTaxy && userType === "taxi")
+						return;
+					if(!proposedByTaxy && userType === "customer")
+						return;
 					var target = proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 					var source = !proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 					app.gisController.showPopupRideProposal(source, target, rideProposal);
@@ -377,6 +403,13 @@ window.kuzzleController = (function() {
 			currentRide = null;
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
+		},
+
+
+		// TODO DEPRECATED 
+		stopListeningUsers: function() {
+			console.log("stop listening to " + positionsRoom);
+			kuzzle.unsubscribe(userRoomId);
 		}
 	};
 })();
