@@ -14,11 +14,10 @@ window.gis = (function() {
 	var rideControl; //use to manage current ride accepted
 
 	var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
+	var assocIdToOtherItemsMark = {};
 
 	var candidatesLayer = L.layerGroup([]);
 	var currentRideLayer = L.layerGroup([]);
-
-	var assocIdToOtherItemsMark = {};
 
 	var iconSize = [38, 38];
 	var popupAnchor = [0, -22];
@@ -83,19 +82,22 @@ window.gis = (function() {
 
 				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
-				window.setTimeout(function() {
-					map.setView(coordinates, 15);
-				}, 3000);
-
 				userPopup = createUserPopup(userType);
 
-				userMarker = L.marker(coordinates, {}).addTo(map)
+				userMarker = L.marker(coordinates, {})
+				//	.addTo(map)
+					.addTo(candidatesLayer)
+				//	.addTo(currentRideLayer)
 					.bindPopup(userPopup);
 
 				if (!userType)
 					userMarker.openPopup();
 
 				userMarker.setIcon(getIcon(userType));
+
+				//window.setInterval(function() {
+				//	map.panTo(userMarker.getLatLng());
+				//}, 3000);
 
 				if (!position) {
 					map.fitWorld();
@@ -155,6 +157,8 @@ window.gis = (function() {
 					.addListener(controlDiv, 'click', function() {
 						app.kuzzleController.finishRide();
 						rideControl.removeFrom(map);
+						map.removeLayer(currentRideLayer);
+						map.addLayer(candidatesLayer);
 					});
 
 				var text = 'End the ride';
@@ -453,6 +457,9 @@ window.gis = (function() {
 
 				candidatesLayer.removeLayer(marker);
 				marker.addTo(currentRideLayer);
+				//toggle layer to ride one (hide all other candidates for ride)
+				map.removeLayer(candidatesLayer);
+				map.addLayer(currentRideLayer);
 			}
 
 			if (!rideControl)
@@ -482,6 +489,13 @@ window.gis = (function() {
 				}
 
 				markerSource = this.addMarker(markerPosition, markerType, markerId);
+
+				var positions = [];
+				for(var i =0; i<otherItemsMark.length; i++){
+					positions.push([otherItemsMark[i].getLatLng().lat,otherItemsMark[i].getLatLng().lng]);
+				}
+				positions.push([userMarker.getLatLng().lat,userMarker.getLatLng().lng])
+				map.fitBounds(positions, {padding:L.point(200, 200)});
 
 			}
 			var popupProposeRide = createPopupRideProposal(source, target, rideProposal);
