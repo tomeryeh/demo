@@ -1,4 +1,4 @@
-var kuzzle = Kuzzle.init('http://localhost:7512');
+var kuzzle = Kuzzle.init(config.kuzzleUrl);
 
 angular.module("demo", [])
   .controller("todoCtrl", ["$scope", function($scope) {

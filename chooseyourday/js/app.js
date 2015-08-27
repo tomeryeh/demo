@@ -1,4 +1,4 @@
-var kuzzle = Kuzzle.init("http://localhost:7512");
+var kuzzle = Kuzzle.init(config.kuzzleUrl);
 var kuzzleChannel = "chooseyourday";
 var chooseYourDay = angular.module("chooseyourday", [
     "ngRoute",

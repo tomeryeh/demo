@@ -1,5 +1,5 @@
 var
-  kuzzle = Kuzzle.init('http://localhost:7512'),
+  kuzzle = Kuzzle.init(config.kuzzleUrl),
   whoami = {},
   subcriptionId,
   CHAT_MSG_COLLECTION = 'demo-chat-messages',
@@ -19,19 +19,19 @@ function listenMessages(chatRoom) {
   }
 
   subcriptionId = kuzzle.subscribe(CHAT_MSG_COLLECTION, {term: {chatRoom: chatRoom}}, function (error, newMessage) {
-    var messageFlow = $('#messageFlow');
+    var $messageFlow = $('#messageFlow');
 
     if (error) {
       throw new Error(error);
     }
 
     // Autoscroll
-    if ((messageFlow[0].scrollHeight - messageFlow.innerHeight()) === messageFlow.scrollTop()) {
-      messageFlow.animate({scrollTop: messageFlow[0].scrollHeight}, 300);
+    if (($messageFlow[0].scrollHeight - $messageFlow.innerHeight()) === $messageFlow.scrollTop()) {
+      $messageFlow.animate({scrollTop: $messageFlow[0].scrollHeight}, 300);
     }
 
     // Appending the received message
-    messageFlow.append(
+    $messageFlow.append(
       '<div class="message"><strong style="color: ' +
       newMessage._source.ownerColor +
       ';">' +
@@ -48,7 +48,8 @@ function listenMessages(chatRoom) {
 */
 function sendMessage() {
   var
-    message = $('#inputChatMessage').val(),
+    $input = $('#inputChatMessage'),
+    content = $input.val(),
     message = {
         content: content,
         owner: whoami.userName,
@@ -58,7 +59,7 @@ function sendMessage() {
 
   // Broadcast and reset the input
   kuzzle.create(CHAT_MSG_COLLECTION, message);
-  $('#inputChatMessage').val("");
+  $input.val("");
 }
 
 /**
