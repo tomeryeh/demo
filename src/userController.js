@@ -24,7 +24,6 @@ window.userController = (function() {
 						if (value) {
 							user = value;
 							kuzzleController.setUserType(user.whoami.type);
-							gisController.setUserType(user.whoami.type);
 						}
 						console.log("##############User initialisation ENDED !#######################");
 
@@ -45,6 +44,7 @@ window.userController = (function() {
 
 		setUserType: function(type) {
 			user.whoami.type = type;
+			return this.setInLocalStorage();
 		},
 
 		getUserId: function() {

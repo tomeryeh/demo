@@ -206,7 +206,6 @@ window.gisController = (function() {
 		btnCustomer.addEventListener("click", function(event) {
 			userMarker.setIcon(customerIcon);
 			kuzzleController.setUserType("customer");
-			gisController.setUserType("customer");
 			btnCustomer.innerHTML = customerSearchText;
 			btnTaxi.innerHTML = wanabeTaxiForCustomer;
 			btnTaxi.disabled = false;
@@ -217,7 +216,6 @@ window.gisController = (function() {
 		btnTaxi.addEventListener("click", function() {
 			userMarker.setIcon(taxiIcon);
 			kuzzleController.setUserType("taxi");
-			gisController.setUserType("taxi");
 			btnCustomer.innerHTML = wanabeCustomerTextForTaxi
 			btnTaxi.innerHTML = taxiSearchText;
 			btnTaxi.disabled = true;

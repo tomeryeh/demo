@@ -49,11 +49,11 @@ We deal with three rooms for Cabble :
 * CABBLE_COLLECTION_RIDES will be used to send and update the ride status along it life cicle 
 
 
-#Positions management
+# Positions management
 
-#Users management
+# Users management
 
-#Rides management
+# Rides management
 
 
 (a ride is first proposed than it can be canceled by user , declined (because user is already in an other ride) or accepted and finally finished).

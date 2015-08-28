@@ -4,9 +4,9 @@ window.kuzzleController = (function() {
 	var
 	//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
 		KUZZLE_URL = 'http://localhost:7512',
-		CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions',
-		CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users',
-		CABBLE_COLLECTION_RIDES = 'coding-challenge-cabble-rides';
+		CABBLE_COLLECTION_POSITIONS = 'cabble-positions',
+		CABBLE_COLLECTION_USERS = 'cabble-users',
+		CABBLE_COLLECTION_RIDES = 'cabble-rides';
 
 	//////////////////privates attributes///////////////////////
 	var
@@ -19,8 +19,6 @@ window.kuzzleController = (function() {
 
 	return {
 		init: function() {
-
-			console.log("##############KUZZLE initialisation START !#######################");
 			return new Promise(
 				function(resolve, reject) {
 					// TODO: retrieve userId from localstorage
@@ -36,7 +34,6 @@ window.kuzzleController = (function() {
 								userController.setInLocalStorage().then(
 									function() {
 										kuzzleController.initListener();
-										console.log("##############KUZZLE initialisation END !#######################");
 										resolve();
 									}
 								);
@@ -44,7 +41,6 @@ window.kuzzleController = (function() {
 						});
 					}
 					kuzzleController.initListener();
-					console.log("##############KUZZLE initialisation END !#######################");
 					resolve();
 				});
 		},
@@ -157,36 +153,33 @@ window.kuzzleController = (function() {
 		},
 
 		setUserType: function(userType) {
-			//console.log("set user type " + userType);
-			var refreshInterval = 5000;
-
-			userController.setUserType(userType);
-
 			if (!userType)
 				return;
 
-			kuzzleController.listenToRidesProposals();
-			kuzzleController.listenToUserChange();
+			userController.setUserType(userType)
+				.then(function() {
+					gisController.setUserType(userType);
 
-			userController.setInLocalStorage().then(function() {
-				console.log("update user " + userController.getUserId());
-				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami);
+					kuzzleController.listenToUserChange();
+					kuzzleController.listenToRidesProposals();
+					console.log("update user " + userController.getUserId());
+					kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami);
+					var refreshInterval = 5000;
+					if (userType === 'customer') {
+						refreshInterval = 6000;
+					} else if (userType === 'taxi') {
+						refreshInterval = 1000;
+					}
 
-				if (userType === 'customer') {
-					refreshInterval = 6000;
-				} else if (userType === 'taxi') {
-					refreshInterval = 1000;
-				}
-
-				if (refreshFilterTimer) {
-					clearInterval(refreshFilterTimer);
-				}
-				kuzzleController.listenToPositionsFilter()
-
-				refreshFilterTimer = setInterval(function() {
+					if (refreshFilterTimer) {
+						clearInterval(refreshFilterTimer);
+					}
 					kuzzleController.listenToPositionsFilter()
-				}.bind(this), refreshInterval);
-			});
+
+					refreshFilterTimer = setInterval(function() {
+						kuzzleController.listenToPositionsFilter()
+					}.bind(this), refreshInterval);
+				});
 		},
 
 		listenToUserChange: function() {
