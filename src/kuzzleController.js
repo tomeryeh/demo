@@ -228,7 +228,7 @@ window.kuzzleController = (function() {
 				gisController.removeCandidate(userWithSameStatus);
 				//if we where aslo in a ride with this candidate, we must break it
 				if (currentRide &&
-					(currentRide._source.taxi === userWithSameStatus ||  currentRide._source.customer === userWithSameStatus)) {
+					(currentRide._source.taxi === userWithSameStatus || currentRide._source.customer === userWithSameStatus)) {
 					kuzzleController.finishRide();
 				}
 			});
