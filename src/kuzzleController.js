@@ -35,23 +35,24 @@ window.kuzzleController = (function() {
 								user.whoami._id = response._id;
 								userController.setInLocalStorage().then(
 									function() {
-										kuzzleController.listenToUserChange();
-										kuzzleController.listenToRidesProposals();
+										kuzzleController.initListener();
 										console.log("##############KUZZLE initialisation END !#######################");
 										resolve();
 									}
 								);
 							}
 						});
-					} else {
-						console.log("this");
-						kuzzleController.listenToUserChange();
-						kuzzleController.listenToRidesProposals();
 					}
-					console.log("...kuzzle controller ended");
+					kuzzleController.initListener();
 					console.log("##############KUZZLE initialisation END !#######################");
 					resolve();
 				});
+		},
+
+		initListener: function() {
+			kuzzleController.listenToUserChange();
+			kuzzleController.listenToRidesProposals();
+			setInterval(kuzzleController.sendMyPosition.bind(app.kuzzleController), 3000);
 		},
 
 		sendMyPosition: function() {
@@ -73,7 +74,7 @@ window.kuzzleController = (function() {
 					lat: userPosition.lat,
 					lon: userPosition.lng
 				},
-				positionsRoom: positionsRoom
+				userSubscribeRoom: userSubscribeRoom
 			}, false);
 		},
 
@@ -83,7 +84,7 @@ window.kuzzleController = (function() {
 		 * - Unsubscribe from previous room if we were listening to one
 		 * - Subscribe to kuzzle with the new filter
 		 */
-		refreshKuzzleFilter: function() {
+		listenToPositionsFilter: function() {
 			var
 				bound = gisController.getMapBounds(),
 				user = userController.getUser();
@@ -144,6 +145,8 @@ window.kuzzleController = (function() {
 					var candidateType = data._source.type;
 					var candidateId = data._source.userId;
 
+					console.log("recive userSubscribeRoom room " + userSubscribeRoom);
+
 					//user has change his state between the last time he listening to ride
 					if (candidateType === userController.getUserType())
 						return;
@@ -166,6 +169,7 @@ window.kuzzleController = (function() {
 			kuzzleController.listenToUserChange();
 
 			userController.setInLocalStorage().then(function() {
+				console.log("update user " + userController.getUserId());
 				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami);
 
 				if (userType === 'customer') {
@@ -177,11 +181,10 @@ window.kuzzleController = (function() {
 				if (refreshFilterTimer) {
 					clearInterval(refreshFilterTimer);
 				}
-
-				kuzzleController.refreshKuzzleFilter()
+				kuzzleController.listenToPositionsFilter()
 
 				refreshFilterTimer = setInterval(function() {
-					kuzzleController.refreshKuzzleFilter()
+					kuzzleController.listenToPositionsFilter()
 				}.bind(this), refreshInterval);
 			});
 		},
@@ -191,8 +194,9 @@ window.kuzzleController = (function() {
 				return;
 
 			var userStatus = {
-				terms: {
-					type: [userController.getUserType() === "taxi" ? "taxi" : "customer"]
+				exists: {
+					field: 'type'
+						//type: [userController.getUserType() === "taxi" ? "customer" : "taxi"]
 				}
 			};
 
@@ -207,13 +211,13 @@ window.kuzzleController = (function() {
 
 				console.log("user subscrib ");
 				console.log(message);
-				if (!message.action.update)
+				if (!message.action == "off")
 					return;
 
 				var userChanged = message._source;
 
 				//a previous user candidate is now a concurent, we remove it from view
-				if (userChanged && user.whoami.type === userChanged.type) {
+				if (userChanged && userController.getUserType() === userChanged.type) {
 					gisController.removeCandidate(userChanged._id);
 				}
 

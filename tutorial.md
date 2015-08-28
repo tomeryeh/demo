@@ -1,0 +1,65 @@
+# Kuzzle - Cabble tutorial
+
+This demo will show you how to use the geolocalisation filtering.
+
+
+**Table of content:**
+
+There are three controllers in this demo : 
+
+  * gisController (gis for Geolocalisation Information System) is devoted to details about map rendering and manipulating markers.
+We use [Leafletjs](http://leafletjs.com/). We also use geolocalisation functionality (function getGeoLoc).
+  * userController is devoted to detail about user information storage (localstorage is used for user persistance).
+  * kuzzleController.js kuzzle.js is devoted to all the communication with Kuzzle.
+
+
+Then we have our entrypoint in app.js.
+This file can be reume to the following snippet :
+
+```javascript
+	this.gisController.init()
+			//init user component to listen to local saved user info (i.e userid and type:=[taxi,customer])
+			.then(app.userController.init)
+			//init kuzzle component to listen for adding candidates changing and rides states
+			.then(app.kuzzleController.init);
+```
+
+So has a sketch we use Promise style to :
+
+* call the function init from gisController, ie the user geolocalisation and the map rendering
+* call the function init from userController (to get from localstorage the id and type from user if exist)
+* call the function init from kuzzleController (create all the protocol communication with Kuzzle).
+
+Thanks to promise, the inits call chain are synchronous.
+
+
+We will focus only on kuzzle.js. 
+When some call will be done to the two other controllers gisController and userController we will explain brievely their maining if not self explainatory.
+As an exemple we will explain the way gisController coordinate system is convert for Kuzzle.
+
+
+
+## The three rooms Cabble has to we deal with
+
+We deal with three rooms for Cabble :
+
+```javascript
+	CABBLE_COLLECTION_POSITIONS = 'coding-challenge-cabble-positions',
+	CABBLE_COLLECTION_USERS = 'coding-challenge-cabble-users',
+	CABBLE_COLLECTION_RIDES = 'coding-challenge-cabble-rides';
+```
+
+
+* CABBLE_COLLECTION_POSITIONS will be used to synchronize all the users positions on the map. It will also be used to filter all the user from Cabble to only deal with the candidates fitting the bounding box from our current map view.
+* CABBLE_COLLECTION_USERS will be used to send the change in user status (an user can choose to be a taxi first and then become a customer). In order to leave user focus on his goal, we do not show Taxi if the user is a taxi and vice versa. 
+* CABBLE_COLLECTION_RIDES will be used to send and update the ride status along it life cicle 
+
+
+#Position management
+
+#User management
+
+#Ride management
+
+
+(a ride is first proposed than it can be canceled by user , declined (because user is already in an other ride) or accepted and finally finished).
