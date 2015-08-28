@@ -11,7 +11,8 @@ window.kuzzleController = (function() {
 	//////////////////privates attributes///////////////////////
 	var
 		kuzzle = Kuzzle.init(KUZZLE_URL),
-		refreshFilterTimer,
+		refreshFilterTimerSubPosition,
+		refreshFilterTimerPubPosition,
 		positionsRoom,
 		ridesRoom,
 		userSubscribeRoom,
@@ -21,8 +22,12 @@ window.kuzzleController = (function() {
 		init: function() {
 			return new Promise(
 				function(resolve, reject) {
+
 					// TODO: retrieve userId from localstorage
 					var user = userController.getUser();
+
+					//no data has been retrieve about user on localstorage
+					//we ask Cabble an id
 					if (!user.userId) {
 						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(error, response) {
 							if (error) {
@@ -33,25 +38,52 @@ window.kuzzleController = (function() {
 								user.whoami._id = response._id;
 								userController.setInLocalStorage().then(
 									function() {
-										kuzzleController.initListener();
+										kuzzleController.initPubSub();
 										resolve();
 									}
 								);
 							}
 						});
 					}
-					kuzzleController.initListener();
+					//user has been fuond in localstorage from userController
+					//we i
+					kuzzleController.setUserType(userController.getUserType());
 					resolve();
 				});
 		},
 
-		initListener: function() {
-			kuzzleController.listenToUserChange();
-			kuzzleController.listenToRidesProposals();
-			setInterval(kuzzleController.sendMyPosition.bind(app.kuzzleController), 3000);
+		initPubSub: function() {
+			kuzzleController.subscribeToUserChange();
+			kuzzleController.subscribeToRidesProposals();
+
+			var userType = userController.getUserType();
+			var refreshInterval = 5000;
+			if (userType === 'customer') {
+				refreshInterval = 3000;
+			} else if (userType === 'taxi') {
+				refreshInterval = 1000;
+			}
+
+			if (refreshFilterTimerSubPosition)
+				clearInterval(refreshFilterTimerSubPosition);
+
+			kuzzleController.subscribeToPositions();
+
+			refreshFilterTimerSubPosition = setInterval(function() {
+				kuzzleController.subscribeToPositions()
+			}, refreshInterval);
+
+			if (refreshFilterTimerPubPosition)
+				clearInterval(refreshFilterTimerPubPosition);
+
+			//we send position for user every 3000 millisecond
+			kuzzleController.publishPosition();
+			refreshFilterTimerPubPosition = setInterval(function() {
+				kuzzleController.publishPosition();
+			}, 3000);
 		},
 
-		sendMyPosition: function() {
+		publishPosition: function() {
 			var userPosition = gisController.getUserPosition();
 			var userId = userController.getUserId();
 			var userType = userController.getUserType();
@@ -75,12 +107,12 @@ window.kuzzleController = (function() {
 		},
 
 		/**
-		 * - Gets the top-left and bottom-right corners coordinates from google maps
+		 * - Gets the top-left and bottom-right corners coordinates from gisController
 		 * - Creates a kuzzle filter including geolocalization bounding box
 		 * - Unsubscribe from previous room if we were listening to one
-		 * - Subscribe to kuzzle with the new filter
+		 * - Subscribe to kuzzle positions with the new filter.
 		 */
-		listenToPositionsFilter: function() {
+		subscribeToPositions: function() {
 			var
 				bound = gisController.getMapBounds(),
 				user = userController.getUser();
@@ -141,8 +173,7 @@ window.kuzzleController = (function() {
 					var candidateType = data._source.type;
 					var candidateId = data._source.userId;
 
-					console.log("recive userSubscribeRoom room " + userSubscribeRoom);
-
+					
 					//user has change his state between the last time he listening to ride
 					if (candidateType === userController.getUserType())
 						return;
@@ -159,30 +190,12 @@ window.kuzzleController = (function() {
 			userController.setUserType(userType)
 				.then(function() {
 					gisController.setUserType(userType);
-
-					kuzzleController.listenToUserChange();
-					kuzzleController.listenToRidesProposals();
-					console.log("update user " + userController.getUserId());
 					kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami);
-					var refreshInterval = 5000;
-					if (userType === 'customer') {
-						refreshInterval = 6000;
-					} else if (userType === 'taxi') {
-						refreshInterval = 1000;
-					}
-
-					if (refreshFilterTimer) {
-						clearInterval(refreshFilterTimer);
-					}
-					kuzzleController.listenToPositionsFilter()
-
-					refreshFilterTimer = setInterval(function() {
-						kuzzleController.listenToPositionsFilter()
-					}.bind(this), refreshInterval);
+					kuzzleController.initPubSub();
 				});
 		},
 
-		listenToUserChange: function() {
+		subscribeToUserChange: function() {
 			if (!userController.getUserType())
 				return;
 
@@ -202,8 +215,8 @@ window.kuzzleController = (function() {
 					return false;
 				}
 
-				console.log("user subscrib ");
-				console.log(message);
+				//console.log("user subscrib ");
+				//console.log(message);
 				if (!message.action == "off")
 					return;
 
@@ -222,8 +235,7 @@ window.kuzzleController = (function() {
 			});
 		},
 
-		listenToRidesProposals: function() {
-			console.log("listen to ride");
+		subscribeToRidesProposals: function() {
 			var
 				filter = {
 					and: []
@@ -383,7 +395,7 @@ window.kuzzleController = (function() {
 			ride proposed in the meantime.
 			So here we list these potential proposals and gracefully decline these
 			 */
-			console.log('=== LISTPROPOSAL FILTER:', listProposal);
+			//console.log('=== LISTPROPOSAL FILTER:', listProposal);
 			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(error, searchResult) {
 				if (error) {
 					console.log(error);

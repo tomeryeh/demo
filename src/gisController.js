@@ -346,8 +346,6 @@ window.gisController = (function() {
 	return {
 
 		addMarker: function(position, type, id) {
-
-			console.log("add marker " + id);
 			var contentString;
 			var marker;
 
@@ -381,7 +379,6 @@ window.gisController = (function() {
 			}
 		},
 		removeCandidate: function(id) {
-			console.log("remove marker " + id);
 			if (!assocIdToOtherItemsMark[id])
 				return;
 			var marker = assocIdToOtherItemsMark[id];
@@ -535,8 +532,6 @@ window.gisController = (function() {
 
 		},
 		showPopupRideProposal: function(sourceId, targetId, rideProposal) {
-			console.log("showPopupRideProposal");
-			console.log(rideProposal);
 
 			var markerSource = assocIdToOtherItemsMark[sourceId];
 			var userType = userController.getUserType();
