@@ -190,8 +190,16 @@ window.gisController = (function() {
 			taxiText = "i'm looking for a customer";
 		}
 
-		var contentPop = document.createElement("h1");
-		contentPop.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
+		var contentPop = document.createElement("div");
+
+		var header = document.createElement("h1");
+		header.setAttribute("class", "header")
+		header.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
+
+		contentPop.appendChild(header); 
+
+		var footer = document.createElement("div");
+		footer.setAttribute("class", "footer")
 
 		var btnCustomer = document.createElement("BUTTON");
 		btnCustomer.setAttribute("class", "chooseCustomer ok_button")
@@ -201,8 +209,10 @@ window.gisController = (function() {
 		btnTaxi.setAttribute("class", "chooseTaxi cancel_button")
 		btnTaxi.appendChild(document.createTextNode(taxiText));
 
-		contentPop.appendChild(btnCustomer); // Append the text to <button>
-		contentPop.appendChild(btnTaxi); // Append the text to <button>
+		footer.appendChild(btnCustomer);
+		footer.appendChild(btnTaxi);
+
+		contentPop.appendChild(footer); 
 
 		btnCustomer.addEventListener("click", function(event) {
 			userMarker.setIcon(customerIcon);
