@@ -534,10 +534,11 @@ window.gis = (function() {
 			console.log("showPopupRideProposal");
 
 			var markerSource = assocIdToOtherItemsMark[source];
+			var userType = userController.getUserType();
 
 			//the source from ride is not know from GIS (not visible in current map or his position are not alread sended
 			if (!markerSource) {
-				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+
 				var markerType = "customer";
 				var markerId = rideProposal._source.taxi;
 				var markerPosition = {
@@ -561,11 +562,21 @@ window.gis = (function() {
 				});
 
 			}
+			markerSource.setIcon(userType == "taxi" ? customerIconAnimated : taxiIconAnimated);
 
 			var popupProposeRide = answerToRidePopup(source, target, rideProposal);
 			markerSource
-				.bindPopup(popupProposeRide);
-			//	.openPopup();
+				.bindPopup(popupProposeRide)
+				//.openPopup();
+		},
+
+		rideUser: function(source, target, rideProposal) {
+
+			currentRideMarker = !currentRideMarker;
+			if (currentRideMarker)
+				userMarker.setIcon(taxiIconAnimated);
+			else
+				userMarker.setIcon(taxiIcon);
 		}
 	};
 
