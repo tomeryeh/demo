@@ -20,7 +20,7 @@ window.userController = (function() {
 			return new Promise(
 				function(resolve, reject) {
 					userController.fetchFromLocalStorage().then(function(value) {
-						if (value) 
+						if (value)
 							user = value;
 
 						if (user.whoami.type)
@@ -29,28 +29,27 @@ window.userController = (function() {
 					});
 				});
 		},
-
 		getUser: function() {
 			return user;
 		},
-
 		getUserType: function() {
 			return user.whoami.type;
 		},
-
 		setUserType: function(type) {
 			user.whoami.type = type;
 			return this.setInLocalStorage();
 		},
-
 		getUserId: function() {
 			return user.whoami._id;
 		},
 		isAvailable: function() {
 			return user.whoami.available !== undefined || user.whoami.available;
 		},
+		setAvailable: function(available) {
+			user.whoami.available = available;
+		},
 		getCandidateType: function() {
-			return user.whoami.type === "taxi" ? "customer" : "taxi";
+			return this.getUserType() === "taxi" ? "customer" : "taxi";
 		},
 		fetchFromLocalStorage: function() {
 			return new Promise(
@@ -71,7 +70,6 @@ window.userController = (function() {
 				});
 			return resolver.promise;
 		}
-
 	};
 
 })();

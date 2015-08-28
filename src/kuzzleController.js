@@ -4,30 +4,39 @@ window.kuzzleController = (function() {
 	var
 	//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
 		KUZZLE_URL = 'http://localhost:7512',
+		kuzzle = Kuzzle.init(KUZZLE_URL),
+
+
+		//the three collections we are interesting to
 		CABBLE_COLLECTION_POSITIONS = 'cabble-positions',
 		CABBLE_COLLECTION_USERS = 'cabble-users',
-		CABBLE_COLLECTION_RIDES = 'cabble-rides';
+		CABBLE_COLLECTION_RIDES = 'cabble-rides',
 
-	//////////////////privates attributes///////////////////////
-	var
-		kuzzle = Kuzzle.init(KUZZLE_URL),
+		
 		refreshFilterTimerSubPosition,
 		refreshFilterTimerPubPosition,
-		positionsRoom,
-		ridesRoom,
+
+		//used to keep the user type change (suppose an user change from taxi to csutomer, 
+		//	it became no more relevant to show it.)
+		assocRoomUserUserId = {},
+
+		//the room we are susbscribe to currently
+		positionsSubscribeRoom,
+		ridesSusbcribeRoom,
 		userSubscribeRoom,
-		currentRide;
+
+		//the current ride if 
+		currentRide = null;
 
 	return {
 		init: function() {
 			return new Promise(
 				function(resolve, reject) {
 
-					// TODO: retrieve userId from localstorage
 					var user = userController.getUser();
 
-					//no data has been retrieve about user on localstorage
-					//we ask Cabble an id
+					//no data has been retrieve about user on localstorage,
+					//we ask Cabble for an userId
 					if (!user.userId) {
 						kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(error, response) {
 							if (error) {
@@ -45,21 +54,33 @@ window.kuzzleController = (function() {
 							}
 						});
 					}
-					//user has been fuond in localstorage from userController
-					//we i
+					//user has been found in localstorage from userController
+					//we set user (this method will init thhe pubsub )
 					kuzzleController.setUserType(userController.getUserType());
 					resolve();
 				});
 		},
 
+		setUserType: function(userType) {
+			if (!userType)
+				return;
+
+			userController.setUserType(userType)
+				.then(function() {
+					gisController.setUserType(userType);
+					kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami);
+					kuzzleController.initPubSub();
+				});
+		},
+
 		initPubSub: function() {
-			kuzzleController.subscribeToUserChange();
-			kuzzleController.subscribeToRidesProposals();
+			kuzzleController.subscribeToUsers();
+			kuzzleController.subscribeToRides();
 
 			var userType = userController.getUserType();
 			var refreshInterval = 5000;
 			if (userType === 'customer') {
-				refreshInterval = 3000;
+				refreshInterval = 1000;
 			} else if (userType === 'taxi') {
 				refreshInterval = 1000;
 			}
@@ -77,13 +98,13 @@ window.kuzzleController = (function() {
 				clearInterval(refreshFilterTimerPubPosition);
 
 			//we send position for user every 3000 millisecond
-			kuzzleController.publishPosition();
+			kuzzleController.publishPositions();
 			refreshFilterTimerPubPosition = setInterval(function() {
-				kuzzleController.publishPosition();
+				kuzzleController.publishPositions();
 			}, 3000);
 		},
 
-		publishPosition: function() {
+		publishPositions: function() {
 			var userPosition = gisController.getUserPosition();
 			var userId = userController.getUserId();
 			var userType = userController.getUserType();
@@ -102,7 +123,7 @@ window.kuzzleController = (function() {
 					lat: userPosition.lat,
 					lon: userPosition.lng
 				},
-				userSubscribeRoom: userSubscribeRoom
+				roomName: userSubscribeRoom
 			}, false);
 		},
 
@@ -150,30 +171,23 @@ window.kuzzleController = (function() {
 				});
 			}
 
-			if (positionsRoom) {
-				kuzzle.unsubscribe(positionsRoom);
+			if (positionsSubscribeRoom) {
+				kuzzle.unsubscribe(positionsSubscribeRoom);
 			}
 
-			positionsRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
+			positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
 				if (error) {
 					console.error(error);
 					return;
 				}
 
-				if (message.action !== "create") {
-					console.log("recive action " + message.action);
-					console.dir(message);
-				}
 				if (message.action == "create") {
-					var data = message.data;
-					if (!data)
-						data = message;
 
-					var candidatePosition = data._source.position;
-					var candidateType = data._source.type;
-					var candidateId = data._source.userId;
+					assocRoomUserUserId[message._source.roomName] = message._source.userId;
+					var candidatePosition = message._source.position;
+					var candidateType = message._source.type;
+					var candidateId = message._source.userId;
 
-					
 					//user has change his state between the last time he listening to ride
 					if (candidateType === userController.getUserType())
 						return;
@@ -183,19 +197,7 @@ window.kuzzleController = (function() {
 			});
 		},
 
-		setUserType: function(userType) {
-			if (!userType)
-				return;
-
-			userController.setUserType(userType)
-				.then(function() {
-					gisController.setUserType(userType);
-					kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami);
-					kuzzleController.initPubSub();
-				});
-		},
-
-		subscribeToUserChange: function() {
+		subscribeToUsers: function() {
 			if (!userController.getUserType())
 				return;
 
@@ -215,27 +217,24 @@ window.kuzzleController = (function() {
 					return false;
 				}
 
-				//console.log("user subscrib ");
-				//console.log(message);
-				if (!message.action == "off")
+				//we are instersting to unscribe i.e user change status interest
+				if (!message || message.action != "off")
 					return;
-
-				var userChanged = message._source;
-
-				//a previous user candidate is now a concurent, we remove it from view
-				if (userChanged && userController.getUserType() === userChanged.type) {
-					gisController.removeCandidate(userChanged._id);
-				}
-
-				//we where in ride with this candidate, we must break the ride
-				if (currentRide && (currentRide._source.taxi === userChanged._id ||  currentRide._source.customer === userChanged._id)) {
+				//if this user was not on our map nothing to do
+				var userWithSameStatus = assocRoomUserUserId[message.roomName];
+				if (!userWithSameStatus)
+					return;
+				//else we remove it from the map
+				gisController.removeCandidate(userWithSameStatus);
+				//if we where aslo in a ride with this candidate, we must break it
+				if (currentRide &&
+					(currentRide._source.taxi === userWithSameStatus ||  currentRide._source.customer === userWithSameStatus)) {
 					kuzzleController.finishRide();
 				}
-
 			});
 		},
 
-		subscribeToRidesProposals: function() {
+		subscribeToRides: function() {
 			var
 				filter = {
 					and: []
@@ -264,11 +263,11 @@ window.kuzzleController = (function() {
 			rideFilter.term[user.whoami.type] = user.whoami._id;
 			filter.and = [rideFilter, statusFilter];
 
-			if (ridesRoom) {
-				kuzzle.unsubscribe(ridesRoom);
+			if (ridesSusbcribeRoom) {
+				kuzzle.unsubscribe(ridesSusbcribeRoom);
 			}
 
-			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
+			ridesSusbcribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;
@@ -323,7 +322,7 @@ window.kuzzleController = (function() {
 		 *
 		 * @param candidateId User Id of the candidate we wish to contact
 		 */
-		sendRideProposal: function(candidateId) {
+		publishRideProposal: function(candidateId) {
 			var
 				rideProposal = {},
 				myUserType = userController.getUserType();
@@ -385,7 +384,7 @@ window.kuzzleController = (function() {
 			userSubFilter.term[myUserType] = userController.getUser().whoami._id;
 			listProposal.filter.and.push(userSubFilter);
 
-			userController.getUser().whoami.available = false;
+			userController.getUser().setAvailable(false);
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
 			currentRide = rideProposal;
 			gisController.onRideAccepted(currentRide);
@@ -436,10 +435,7 @@ window.kuzzleController = (function() {
 				status: 'completed'
 			};
 
-			userController.getUser().whoami.available = true;
-			//gisController.onRideEnded(currentRide);
-			//currentRide = null;
-
+			userController.getUser().setAvailable(true);
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
 		},
 
