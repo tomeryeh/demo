@@ -80,7 +80,7 @@ window.userController = (function() {
 				.then(function() {
 					this.setAvailable(availability);
 					resolver.resolve();
-				});
+				}.bind(this));
 			return resolver.promise;
 		}
 	};

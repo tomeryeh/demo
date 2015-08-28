@@ -411,7 +411,6 @@ window.gisController = (function() {
 			return userMarker.getLatLng();
 		},
 		setUserType: function(type) {
-			//console.log("set user type " + type);
 			userMarker.setIcon(getIcon(type));
 			userPopup.getContent().querySelector(".chooseTaxi").disabled = (type === "taxi");
 			userPopup.getContent().querySelector(".chooseCustomer").disabled = (type === "customer");
@@ -558,9 +557,7 @@ window.gisController = (function() {
 				map.fitBounds(positions, {
 					padding: L.point(100, 100)
 				});
-
 			}
-			console.log("adding a " + userController.getCandidateType());
 			markerSource.setIcon(userController.getCandidateType() == "taxi" ? taxiIconAnimated : customerIconAnimated);
 
 			var popupProposeRide = answerToRidePopup(sourceId, targetId, rideProposal);

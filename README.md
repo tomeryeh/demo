@@ -22,11 +22,9 @@ TODO
 
 # The three Cabble Dependancies :
 
-Cabble has the following dependencies :
-
  * [Bluebird](https://github.com/petkaantonov/bluebird) (For Promise Styling)
  * [localForage](https://mozilla.github.io/localForage) (For local storage persistency)
  * [Leafletjs](http://leafletjs.com/) (awesome library for drawing map with OpenStreetMap Database)
 
 # Licence
-This deom is publish under the MIT licence
+This demo is published under the MIT licence

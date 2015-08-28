@@ -355,7 +355,6 @@ window.kuzzleController = (function() {
 		 *
 		 */
 		acceptRideProposal: function(rideProposal) {
-			console.log("accept ride proposal");
 			var
 				myUserType = userController.getUser().whoami.type,
 				acceptedRide = {
@@ -385,7 +384,7 @@ window.kuzzleController = (function() {
 			userSubFilter.term[myUserType] = userController.getUser().whoami._id;
 			listProposal.filter.and.push(userSubFilter);
 
-			userController.getUser().setAvailable(false);
+			userController.setAvailable(false);
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
 			currentRide = rideProposal;
 			gisController.onRideAccepted(currentRide);
@@ -395,7 +394,6 @@ window.kuzzleController = (function() {
 			ride proposed in the meantime.
 			So here we list these potential proposals and gracefully decline these
 			 */
-			//console.log('=== LISTPROPOSAL FILTER:', listProposal);
 			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(error, searchResult) {
 				if (error) {
 					console.log(error);
@@ -436,7 +434,7 @@ window.kuzzleController = (function() {
 				status: 'completed'
 			};
 
-			userController.getUser().setAvailable(true);
+			userController.setAvailable(true);
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
 		},
 

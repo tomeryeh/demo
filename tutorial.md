@@ -21,7 +21,7 @@ This file can be resume to the following snippet with Promise :
 		.then(kuzzleController.init);
 ```
 
-Corresponding rougly to  :
+Corresponding roughly to  :
 
 * init the gisController : the user will be geolocalised, and visible on the center of the newly rendered map,
 * init the userController : if previous user store is "session" in localstorage we load them,
