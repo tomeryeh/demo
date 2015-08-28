@@ -1,6 +1,7 @@
 /**
  *	GIS module
  *	all the GIS specific code (here we use Leaflet) http://leafletjs.com/
+ * 
  *
  **/
 

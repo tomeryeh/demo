@@ -1,39 +1,35 @@
 # Kuzzle - Cabble tutorial
 
-This demo will show you how to use the geolocalisation filtering.
+This demo will show you how to use the geolocalisation filtering fro Kuzzle.
+It will also show you quite complex process to 
 
 
-**Table of content:**
-
-There are three controllers in this demo : 
+# The three controllers 
 
   * gisController (gis for Geolocalisation Information System) is devoted to details about map rendering and manipulating markers.
-We use [Leafletjs](http://leafletjs.com/). We also use geolocalisation functionality (function getGeoLoc).
-  * userController is devoted to detail about user information storage (localstorage is used for user persistance).
-  * kuzzleController.js kuzzle.js is devoted to all the communication with Kuzzle.
+We use [Leafletjs](http://leafletjs.com/) for rendering. We also use webAPI geolocalisation functionality.
+  * userController allow to deal with localstorage as a persistance user information data).
+  * kuzzleController.js is devoted to all the PubSub (Publication Subscription) with Kuzzle.
 
 
 Then we have our entrypoint in app.js.
-This file can be resume to the following snippet :
+This file can be resume to the following snippet with Promise :
 
 ```javascript
-	this.gisController.init()
-		.then(app.userController.init)
-		.then(app.kuzzleController.init);
+	gisController.init()
+		.then(userController.init)
+		.then(kuzzleController.init);
 ```
 
-So has a sketch we use Promise style to :
+Corresponding rougly to  :
 
-* call the function init from gisController, ie the user will be geolocalised, and visible on the center of the newly rendered map.
-* call the function init from userController (if previous user store his id and type (i.e taxi or customer) in localstorage we load them)
-* call the function init from kuzzleController (connection to Kuzzle for pubsub about positions, user status and rides change).
+* init the gisController : the user will be geolocalised, and visible on the center of the newly rendered map,
+* init the userController : if previous user store is "session" in localstorage we load them,
+* init the kuzzleController : connection to Kuzzle for pubsub about positions, user status and rides change.
 
-Thanks to promise, the inits call chain are synchronous.
+We will focus on kuzzleController. When some call will be done to the two other controllers (gisController and userController) we will explain brievely their meaning if no self explanatory.
 
-We will focus only on kuzzle.js. When some call will be done to the two other controllers (gisController and userController) we will explain brievely their meaning.
-
-
-## The three rooms Cabble has to deal with
+## kuzzleController : The three rooms Cabble has to deal with
 
 We deal with three rooms for Cabble :
 
@@ -51,9 +47,21 @@ We deal with three rooms for Cabble :
 
 # Positions management
 
+## subscribeToPositions
+
+## publishPositions
+
 # Users management
 
+## subscribeToUsers
+
+## publishUsers
+
 # Rides management
+
+## subscribeToRides
+
+## publishRides
 
 
 (a ride is first proposed than it can be canceled by user , declined (because user is already in an other ride) or accepted and finally finished).

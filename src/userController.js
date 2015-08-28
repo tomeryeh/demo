@@ -1,8 +1,9 @@
 /**
- *	User module
- *	Model user (type and id)
+ *	User Controller
  *  fetch user data from localstorage
- *
+ * 	id for Kuzzle communication, 
+ *  type (taxi or customer)
+ *  isAvailable (this state is not persisted) do user is currently in ride or not.
  **/
 
 window.userController = (function() {
@@ -35,6 +36,9 @@ window.userController = (function() {
 		getUserType: function() {
 			return user.whoami.type;
 		},
+		/** 
+		 * @return a Promise
+		 */
 		setUserType: function(type) {
 			user.whoami.type = type;
 			return this.setInLocalStorage();
@@ -48,6 +52,11 @@ window.userController = (function() {
 		setAvailable: function(available) {
 			user.whoami.available = available;
 		},
+
+		/**
+		 * type candidate is "taxi" if user is a "customer" and vice versa.
+		 *
+		 **/
 		getCandidateType: function() {
 			return this.getUserType() === "taxi" ? "customer" : "taxi";
 		},
@@ -64,8 +73,12 @@ window.userController = (function() {
 		},
 		setInLocalStorage: function() {
 			var resolver = Promise.pending();
+			var availability = this.isAvailable();
+			//we do not persist the availability status
+			this.setAvailable(true);
 			localforage.setItem('cable_user', JSON.stringify(user))
 				.then(function() {
+					this.setAvailable(availability);
 					resolver.resolve();
 				});
 			return resolver.promise;

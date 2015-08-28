@@ -1,18 +1,19 @@
-////////////////////////kuzzle module/////////////////
-
+/**
+ *	Kuzzle controller
+ *	all the Kuzzle pub sub methods.
+ *
+ **/
 window.kuzzleController = (function() {
 	var
-	//KUZZLE_URL = 'api.uat.kuzzle.io:7512',
+	//the Kuzzle url adress
 		KUZZLE_URL = 'http://localhost:7512',
 		kuzzle = Kuzzle.init(KUZZLE_URL),
-
 
 		//the three collections we are interesting to
 		CABBLE_COLLECTION_POSITIONS = 'cabble-positions',
 		CABBLE_COLLECTION_USERS = 'cabble-users',
 		CABBLE_COLLECTION_RIDES = 'cabble-rides',
 
-		
 		refreshFilterTimerSubPosition,
 		refreshFilterTimerPubPosition,
 
