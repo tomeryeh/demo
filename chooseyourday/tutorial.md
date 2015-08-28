@@ -46,11 +46,10 @@ In this tutorial, we assume that you already have some basis on AngularJS, and w
 
 Assuming you have a running Kuzzle instance installed (please follow the instructions from [doc/install.md](doc/install.md) to start it), let's setup our client application to connect to it.
 
-This is literally the first two lines of our ``js/app.js`` file:
+This is literally the first line of our ``js/app.js`` file:
 
 ```javascript
-var
-  kuzzle = Kuzzle.init("http://localhost:7512"),
+var kuzzle = Kuzzle.init(config.kuzzleUrl);
 ```
 
 Just set here the address of your Kuzzle instance... and that's it !
@@ -106,7 +105,7 @@ that means :
 At controller's initialization, ``viewForm`` equals ``false``, so we show the template ``templates/event_table.html`` to list the available events.
 
 But how do we get these events ?
-That is done by the ``getAllEvents()`` function (lines 73-86) :
+That is done by the ``getAllEvents()`` function (lines 71-84) :
 
 ```javascript
 $scope.getAllEvents = function () {
@@ -144,7 +143,7 @@ OK, we have a nice function to list contents from Kuzzle, but for now, the list 
 To test this first function, we can send data manually with REST requests, but it will be soon painful and boring.
 Instead, let's now implement the function to add an event.
 
-For that, first load the "new event" form, with the ``newEvent()`` function (lines 102-109) :
+For that, first load the "new event" form, with the ``newEvent()`` function (lines 100-108) :
 
 ```javascript
 $scope.newEvent = function() {
@@ -169,7 +168,7 @@ We will not explain this template in details (it contains a lot a internal featu
 </button>
 ```
 
-In brief, the form submition triggers the ``addEvent()`` function (lines 151-168), which calls the [create](https://github.com/kuzzleio/sdk-javascript#create) function of the SDK to send the data to Kuzzle:
+In brief, the form submition triggers the ``addEvent()`` function (lines 149-172), which calls the [create](https://github.com/kuzzleio/sdk-javascript#create) function of the SDK to send the data to Kuzzle:
 
 ```
 kuzzle.create(kuzzleChannel, {
@@ -250,7 +249,7 @@ Now, we can test the application simultaneously with 2 clients, and enjoy viewin
 Now, we want to be able to update an event (adding some proposed dates, or change the title for example).
 For that, we will reuse the ``event_edit.html`` form, but we have to populate the form data with the existing event.
 
-It is implemented by the ``editEvent()`` function (lines 116-133):
+It is implemented by the ``editEvent()`` function (lines 114-131):
 
 ```javascript
 $scope.editEvent = function(id) {
@@ -304,7 +303,7 @@ $scope.addEvent = function () {
 
 Finally for this controller, we want to be able to remove an event.
 
-Nothing easier: just call the [delete](https://github.com/kuzzleio/sdk-javascript#delete) function of the SDK (lines 98-100):
+Nothing easier: just call the [delete](https://github.com/kuzzleio/sdk-javascript#delete) function of the SDK (lines 96-98):
 
 ```javascript
 $scope.delete = function (index) {
@@ -320,7 +319,7 @@ We use the same SDK functions for this feature, and the technical logic is quite
 
 ### List participants
 
-The list of all participants for an event is implemented by the ``getAllParticipants()`` function (lines 252-270):
+The list of all participants for an event is implemented by the ``getAllParticipants()`` function (lines 250-268):
 
 ```javascript
 $scope.getAllParticipants = function () {
@@ -348,7 +347,7 @@ kuzzle.search(kuzzleChannel, filter, function (error, response) {
 
 ### Subscribe to votes
 
-The subscription to be notified in real-time by new votes is implemented in the ``subscribeParticipants()`` function (lines 272-309):
+The subscription to be notified in real-time by new votes is implemented in the ``subscribeParticipants()`` function (lines 270-307):
 
 ```javascript
 $scope.subscribeParticipants = function () {
@@ -394,7 +393,7 @@ $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (error, response
 
 ### Vote for a date
 
-A new vote is handle by the ``createParticipant()`` function (lines 206-214), which uses the ``create`` function of the Kuzzle SDK:
+A new vote is handle by the ``createParticipant()`` function (lines 204-212), which uses the ``create`` function of the Kuzzle SDK:
 
 ```javascript
 $scope.createParticipant = function () {
@@ -410,7 +409,7 @@ $scope.createParticipant = function () {
 
 ### Update a vote
 
-We can also modify an existing vote with the ``updateParticipant()`` function (lines 238-246), which uses the ``update`` function of the Kuzzle SDK:
+We can also modify an existing vote with the ``updateParticipant()`` function (lines 236-244), which uses the ``update`` function of the Kuzzle SDK:
 
 ```javascript
 kuzzle.update(kuzzleChannel, {
