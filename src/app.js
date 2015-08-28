@@ -1,5 +1,5 @@
 var app = {
-	gisController: gis,
+	gisController: gisController,
 	kuzzleController: kuzzleController,
 	userController: userController,
 

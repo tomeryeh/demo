@@ -4,7 +4,7 @@
  *
  **/
 
-window.gis = (function() {
+window.gisController = (function() {
 
 	var map;
 	var userMarker;
@@ -24,7 +24,7 @@ window.gis = (function() {
 	var popupAnchor = [0, -22];
 
 	var taxiIcon = L.icon({
-		iconUrl: "assets/img/imagen-taxi.jpg",
+		iconUrl: "assets/img/taxi.jpg",
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
 	});
@@ -41,14 +41,14 @@ window.gis = (function() {
 		popupAnchor: popupAnchor
 	});
 
-	var userIcon = L.icon({
-		iconUrl: "assets/img/meeple2.png",
+	var customerIcon = L.icon({
+		iconUrl: "assets/img/meeple.png",
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
 	});
 
-	var userIconAnimated = L.icon({
-		iconUrl: "assets/img/meeple2animated.gif",
+	var customerIconAnimated = L.icon({
+		iconUrl: "assets/img/meepleanimated.gif",
 
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
@@ -64,9 +64,9 @@ window.gis = (function() {
 
 		}
 		if (type === "customer") {
-			icon = userIcon;
+			icon = customerIcon;
 			if (animated)
-				icon = userIconAnimated;
+				icon = customerIconAnimated;
 		}
 		return icon;
 	};
@@ -78,7 +78,7 @@ window.gis = (function() {
 				var coordinates = [position[0], position[1]];
 				map.setView(coordinates, 15);
 
-				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+				var userType = userController.getUserType();
 
 				userPopup = createUserPopup(userType);
 				userMarker = L.marker(coordinates, {})
@@ -88,7 +88,7 @@ window.gis = (function() {
 				if (!userType)
 					userMarker.openPopup();
 
-				userMarker.setIcon(getIcon(userType, true));
+				userMarker.setIcon(getIcon(userType));
 
 				if (!position) {
 					map.fitWorld();
@@ -146,7 +146,7 @@ window.gis = (function() {
 					.addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
 					.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
 					.addListener(controlDiv, 'click', function() {
-						app.kuzzleController.finishRide();
+						kuzzleController.finishRide();
 					});
 
 				var text = 'End the ride';
@@ -204,9 +204,9 @@ window.gis = (function() {
 		contentPop.appendChild(btnTaxi); // Append the text to <button>
 
 		btnCustomer.addEventListener("click", function(event) {
-			userMarker.setIcon(userIcon);
-			app.kuzzleController.setUserType("customer");
-			app.gisController.setUserType("customer");
+			userMarker.setIcon(customerIcon);
+			kuzzleController.setUserType("customer");
+			gisController.setUserType("customer");
 			btnCustomer.innerHTML = customerSearchText;
 			btnTaxi.innerHTML = wanabeTaxiForCustomer;
 			btnTaxi.disabled = false;
@@ -216,8 +216,8 @@ window.gis = (function() {
 
 		btnTaxi.addEventListener("click", function() {
 			userMarker.setIcon(taxiIcon);
-			app.kuzzleController.setUserType("taxi");
-			app.gisController.setUserType("taxi");
+			kuzzleController.setUserType("taxi");
+			gisController.setUserType("taxi");
 			btnCustomer.innerHTML = wanabeCustomerTextForTaxi
 			btnTaxi.innerHTML = taxiSearchText;
 			btnTaxi.disabled = true;
@@ -232,7 +232,7 @@ window.gis = (function() {
 
 		var popupProposeRide = null;
 
-		var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
+		var userType = userController.getUserType();
 
 		var titleText = 'You have a ride proposition from this taxi';
 		var acceptMessage = "Yes, pick me up!";
@@ -255,7 +255,7 @@ window.gis = (function() {
 		acceptCabbleButton.setAttribute("class", "ok_button");
 		acceptCabbleButton.addEventListener("click", function(event) {
 			map.closePopup(popupProposeRide);
-			app.kuzzleController.acceptRideProposal(rideProposal);
+			kuzzleController.acceptRideProposal(rideProposal);
 			acceptCabbleButton.disabled = true;
 		});
 
@@ -265,7 +265,7 @@ window.gis = (function() {
 		cancelCabbleButton.appendChild(document.createTextNode(cancelMessage));
 		cancelCabbleButton.addEventListener("click", function(event) {
 			map.closePopup(popupProposeRide);
-			app.kuzzleController.declineRideProposal(rideProposal);
+			kuzzleController.declineRideProposal(rideProposal);
 			acceptCabbleButton.disabled = false;
 		});
 
@@ -293,7 +293,7 @@ window.gis = (function() {
 			loader.src = "/assets/img/loading.gif";
 			proposeCabble.appendChild(loader);
 			proposeCabbleButton.disabled = true;
-			app.kuzzleController.sendRideProposal(id);
+			kuzzleController.sendRideProposal(id);
 		});
 
 		var cancelCabble = document.createElement("p");
@@ -412,7 +412,7 @@ window.gis = (function() {
 		},
 		setUserType: function(type) {
 			//console.log("set user type " + type);
-			userMarker.setIcon(getIcon(type, true));
+			userMarker.setIcon(getIcon(type));
 			userPopup.getContent().querySelector(".chooseTaxi").disabled = (type === "taxi");
 			userPopup.getContent().querySelector(".chooseCustomer").disabled = (type === "customer");
 
@@ -458,6 +458,8 @@ window.gis = (function() {
 			if (marker) {
 				var popup = marker.getPopup();
 
+				marker.setIcon(userController.getCandidateType() == "taxi" ? taxiIcon : customerIcon);
+
 				var contentPopup = document.createElement("div");
 				var titleText = "the ride has been refused !";
 
@@ -495,6 +497,8 @@ window.gis = (function() {
 
 				candidatesLayer.removeLayer(marker);
 				marker.addTo(currentRideLayer);
+
+				marker.setIcon(userController.getCandidateType() == "taxi" ? taxiIcon : customerIcon);
 				currentRideMarker = marker;
 				//toggle layer to ride one (hide all other candidates for ride)
 				map.removeLayer(candidatesLayer);
@@ -530,27 +534,23 @@ window.gis = (function() {
 			rideControl = null;
 
 		},
-		showPopupRideProposal: function(source, target, rideProposal) {
+		showPopupRideProposal: function(sourceId, targetId, rideProposal) {
 			console.log("showPopupRideProposal");
+			console.log(rideProposal);
 
-			var markerSource = assocIdToOtherItemsMark[source];
+			var markerSource = assocIdToOtherItemsMark[sourceId];
 			var userType = userController.getUserType();
 
 			//the source from ride is not know from GIS (not visible in current map or his position are not alread sended
 			if (!markerSource) {
 
-				var markerType = "customer";
-				var markerId = rideProposal._source.taxi;
+				var markerType = userController.getCandidateType();
 				var markerPosition = {
 					lat: rideProposal._source.position.lat,
 					lon: rideProposal._source.position.lng
 				};
-				if (userType == "customer") {
-					markerType = "taxi";
-					markerId = rideProposal._source.customer;
-				}
 
-				markerSource = this.addMarker(markerPosition, markerType, markerId, true);
+				markerSource = this.addMarker(markerPosition, markerType, sourceId);
 
 				var positions = [];
 				for (var i = 0; i < otherItemsMark.length; i++) {
@@ -558,25 +558,17 @@ window.gis = (function() {
 				}
 				positions.push([userMarker.getLatLng().lat, userMarker.getLatLng().lng])
 				map.fitBounds(positions, {
-					padding: L.point(200, 200)
+					padding: L.point(100, 100)
 				});
 
 			}
-			markerSource.setIcon(userType == "taxi" ? customerIconAnimated : taxiIconAnimated);
+			console.log("adding a " + userController.getCandidateType());
+			markerSource.setIcon(userController.getCandidateType() == "taxi" ? taxiIconAnimated : customerIconAnimated);
 
-			var popupProposeRide = answerToRidePopup(source, target, rideProposal);
+			var popupProposeRide = answerToRidePopup(sourceId, targetId, rideProposal);
 			markerSource
 				.bindPopup(popupProposeRide)
 				//.openPopup();
-		},
-
-		rideUser: function(source, target, rideProposal) {
-
-			currentRideMarker = !currentRideMarker;
-			if (currentRideMarker)
-				userMarker.setIcon(taxiIconAnimated);
-			else
-				userMarker.setIcon(taxiIcon);
 		}
 	};
 

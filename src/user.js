@@ -20,16 +20,16 @@ window.userController = (function() {
 			console.log("##############User initialisation START !#######################");
 			return new Promise(
 				function(resolve, reject) {
-					app.userController.fetchFromLocalStorage().then(function(value) {
+					userController.fetchFromLocalStorage().then(function(value) {
 						if (value) {
 							user = value;
-							app.kuzzleController.setUserType(user.whoami.type);
-							app.gisController.setUserType(user.whoami.type);
+							kuzzleController.setUserType(user.whoami.type);
+							gisController.setUserType(user.whoami.type);
 						}
 						console.log("##############User initialisation ENDED !#######################");
 
 						if (user.whoami.type)
-							app.gisController.closePopupForUser();
+							gisController.closePopupForUser();
 						resolve();
 					});
 				});
@@ -42,8 +42,15 @@ window.userController = (function() {
 		getUserType: function() {
 			return user.whoami.type;
 		},
+
+		getUserId: function() {
+			return user.whoami._id;
+		},
+		isAvailable: function() {
+			return user.whoami.available !== undefined || user.whoami.available;
+		},
 		getCandidateType: function() {
-			return user.whoami.type === "taxi" ? "taxi" : "customer";
+			return user.whoami.type === "taxi" ? "customer" : "taxi";
 		},
 		fetchFromLocalStorage: function() {
 			return new Promise(
