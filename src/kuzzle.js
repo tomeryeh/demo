@@ -35,6 +35,7 @@ window.kuzzleController = (function() {
 								app.userController.setInLocalStorage().then(
 									function() {
 										app.kuzzleController.listenToRidesProposals();
+										app.kuzzleController.listenToUserChange();
 										console.log("##############KUZZLE initialisation END !#######################");
 										resolve();
 									}
@@ -42,6 +43,8 @@ window.kuzzleController = (function() {
 							}
 						});
 					} else {
+						console.log("this");
+						app.kuzzleController.listenToUserChange();
 						app.kuzzleController.listenToRidesProposals();
 					}
 					console.log("...kuzzle controller ended");
@@ -68,7 +71,7 @@ window.kuzzleController = (function() {
 					lat: userPosition.lat,
 					lon: userPosition.lng
 				},
-				positionsRoom : positionsRoom
+				positionsRoom: positionsRoom
 			}, false);
 		},
 
@@ -147,7 +150,7 @@ window.kuzzleController = (function() {
 					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
 					//user has change his state between the last time he listening to ride
-					if(candidateType === userType)
+					if (candidateType === userType)
 						return;
 
 					app.gisController.addMarker(candidatePosition, candidateType, candidateId);
@@ -187,7 +190,53 @@ window.kuzzleController = (function() {
 			});
 		},
 
+		listenToUserChange: function() {
+			var user = app.userController.getUser();
+
+			if (!user.whoami.type)
+				return;
+			/*
+						var userStatus = {terms: {type: [app.userController.getUser().whoami.type === "taxi" ? "taxi" : "customer"]	}};
+						*/
+			var userStatus = {
+				"or": [{
+					"term": {
+						"type": "taxi"
+					}
+				}, {
+					"term": {
+						"type": "customer"
+					}
+				}]
+			};
+
+			kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
+				if (error) {
+					console.error(error);
+					return false;
+				}
+				if (!message.action.update)
+					return;
+
+				var userChanged = message._source;
+				console.log("user sub ");
+				console.log(message);
+
+				//a previous user candidate is now a concurent, we remove it from view
+				if (userChanged && user.whoami.type === userChanged.type) {
+					app.gisController.removeCandidate(userChanged._id);
+				}
+
+				//we where in ride with this candidate, we must break the ride
+				if (currentRide && (currentRide._source.taxi === userChanged._id ||  currentRide._source.customer === userChanged._id)) {
+					app.kuzzleController.finishRide();
+				}
+
+			});
+		},
+
 		listenToRidesProposals: function() {
+			console.log("listen to ride");
 			var
 				filter = {
 					and: []
@@ -201,7 +250,6 @@ window.kuzzleController = (function() {
 			if (!user.whoami.type)
 				return;
 
-			// we don't want to listen to our own actions
 			statusFilter = {
 				not: {
 					terms: {
@@ -221,24 +269,12 @@ window.kuzzleController = (function() {
 				kuzzle.unsubscribe(ridesRoom);
 			}
 
-
 			ridesRoom = kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;
 				}
-
-				if (message.action === 'create') {
-					app.kuzzleController.manageRideProposal(message);
-				}
-				if (message.action === 'update') {
-					app.kuzzleController.manageRideProposal(message);
-				}
-				else if (message.action === 'off') {
-					console.log("offf ");
-					//delete user corresponding to roomname (suppose you have corespond )
-					//see the TWO TODO REMOVE deprecated
-				}
+				app.kuzzleController.manageRideProposal(message);
 			});
 		},
 
@@ -265,9 +301,9 @@ window.kuzzleController = (function() {
 					var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
 					//TODO REMOVE user has change his state between the last time he listening to ride
-					if(proposedByTaxy && userType === "taxi")
+					if (proposedByTaxy && userType === "taxi")
 						return;
-					if(!proposedByTaxy && userType === "customer")
+					if (!proposedByTaxy && userType === "customer")
 						return;
 					var target = proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
 					var source = !proposedByTaxy ? rideInfo.customer : rideInfo.taxi;
@@ -281,7 +317,7 @@ window.kuzzleController = (function() {
 				app.gisController.onRideAccepted(rideProposal);
 			} else if (rideInfo.status.indexOf('completed') !== -1) {
 				currentRide = null;
-				app.gisController.onRideEnded();
+				app.gisController.onRideEnded(rideInfo);
 			}
 		},
 
@@ -409,11 +445,5 @@ window.kuzzleController = (function() {
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
 		},
 
-
-		// TODO DEPRECATED 
-		stopListeningUsers: function() {
-			console.log("stop listening to " + positionsRoom);
-			kuzzle.unsubscribe(userRoomId);
-		}
 	};
 })();

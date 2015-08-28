@@ -22,8 +22,15 @@ window.gis = (function() {
 
 	var iconSize = [38, 38];
 	var popupAnchor = [0, -22];
+
 	var taxiIcon = L.icon({
 		iconUrl: "assets/img/imagen-taxi.jpg",
+		iconSize: iconSize,
+		popupAnchor: popupAnchor
+	});
+
+	var taxiIconAnimated = L.icon({
+		iconUrl: "assets/img/taxianimated.gif",
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
 	});
@@ -40,38 +47,28 @@ window.gis = (function() {
 		popupAnchor: popupAnchor
 	});
 
-	function getIcon(type) {
+	var userIconAnimated = L.icon({
+		iconUrl: "assets/img/meeple2animated.gif",
+
+		iconSize: iconSize,
+		popupAnchor: popupAnchor
+	});
+
+	function getIcon(type, animated) {
+
 		var icon = unknowIcon;
 		if (type === "taxi") {
 			icon = taxiIcon;
+			if (animated)
+				icon = taxiIconAnimated;
+
 		}
 		if (type === "customer") {
 			icon = userIcon;
+			if (animated)
+				icon = userIconAnimated;
 		}
 		return icon;
-	};
-
-	var animateMarker = function(marker) {
-		var t = 0;
-		var marker = marker;
-		var timer;
-
-		return {
-			start: function() {
-				timer = window.setInterval(function() {
-					//console.log(marker.getLatLng());
-					var delta = t % 100;
-					delta -= 50;
-					delta *= 0.00001;
-					marker.setLatLng(L.latLng(marker.getLatLng().lat + delta, marker.getLatLng().lng));
-					t += 1;
-				}, 50);
-			},
-			stop: function() {
-				if (timer)
-					clearInterval(timer);
-			}
-		}
 	};
 
 	function createUserMarker(position) {
@@ -84,21 +81,14 @@ window.gis = (function() {
 				var userType = app.userController.getUser() && app.userController.getUser().whoami.type;
 
 				userPopup = createUserPopup(userType);
-
 				userMarker = L.marker(coordinates, {})
 					.addTo(map)
-					//	.addTo(candidatesLayer)
-					//	.addTo(currentRideLayer)
 					.bindPopup(userPopup);
 
 				if (!userType)
 					userMarker.openPopup();
 
-				userMarker.setIcon(getIcon(userType));
-
-				//window.setInterval(function() {
-				//	map.panTo(userMarker.getLatLng());
-				//}, 3000);
+				userMarker.setIcon(getIcon(userType, true));
 
 				if (!position) {
 					map.fitWorld();
@@ -238,7 +228,7 @@ window.gis = (function() {
 		return popupChooseUserType;
 	};
 
-	function createPopupRideProposal(source, target, rideProposal) {
+	function answerToRidePopup(source, target, rideProposal) {
 
 		var popupProposeRide = null;
 
@@ -286,7 +276,7 @@ window.gis = (function() {
 		return L.popup().setContent(contentPopup);
 	};
 
-	function createProposeRidePopup(type, id) {
+	function proposeARidePopup(type, id) {
 		var popupProposeRide = null;
 
 		var proposeCabble = document.createElement("p");
@@ -358,6 +348,8 @@ window.gis = (function() {
 	return {
 
 		addMarker: function(position, type, id) {
+
+			console.log("add marker " + id);
 			var contentString;
 			var marker;
 
@@ -365,11 +357,10 @@ window.gis = (function() {
 			if (assocIdToOtherItemsMark[id]) {
 				marker = assocIdToOtherItemsMark[id];
 				marker.setLatLng(L.latLng(position.lat, position.lon));
-				infowindow = marker.infowindow;
 			}
 			//create marker
 			else {
-				var popup = createProposeRidePopup(type, id);
+				var popup = proposeARidePopup(type, id);
 				marker = L.marker([position.lat, position.lon], {
 						icon: getIcon(type)
 					})
@@ -385,14 +376,35 @@ window.gis = (function() {
 				//marker.openPopup();
 
 				//thumble element.
-				var iconForMarker = getIcon(type);
-				//iconForMarker.options.className = "animated bounce";
-				marker.setIcon(iconForMarker);
 
 				assocIdToOtherItemsMark[id] = marker;
 				otherItemsMark.push(marker);
 				return marker;
 			}
+		},
+		removeCandidate: function(id) {
+			console.log("remove marker " + id);
+			if (!assocIdToOtherItemsMark[id])
+				return;
+			var marker = assocIdToOtherItemsMark[id];
+			if (assocIdToOtherItemsMark[id]) {
+				marker = assocIdToOtherItemsMark[id];
+				if (currentRideMarker == marker) {
+					currentRideLayer.removeLayer(marker);
+					currentRideMarker = null;
+				} else {
+					candidatesLayer.removeLayer(marker);
+					currentRideLayer.removeLayer(marker);
+				}
+				var indiceMarker = otherItemsMark.indexOf(marker);
+				console.log("marker indice" + otherItemsMark.indexOf(marker));
+				if (indiceMarker >= 0) {
+					otherItemsMark.splice(indiceMarker, 1);
+				}
+				delete assocIdToOtherItemsMark[id];
+				delete marker;
+			}
+
 		},
 
 		getUserPosition: function() {
@@ -400,16 +412,16 @@ window.gis = (function() {
 		},
 		setUserType: function(type) {
 			//console.log("set user type " + type);
-			userMarker.setIcon(getIcon(type));
+			userMarker.setIcon(getIcon(type, true));
 			userPopup.getContent().querySelector(".chooseTaxi").disabled = (type === "taxi");
 			userPopup.getContent().querySelector(".chooseCustomer").disabled = (type === "customer");
 
-			for (var i =0; i <otherItemsMark.length;i++){
+			for (var i = 0; i < otherItemsMark.length; i++) {
 				candidatesLayer.removeLayer(otherItemsMark[i]);
 			}
 			assocIdToOtherItemsMark = {};
 
-			if(rideControl)
+			if (rideControl)
 				rideControl.removeFrom(map);
 
 			map.removeLayer(currentRideLayer);
@@ -454,10 +466,10 @@ window.gis = (function() {
 				contentPopup.appendChild(header);
 
 				popup.setContent(contentPopup);
-				setTimeout(function(){
+				setTimeout(function() {
 					marker.closePopup();
-				},3000);
-				
+				}, 3000);
+
 			}
 		},
 		onRideAccepted: function(ride) {
@@ -494,7 +506,7 @@ window.gis = (function() {
 			map.addControl(rideControl);
 		},
 		onRideEnded: function(ride) {
-			if(rideControl)
+			if (rideControl)
 				rideControl.removeFrom(map);
 
 			currentRideLayer.removeLayer(currentRideMarker);
@@ -503,15 +515,23 @@ window.gis = (function() {
 			map.addLayer(candidatesLayer);
 
 			///Get popup from marker
+			var popup = proposeARidePopup(userController.getCandidateType(), ride[userController.getCandidateType()]);
+
+			currentRideMarker.bindPopup(popup);
+
+			/*
 			var popup = currentRideMarker.getPopup();
 			//rearm ok button for popup.
 			var okButton = popup.getContent().querySelector(".ok_button");
 			okButton.disabled = false;
+			*/
 
 			currentRideMarker = null;
 			rideControl = null;
+
 		},
 		showPopupRideProposal: function(source, target, rideProposal) {
+			console.log("showPopupRideProposal");
 
 			var markerSource = assocIdToOtherItemsMark[source];
 
@@ -529,7 +549,7 @@ window.gis = (function() {
 					markerId = rideProposal._source.customer;
 				}
 
-				markerSource = this.addMarker(markerPosition, markerType, markerId);
+				markerSource = this.addMarker(markerPosition, markerType, markerId, true);
 
 				var positions = [];
 				for (var i = 0; i < otherItemsMark.length; i++) {
@@ -541,10 +561,11 @@ window.gis = (function() {
 				});
 
 			}
-			var popupProposeRide = createPopupRideProposal(source, target, rideProposal);
+
+			var popupProposeRide = answerToRidePopup(source, target, rideProposal);
 			markerSource
-				.bindPopup(popupProposeRide)
-				.openPopup();
+				.bindPopup(popupProposeRide);
+			//	.openPopup();
 		}
 	};
 
