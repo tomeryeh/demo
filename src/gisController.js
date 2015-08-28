@@ -43,20 +43,18 @@ window.gisController = (function() {
 	});
 
 	var customerIcon = L.icon({
-		iconUrl: "assets/img/meeple.png",
+		iconUrl: "assets/img/customer.png",
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
 	});
 
 	var customerIconAnimated = L.icon({
-		iconUrl: "assets/img/meepleanimated.gif",
-
+		iconUrl: "assets/img/customeranimated.gif",
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
 	});
 
 	function getIcon(type, animated) {
-
 		var icon = unknowIcon;
 		if (type === "taxi") {
 			icon = taxiIcon;
@@ -196,7 +194,7 @@ window.gisController = (function() {
 		header.setAttribute("class", "header")
 		header.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
 
-		contentPop.appendChild(header); 
+		contentPop.appendChild(header);
 
 		var footer = document.createElement("div");
 		footer.setAttribute("class", "footer")
@@ -212,7 +210,7 @@ window.gisController = (function() {
 		footer.appendChild(btnCustomer);
 		footer.appendChild(btnTaxi);
 
-		contentPop.appendChild(footer); 
+		contentPop.appendChild(footer);
 
 		btnCustomer.addEventListener("click", function(event) {
 			userMarker.setIcon(customerIcon);
@@ -241,7 +239,7 @@ window.gisController = (function() {
 
 	function answerToRidePopup(source, target, rideProposal) {
 
-		var popupProposeRide = null;
+		var answerPopupRide = null;
 
 		var userType = userController.getUserType();
 
@@ -258,19 +256,22 @@ window.gisController = (function() {
 		var contentPopup = document.createElement("div");
 
 		var header = document.createElement("h1");
+		header.setAttribute("class", "header");
 		header.appendChild(document.createTextNode(titleText));
 
-		var acceptCabble = document.createElement("p");
+		var footer = document.createElement("div");
+		footer.setAttribute("class", "footer");
+
 		var acceptCabbleButton = document.createElement("button");
 		acceptCabbleButton.appendChild(document.createTextNode(acceptMessage));
 		acceptCabbleButton.setAttribute("class", "ok_button");
 		acceptCabbleButton.addEventListener("click", function(event) {
-			map.closePopup(popupProposeRide);
+			map.closePopup(answerPopupRide);
 			kuzzleController.acceptRideProposal(rideProposal);
 			acceptCabbleButton.disabled = true;
 		});
+		footer.appendChild(acceptCabbleButton);
 
-		var cancelCabble = document.createElement("p");
 		var cancelCabbleButton = document.createElement("button");
 		cancelCabbleButton.setAttribute("class", "cancel_button");
 		cancelCabbleButton.appendChild(document.createTextNode(cancelMessage));
@@ -279,12 +280,15 @@ window.gisController = (function() {
 			kuzzleController.declineRideProposal(rideProposal);
 			acceptCabbleButton.disabled = false;
 		});
+		footer.appendChild(cancelCabbleButton);
 
 		contentPopup.appendChild(header);
-		contentPopup.appendChild(acceptCabbleButton);
-		contentPopup.appendChild(cancelCabbleButton);
+		contentPopup.appendChild(footer);
 
-		return L.popup().setContent(contentPopup);
+		answerPopupRide = L.popup().setContent(contentPopup);
+		answerPopupRide.options.minWidth = 500;
+
+		return answerPopupRide;
 	};
 
 	function proposeARidePopup(type, id) {
@@ -322,10 +326,10 @@ window.gisController = (function() {
 
 		footer.appendChild(cancelCabbleButton);
 
-
 		var contentPopup = document.createElement("div");
 
 		var header = document.createElement("h1");
+		header.setAttribute("class", "header");
 		var contentHeader = "";
 		if (type === "customer")
 			contentHeader += 'Propose this customer a ride';
@@ -336,8 +340,8 @@ window.gisController = (function() {
 		contentPopup.appendChild(header);
 		contentPopup.appendChild(footer);
 
-		//contentPopup.options.minWidth = 500;
 		popupProposeRide = L.popup().setContent(contentPopup);
+		popupProposeRide.options.minWidth = 500;
 		return popupProposeRide;
 
 	};

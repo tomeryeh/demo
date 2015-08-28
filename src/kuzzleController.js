@@ -139,7 +139,7 @@ window.kuzzleController = (function() {
 				bound = gisController.getMapBounds(),
 				user = userController.getUser();
 
-			if (!user.whoami.type)
+			if (!userController.getUserType())
 				return;
 
 			var filterUserType = userController.getUserType() === 'taxi' ? 'customer' : 'taxi',
@@ -280,17 +280,11 @@ window.kuzzleController = (function() {
 		manageRideProposal: function(rideProposal) {
 			var rideInfo = rideProposal._source;
 
-			if (!rideInfo) {
-				console.log("no ride info");
+			if (!rideInfo || !rideInfo.status) {
 				return;
 			}
 
-			if (!rideInfo.status) {
-				console.log("no status info");
-				return;
-			}
-
-			if (rideInfo && rideInfo.status.indexOf('proposed_by') !== -1) {
+			if (rideInfo.status.indexOf('proposed_by') !== -1) {
 				if (!userController.isAvailable()) {
 					this.declineRideProposal(rideProposal);
 					return;
@@ -436,7 +430,6 @@ window.kuzzleController = (function() {
 
 			userController.setAvailable(true);
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
-		},
-
+		}
 	};
 })();
