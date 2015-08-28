@@ -14,32 +14,26 @@ We use [Leafletjs](http://leafletjs.com/). We also use geolocalisation functiona
 
 
 Then we have our entrypoint in app.js.
-This file can be reume to the following snippet :
+This file can be resume to the following snippet :
 
 ```javascript
 	this.gisController.init()
-			//init user component to listen to local saved user info (i.e userid and type:=[taxi,customer])
-			.then(app.userController.init)
-			//init kuzzle component to listen for adding candidates changing and rides states
-			.then(app.kuzzleController.init);
+		.then(app.userController.init)
+		.then(app.kuzzleController.init);
 ```
 
 So has a sketch we use Promise style to :
 
-* call the function init from gisController, ie the user geolocalisation and the map rendering
-* call the function init from userController (to get from localstorage the id and type from user if exist)
-* call the function init from kuzzleController (create all the protocol communication with Kuzzle).
+* call the function init from gisController, ie the user will be geolocalised, and visible on the center of the newly rendered map.
+* call the function init from userController (if previous user store his id and type (i.e taxi or customer) in localstorage we load them)
+* call the function init from kuzzleController (connection to Kuzzle for pubsub about positions, user status and rides change).
 
 Thanks to promise, the inits call chain are synchronous.
 
-
-We will focus only on kuzzle.js. 
-When some call will be done to the two other controllers gisController and userController we will explain brievely their maining if not self explainatory.
-As an exemple we will explain the way gisController coordinate system is convert for Kuzzle.
+We will focus only on kuzzle.js. When some call will be done to the two other controllers (gisController and userController) we will explain brievely their meaning.
 
 
-
-## The three rooms Cabble has to we deal with
+## The three rooms Cabble has to deal with
 
 We deal with three rooms for Cabble :
 
@@ -55,11 +49,11 @@ We deal with three rooms for Cabble :
 * CABBLE_COLLECTION_RIDES will be used to send and update the ride status along it life cicle 
 
 
-#Position management
+#Positions management
 
-#User management
+#Users management
 
-#Ride management
+#Rides management
 
 
 (a ride is first proposed than it can be canceled by user , declined (because user is already in an other ride) or accepted and finally finished).
