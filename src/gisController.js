@@ -234,6 +234,8 @@ window.gisController = (function() {
 			map.closePopup(popupChooseUserType);
 		});
 		var popupChooseUserType = L.popup().setContent(contentPop);
+
+		popupChooseUserType.options.minWidth = 500;
 		return popupChooseUserType;
 	};
 
@@ -288,35 +290,38 @@ window.gisController = (function() {
 	function proposeARidePopup(type, id) {
 		var popupProposeRide = null;
 
-		var proposeCabble = document.createElement("p");
 		var proposeCabbleButton = document.createElement("button");
 		proposeCabbleButton.setAttribute("class", "ok_button");
 		var loader;
 
+		var footer = document.createElement("div");
+		footer.setAttribute("class", "footer");
+
 		proposeCabbleButton.appendChild(document.createTextNode("Ask for a ride"));
-		proposeCabble.appendChild(proposeCabbleButton);
-		proposeCabble.addEventListener("click", function(event) {
+		proposeCabbleButton.addEventListener("click", function(event) {
 			popupContent = popupProposeRide.getContent();
 			loader = document.createElement("img");
 			loader.setAttribute("class", "loader");
 			loader.src = "/assets/img/loading.gif";
-			proposeCabble.appendChild(loader);
+			proposeCabbleButton.appendChild(loader);
 			proposeCabbleButton.disabled = true;
 			kuzzleController.publishRideProposal(id);
 		});
+		footer.appendChild(proposeCabbleButton);
 
-		var cancelCabble = document.createElement("p");
 		var cancelCabbleButton = document.createElement("button");
 		cancelCabbleButton.setAttribute("class", "cancel_button");
 		cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
-		cancelCabble.appendChild(cancelCabbleButton);
-		cancelCabble.addEventListener("click", function() {
+		cancelCabbleButton.addEventListener("click", function() {
 			if (loader) {
 				loader.remove();
 			}
 			proposeCabbleButton.disabled = false;
 			map.closePopup(popupProposeRide);
 		});
+
+		footer.appendChild(cancelCabbleButton);
+
 
 		var contentPopup = document.createElement("div");
 
@@ -329,10 +334,10 @@ window.gisController = (function() {
 		header.appendChild(document.createTextNode(contentHeader));
 
 		contentPopup.appendChild(header);
-		contentPopup.appendChild(proposeCabble);
-		contentPopup.appendChild(cancelCabble);
-		popupProposeRide = L.popup().setContent(contentPopup);
+		contentPopup.appendChild(footer);
 
+		//contentPopup.options.minWidth = 500;
+		popupProposeRide = L.popup().setContent(contentPopup);
 		return popupProposeRide;
 
 	};

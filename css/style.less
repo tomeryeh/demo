@@ -9,6 +9,12 @@ body {
 	margin: 0;
 }
 
+.footer,.header {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
+}
+
 .button {
   color: #fff;
   display: inline-block;
@@ -29,19 +35,21 @@ body {
   position: relative;
 }
 
+.button:focus {
+  outline: none;
+}
+
 .ok_button {
 	.button;
 	background-color: #5cb85c;
 	border-color: #4cae4c;
 }
 
-
 .cancel_button {
 	.button;
 	background-color: #d9534f;
 	border-color: #d43f3a;
 }
-
 
 .info_button {
 	.button;
