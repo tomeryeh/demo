@@ -38,6 +38,13 @@ window.userController = (function() {
 		getUser: function() {
 			return user;
 		},
+
+		getUserType: function() {
+			return user.whoami.type;
+		},
+		getCandidateType: function() {
+			return user.whoami.type === "taxi" ? "taxi" : "customer";
+		},
 		fetchFromLocalStorage: function() {
 			return new Promise(
 				function(resolve, reject) {
