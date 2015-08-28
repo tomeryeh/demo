@@ -14,6 +14,7 @@ window.kuzzleController = (function() {
 		refreshFilterTimer,
 		positionsRoom,
 		ridesRoom,
+		userSubscribeRoom,
 		currentRide;
 
 	return {
@@ -30,12 +31,12 @@ window.kuzzleController = (function() {
 								console.error(error);
 								reject();
 							} else {
-								userController.getUser().userId = response._id;
-								userController.getUser().whoami._id = response._id;
+								user.userId = response._id;
+								user.whoami._id = response._id;
 								userController.setInLocalStorage().then(
 									function() {
-										kuzzleController.listenToRidesProposals();
 										kuzzleController.listenToUserChange();
+										kuzzleController.listenToRidesProposals();
 										console.log("##############KUZZLE initialisation END !#######################");
 										resolve();
 									}
@@ -90,7 +91,7 @@ window.kuzzleController = (function() {
 			if (!user.whoami.type)
 				return;
 
-			var filterUserType = user.whoami.type === 'taxi' ? 'customer' : 'taxi',
+			var filterUserType = userController.getUserType() === 'taxi' ? 'customer' : 'taxi',
 				filter = {
 					and: [{
 						term: {
@@ -112,15 +113,10 @@ window.kuzzleController = (function() {
 					}]
 				};
 
-			// If a currentRide has been accepted, we only want to subscribe to the other person position
-			if (currentRide) {
-				//console.log("ride");
-				//console.log(currentRide);
-			}
 			if (currentRide && currentRide.status && currentRide.status.indexOf('accepted') !== -1) {
 				filter.and.push({
 					term: {
-						_id: user.whoami.type === 'taxi' ? currentRide.customer : currentRide.taxi
+						_id: userController.getUserType() === 'taxi' ? currentRide.customer : currentRide.taxi
 					}
 				});
 			}
@@ -148,10 +144,8 @@ window.kuzzleController = (function() {
 					var candidateType = data._source.type;
 					var candidateId = data._source.userId;
 
-					var userType = userController.getUserType();
-
 					//user has change his state between the last time he listening to ride
-					if (candidateType === userType)
+					if (candidateType === userController.getUserType())
 						return;
 
 					gisController.addMarker(candidatePosition, candidateType, candidateId);
@@ -163,12 +157,13 @@ window.kuzzleController = (function() {
 			//console.log("set user type " + userType);
 			var refreshInterval = 5000;
 
-			userController.getUser().whoami.type = userType;
+			userController.setUserType(userType);
 
 			if (!userType)
 				return;
 
 			kuzzleController.listenToRidesProposals();
+			kuzzleController.listenToUserChange();
 
 			userController.setInLocalStorage().then(function() {
 				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami);
@@ -201,7 +196,10 @@ window.kuzzleController = (function() {
 				}
 			};
 
-			kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
+			if (userSubscribeRoom)
+				kuzzle.unsubscribe(userSubscribeRoom);
+
+			userSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;
@@ -430,8 +428,8 @@ window.kuzzleController = (function() {
 			};
 
 			userController.getUser().whoami.available = true;
-			gisController.onRideEnded(currentRide);
-			currentRide = null;
+			//gisController.onRideEnded(currentRide);
+			//currentRide = null;
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
 		},

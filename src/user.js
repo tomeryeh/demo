@@ -43,6 +43,10 @@ window.userController = (function() {
 			return user.whoami.type;
 		},
 
+		setUserType: function(type) {
+			user.whoami.type = type;
+		},
+
 		getUserId: function() {
 			return user.whoami._id;
 		},

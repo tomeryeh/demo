@@ -389,6 +389,7 @@ window.gisController = (function() {
 			var marker = assocIdToOtherItemsMark[id];
 			if (assocIdToOtherItemsMark[id]) {
 				marker = assocIdToOtherItemsMark[id];
+				/*
 				if (currentRideMarker == marker) {
 					currentRideLayer.removeLayer(marker);
 					currentRideMarker = null;
@@ -396,6 +397,7 @@ window.gisController = (function() {
 					candidatesLayer.removeLayer(marker);
 					currentRideLayer.removeLayer(marker);
 				}
+				*/
 				var indiceMarker = otherItemsMark.indexOf(marker);
 				console.log("marker indice" + otherItemsMark.indexOf(marker));
 				if (indiceMarker >= 0) {
