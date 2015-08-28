@@ -6,8 +6,7 @@
 window.kuzzleController = (function() {
 	var
 	//the Kuzzle url adress
-		KUZZLE_URL = 'http://localhost:7512',
-		kuzzle = Kuzzle.init(KUZZLE_URL),
+		kuzzle = Kuzzle.init(config.kuzzleUrl),
 
 		//the three collections we are interesting to
 		CABBLE_COLLECTION_POSITIONS = 'cabble-positions',
