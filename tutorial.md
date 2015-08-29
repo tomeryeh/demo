@@ -49,6 +49,22 @@ We deal with three rooms for Cabble :
 Positions collection allow to update the current position of the taxi and customer for all users.
 We also use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box.
 
+Thus we have to update position :
+-every time geolocalisation from user change
+
+To keep it simple, we will update user position every Y time.
+
+We have to update filtering position:
+-every time we zoom into the map,
+-every time the user move into the map,
+-every time we move the viewport in map (the user change the brwoser side, the user change his phone orientation, ...)
+-every time the user change from state taxi to customer (if we are customer, we are interesting for taxi and vice versa, filter must chnage accordingly).
+
+
+To keep it simple, we will not listen to all these events and intead force the filtering to be change every X time.
+
+and filtering 
+
 ### subscribeToPositions
 
 ### publishPositions

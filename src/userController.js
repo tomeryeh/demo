@@ -23,9 +23,10 @@ window.userController = (function() {
 					userController.fetchFromLocalStorage().then(function(value) {
 						if (value)
 							user = value;
-
-						if (user.whoami.type)
+						if (user.whoami.type) {
+							gisController.setUserType(user.whoami.type);
 							gisController.closePopupForUser();
+						}
 						resolve();
 					});
 				});
