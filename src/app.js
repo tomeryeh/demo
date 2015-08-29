@@ -8,6 +8,6 @@
 		//init kuzzle component to pubsub :
 		//	- positions change
 		//	- user status change
-		//	- and ride change
+		//	- ride change
 		.then(kuzzleController.init);
 })();

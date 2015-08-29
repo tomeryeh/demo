@@ -20,7 +20,6 @@ window.kuzzleController = (function() {
 
 		//the room we are susbscribe to currently
 		positionsSubscribeRoom,
-		ridesSusbcribeRoom,
 		userSubscribeRoom,
 
 		//the current ride if 
@@ -90,11 +89,14 @@ window.kuzzleController = (function() {
 			var userType = userController.getUserType();
 			var refreshInterval = 5000;
 			if (userType === 'customer') {
-				refreshInterval = 1000;
+				refreshInterval = 3000;
 			} else if (userType === 'taxi') {
 				refreshInterval = 1000;
 			}
 
+			//we can change user type anytime and our filter rate must chnage accordingly ()
+			//so we keep a ref to the previous timer to remove it.
+			// and so we must for idempotence purpose
 			if (refreshFilterTimerSubPosition)
 				clearInterval(refreshFilterTimerSubPosition);
 
@@ -151,6 +153,9 @@ window.kuzzleController = (function() {
 						var candidatePosition = message._source.position;
 						var candidateType = message._source.type;
 						var candidateId = message._source.userId;
+
+						if (candidateType === userController.getUserType())
+							return;
 						gisController.addMarker(candidatePosition, candidateType, candidateId);
 					}
 				});
@@ -178,14 +183,18 @@ window.kuzzleController = (function() {
 			if (!userType)
 				return;
 
-			kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
-				function() {
-					userController.setUserType(userType)
-						.then(function() {
-							gisController.setUserType(userType);
-							kuzzleController.subscribeToPositions();
-						});
-				});
+			userController.setUserType(userType).then(function() {
+				gisController.setUserType(userType);
+				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
+					function(error, response) {
+						if (error) {
+							console.log(error);
+							return;
+						}
+						kuzzleController.subscribeToUsers();
+						kuzzleController.subscribeToPositions();
+					});
+			});
 		},
 
 		subscribeToUsers: function() {
@@ -198,8 +207,11 @@ window.kuzzleController = (function() {
 						//type: [userController.getUserType() === "taxi" ? "customer" : "taxi"]
 				}
 			};
+			if (userSubscribeRoom)
+				kuzzle.unsubscribe(userSubscribeRoom);
 
-			kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
+
+			userSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;
@@ -208,6 +220,7 @@ window.kuzzleController = (function() {
 				//we are instersting to unscribe i.e user change status interest
 				if (!message || message.action != "off")
 					return;
+
 				//if this user was not on our map nothing to do
 				var userWithSameStatus = assocRoomToUser[message.roomName];
 				if (!userWithSameStatus)
@@ -260,7 +273,11 @@ window.kuzzleController = (function() {
 				kuzzleController.manageRideProposal(message);
 			});
 		},
-
+		/**
+		 * manageRideProposal internally when recive from subscription just above
+		 *
+		 * @param candidateId User Id of the candidate we wish to contact
+		 */
 		manageRideProposal: function(rideProposal) {
 			var rideInfo = rideProposal._source;
 

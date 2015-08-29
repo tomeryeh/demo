@@ -122,8 +122,6 @@ window.gisController = (function() {
 				if (!position) {
 					map.fitWorld();
 				} else {
-					console.log(position);
-					console.log(userMarker.getLatLng());
 					map.setView([position[0], position[1]], 15);
 				}
 
@@ -345,7 +343,6 @@ window.gisController = (function() {
 	}
 
 	return {
-
 		addMarker: function(position, type, id) {
 			var contentString;
 			var marker;
@@ -491,7 +488,6 @@ window.gisController = (function() {
 			setTimeout(function() {
 				marker.closePopup();
 			}, 3000);
-
 		},
 		onRideAccepted: function(ride) {
 			var rideInfo = ride._source;
