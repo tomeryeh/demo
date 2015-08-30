@@ -337,42 +337,41 @@ Every time the user choose to change between taxi and customer type, Cabble must
 
 ```javascript
 	subscribeToUsers: function() {
-			if (!userController.getUserType())
+		if (!userController.getUserType())
+			return;
+		var userStatus = {
+			exists: {
+				field: 'type'
+			}
+		};
+		if (userSubscribedRoom)
+			kuzzle.unsubscribe(userSubscribedRoom);
+
+
+		userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, 
+						userStatus, function(error, message) {
+			if (error) {
+				console.error(error);
+				return false;
+			}
+
+			//we are instersting to unscribe i.e user change status interest
+			if (!message || message.action != "off")
 				return;
 
-			var userStatus = {
-				exists: {
-					field: 'type'
-						//type: [userController.getUserType() === "taxi" ? "customer" : "taxi"]
-				}
-			};
-			if (userSubscribedRoom)
-				kuzzle.unsubscribe(userSubscribedRoom);
-
-
-			userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
-				if (error) {
-					console.error(error);
-					return false;
-				}
-
-				//we are instersting to unscribe i.e user change status interest
-				if (!message || message.action != "off")
-					return;
-
-				//if this user was not on our map nothing to do
-				var userWithSameStatus = assocRoomToUser[message.roomName];
-				if (!userWithSameStatus)
-					return;
-				//else we remove it from the map
-				gisController.removeCandidate(userWithSameStatus);
-				//if we where aslo in a ride with this candidate, we must break it
-				if (currentRide &&
-					(currentRide._source.taxi === userWithSameStatus || currentRide._source.customer === userWithSameStatus)) {
-					kuzzleController.finishRide();
-				}
-			});
-		}
+			//if this user was not on our map nothing to do
+			var userWithSameStatus = assocRoomToUser[message.roomName];
+			if (!userWithSameStatus)
+				return;
+			//else we remove it from the map
+			gisController.removeCandidate(userWithSameStatus);
+			//if we where aslo in a ride with this candidate, we must break it
+			if (currentRide && (currentRide._source.taxi === userWithSameStatus 
+					|| currentRide._source.customer === userWithSameStatus)) {
+				kuzzleController.finishRide();
+			}
+		});
+	}
 ```
 
 ## Rides management
@@ -382,5 +381,197 @@ Every time the user choose to change between taxi and customer type, Cabble must
 
 ## subscribeToRides
 
-## publishRides
 
+```javascript
+	subscribeToRides: function() {
+		var
+			filter = {
+				and: []
+			},
+			rideFilter = {
+				term: {}
+			},
+			user = userController.getUser(),
+			userType = userController.getUserType(),
+			statusFilter = {
+				not: {
+					terms: {
+						status: [
+							'proposed_by_' + userType,
+							'refused_by_' + userType,
+							'accepted_by_' + userType
+						]
+					}
+				}
+			};
+
+		if (!userType)
+			return;
+
+		rideFilter.term[userType] = userController.getUserId();
+		filter.and = [rideFilter, statusFilter];
+
+		kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
+			if (error) {
+				console.error(error);
+				return false;
+			}
+			kuzzleController.manageRideProposal(message);
+		});
+	},
+```
+
+
+```javascript
+	manageRideProposal: function(rideProposal) {
+		var rideInfo = rideProposal._source;
+
+		if (!rideInfo || !rideInfo.status) {
+			return;
+		}
+
+		if (rideInfo.status.indexOf('proposed_by') !== -1) {
+			if (!userController.isAvailable()) {
+				this.declineRideProposal(rideProposal);
+				return;
+			} else {
+				var candidateType = (rideInfo.status === "proposed_by_taxi") ? "taxi" : "customer";
+				var userType = userController.getUserType();
+
+				//TODO REMOVE user has change his state between the last time he listening to ride
+				if (userType === candidateType)
+					return;
+				var target = (rideInfo.status === "proposed_by_taxi") ? rideInfo.customer : rideInfo.taxi;
+				var source = (rideInfo.status === "proposed_by_taxi") ? rideInfo.taxi : rideInfo.customer;
+				gisController.showPopupRideProposal(source, target, rideProposal);
+			}
+		} else if (rideInfo.status.indexOf('refused_by') !== -1) {
+			gisController.onRideRefused(rideProposal);
+			currentRide = null;
+		} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
+			currentRide = rideProposal;
+			gisController.onRideAccepted(rideProposal);
+		} else if (rideInfo.status.indexOf('completed') !== -1) {
+			currentRide = null;
+			gisController.onRideEnded(rideInfo);
+		}
+	}
+```
+
+## Propose a Ride
+
+
+```javascript
+publishRideProposal: function(candidateId) {
+	var
+		rideProposal = {},
+		myUserType = userController.getUserType();
+
+	rideProposal.customer = myUserType === 'taxi' ? candidateId : userController.getUserId();
+	rideProposal.taxi = myUserType === 'customer' ? candidateId : userController.getUserId();
+	rideProposal.status = 'proposed_by_' + myUserType;
+	rideProposal.position = gisController.getUserPosition();
+
+	if (currentRide) {
+		this.declineRideProposal(currentRide);
+	}
+
+	kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, function(error, response) {
+		if (error) {
+			console.error(error);
+			return false;
+		}
+		currentRide = response.result;
+	});
+	}
+```
+
+
+### Accept a Ride porposal
+
+```javascript
+
+		acceptRideProposal: function(rideProposal) {
+			var
+				myUserType = userController.getUserType(),
+				acceptedRide = {
+					_id: rideProposal._id,
+					status: 'accepted_by_' + myUserType
+				},
+				// All rides, except this one, proposed by others and involving me
+				listProposal = {
+					filter: {
+						and: [{
+							term: {
+								status: 'proposed_by_' + (myUserType === 'taxi' ? 'customer' : 'taxi')
+							}
+						}, {
+							not: {
+								ids: {
+									values: [rideProposal._id]
+								}
+							}
+						}]
+					}
+				},
+				userSubFilter = {
+					term: {}
+				};
+
+			userSubFilter.term[myUserType] = userController.getUserId();
+			listProposal.filter.and.push(userSubFilter);
+
+			userController.setAvailable(false);
+			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
+			currentRide = rideProposal;
+			gisController.onRideAccepted(currentRide);
+
+			/*
+			At this point, we have 1 accepted ride proposal, and possibly multiple
+			ride proposed in the meantime.
+			So here we list these potential proposals and gracefully decline these
+			 */
+			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(error, searchResult) {
+				if (error) {
+					console.log(error);
+					return false;
+				}
+
+				searchResult.hits.hits.forEach(function(element) {
+					// element is not a ride document, but it contains the _id element we need to decline the ride
+					kuzzleController.declineRideProposal(element);
+				});
+			});
+		}
+```
+
+
+### Decline or Finish a Ride
+
+
+```javascript
+
+	declineRideProposal: function(rideProposal) {
+		var declinedRide = {
+			_id: rideProposal._id,
+			status: 'refused_by_' + userController.getUserType()
+		};
+
+		kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
+	},
+
+	finishRide: function() {
+		if (!currentRide) {
+			console.log("no curent ride");
+			return;
+		}
+
+		var finishedRide = {
+			_id: currentRide._id,
+			status: 'completed'
+		};
+
+		userController.setAvailable(true);
+		kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
+	}
+```
