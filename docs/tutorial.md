@@ -66,7 +66,7 @@ Here, this is the customer who propose the ride, but it can be the taxi.
 # The three controllers 
 
 
-The entry point for Cabble is [app.js](../src/apps.js).
+The entry point for Cabble is [app.js](../src/app.js).
 This file can be resume to the following snippet with Promise :
 
 ```javascript
@@ -77,21 +77,21 @@ This file can be resume to the following snippet with Promise :
 
 Corresponding to  :
 
-  * `gisController` (gis for Geolocalisation Information System) is devoted to details about map rendering and manipulating markers.
-Cabble use [Leafletjs](http://leafletjs.com/) for rendering. Cabble also use webAPI geolocalisation functionality.
-  * `userController` allow to deal with localstorage as a persistance user information data).
-  * `kuzzleController` is devoted to all the PubSub (Publication Subscription) with Kuzzle.
+  * [`gisController`](../src/gisController.js) (gis is for Geolocalisation Information System) is devoted to map rendering and manipulating markers.
+Cabble use [Leafletjs](http://leafletjs.com/) for rendering. gisController also use webAPI geolocalisation functionality.
+After the `gisController.init` call, the user is geolocalised, and visible on the center of the newly rendered map with [Leafletjs](http://leafletjs.com/),
+  * [`userController`](../src/userController.js) allow to deal with localstorage as a persistance user information data.
+  After the `userController.init`, if a previous user exist in storage, his id and type are loaded,
+  * [`kuzzleController`](../src/kuzzleController.js) is devoted to all the PubSub (Publication Subscription) with Kuzzle.
+  After the `kuzzleController.init`, connection to Kuzzle for pubsub positions, user status, and rides are enabled.
 
 
-* init the `gisController` : the user will be geolocalised, and visible on the center of the newly rendered map with [Leafletjs](http://leafletjs.com/),
-* init the `userController` : if previous user store is "session" in [Leafletjs](http://leafletjs.com/) we load them,
-* init the `kuzzleController` : connection to Kuzzle for pubsub positions, user status, and rides.
 
-We will focus on kuzzleController. When some call will be done to the two other controllers (gisController and userController) we will explain brievely their meaning if no self explanatory.
+We will focus on [`kuzzleController`](../src/kuzzleController.js). When some call will be done to the two other controllers (gisController and userController) we will explain brievely their meaning if ir is not self explanatory.
 
-# The three rooms
+# The three collections in [`kuzzleController`](../src/kuzzleController.js)
 
-Cabble deal with three rooms :
+Cabble deal with three collections :
 
 ```javascript
 	CABBLE_COLLECTION_POSITIONS = 'cabble-positions',
@@ -112,8 +112,10 @@ The init for kuzzleController is :
 			return new Promise(
 				function(resolve, reject) {
 					var user = userController.getUser();
-					//this is the first time user is connected to Kuzzle so Cabble ask an id user to Kuzzle
+					//this is the first time user is connected to Kuzzle,
+					//Cabble ask an id user to Kuzzle
 					if (!user.userId) {
+						//createUser set the new id send from Kuzzle to user.
 						kuzzleController.createUser(user, function() {
 							kuzzleController.initPubSub();
 							resolve();
@@ -146,11 +148,15 @@ Then Cabble init the publication subscriptions via initPubSub for the three coll
 		kuzzleController.subscribeToRides();
 	},
 ```
+The three following sections will describe : 
 
+ * the positions pub sub, 
+ * the user pub sub, 
+ * the ride pub sub, 
 
 ## Positions management
-Positions collection allow to update the current position of the taxi and customer for all users.
-Cabble also use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box.
+Positions collection allow to update the current position of the taxi and customer (publishPositions).
+Cabble also use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box (subscribeToPositions).
 
 ### publishPositions
 
@@ -189,8 +195,8 @@ To keep it simple Cabble will send position every 3000 milliseconds :
 	}
 ```
 
-Here Cabble get information about user id and type from `userController` , current positions from `gisController.geoLoc` and send 
-it as a document with `kuzzle.create`. This document will be not persisted in Kuzzle (i.e last argument of create is `false`).
+Cabble get information about user id and type from `userController` , current positions from `gisController.geoLoc` and send 
+it as a document with `kuzzle.create`. This document will be not persisted in Kuzzle (i.e last argument of `kuzzle.create` is `false`).
 
 The `roomName` attribute is not important for the positions listening purpose. It is related to the user state change listening, and will be explain 
 in the user management section.
@@ -208,10 +214,10 @@ Cabble has to change filtering for positions every time that user :
  * change the viewport size (by changing browser size, by changing his phone orientation, ...)
  * change from state taxi to customer (if user is a customer, he is interesting for taxi and vice versa, marker on map must reflect that).
 
-To keep it simple, we will not listen to all these events but instead force the filtering to be change every 1000 milliseconds.
+To keep it simple, we will not listen to all these events but instead blindly force the filtering to be change every 1000 milliseconds.
 
 ```javascript
-	// and so we must for idempotence purpose
+	// we remove deprecated timer if any first
 	if (refreshFilterTimerSubPosition)
 		clearInterval(refreshFilterTimerSubPosition);
 
@@ -283,19 +289,20 @@ Then Cabble will subscribe for positions change with our current filter.
 
 			if (candidateType === userController.getUserType())
 				return;
-				gisController.addMarker(candidatePosition, candidateType, candidateId);
+			gisController.addMarker(candidatePosition, candidateType, candidateId);
 		}
 	});
 ```
-
-## Users management
-
 
 Like for publishPositions, Cabble track the roomName attribute, but this is unrelated to positions pubSub.
 ```javascript
 	assocRoomToUser[message._source.roomName] = message._source.userId;
 ```
 It will be used for the user management purpose who come next.
+
+
+
+## Users management
 
 
 
