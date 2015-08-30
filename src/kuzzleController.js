@@ -20,7 +20,7 @@ window.kuzzleController = (function() {
 
 		//the room we are susbscribe to currently
 		positionsSubscribeRoom,
-		userSubscribeRoom,
+		userSubscribedRoom,
 
 		//the current ride if 
 		currentRide = null;
@@ -44,11 +44,16 @@ window.kuzzleController = (function() {
 				});
 		},
 		initPubSub: function() {
+
+			//positions collection
 			kuzzleController.publishPositions();
 			kuzzleController.subscribeToPositions();
 
+			//users collection
 			kuzzleController.subscribeToUsers();
 
+
+			//rides collection
 			kuzzleController.subscribeToRides();
 		},
 
@@ -80,7 +85,7 @@ window.kuzzleController = (function() {
 								lat: userPosition.lat,
 								lon: userPosition.lng
 							},
-							roomName: userSubscribeRoom
+							roomName: userSubscribedRoom
 						}, false);
 					});
 				}, 3000);
@@ -94,21 +99,21 @@ window.kuzzleController = (function() {
 				refreshInterval = 1000;
 			}
 
-			//we can change user type anytime and our filter rate must chnage accordingly ()
+			//we can change user type anytime and our filter rate must change accordingly ()
 			//so we keep a ref to the previous timer to remove it.
 			// and so we must for idempotence purpose
 			if (refreshFilterTimerSubPosition)
 				clearInterval(refreshFilterTimerSubPosition);
 
 			refreshFilterTimerSubPosition = setInterval(function() {
-				var
-					bound = gisController.getMapBounds(),
-					user = userController.getUser();
 
 				if (!userController.getUserType())
 					return;
 
-				var filterUserType = userController.getUserType() === 'taxi' ? 'customer' : 'taxi',
+				var
+					bound = gisController.getMapBounds(),
+					user = userController.getUser(),
+					filterUserType = userController.getCandidateType(),
 					filter = {
 						and: [{
 							term: {
@@ -207,11 +212,11 @@ window.kuzzleController = (function() {
 						//type: [userController.getUserType() === "taxi" ? "customer" : "taxi"]
 				}
 			};
-			if (userSubscribeRoom)
-				kuzzle.unsubscribe(userSubscribeRoom);
+			if (userSubscribedRoom)
+				kuzzle.unsubscribe(userSubscribedRoom);
 
 
-			userSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
+			userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;

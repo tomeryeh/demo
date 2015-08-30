@@ -21,7 +21,7 @@ This file can be resume to the following snippet with Promise :
 		.then(kuzzleController.init);
 ```
 
-Corresponding roughly to  :
+Corresponding to  :
 
 * init the `gisController` : the user will be geolocalised, and visible on the center of the newly rendered map with [Leafletjs](http://leafletjs.com/),
 * init the `userController` : if previous user store is "session" in [Leafletjs](http://leafletjs.com/) we load them,
@@ -39,35 +39,185 @@ We deal with three rooms for Cabble :
 	CABBLE_COLLECTION_RIDES = 'cabble-rides';
 ```
 
-
 * `CABBLE_COLLECTION_POSITIONS` will be used to synchronize all the users positions on the map. It will also be used to filter all the user from Cabble to only deal with the candidates fitting the bounding box from our current map view.
 * `CABBLE_COLLECTION_USERS` will be used to send the change in user status (an user can choose to be a taxi first and then become a customer). In order to leave user focus on his goal, we do not show Taxi if the user is a taxi and vice versa. 
 * `CABBLE_COLLECTION_RIDES` will be used to send and update the ride status along it life cicle 
+
+
+
+The init for kuzzleController is : 
+```javascript
+	return {
+		init: function() {
+			return new Promise(
+				function(resolve, reject) {
+					var user = userController.getUser();
+					//this is the first time we use Cabble so we ask an id user to Kuzzle
+					if (!user.userId) {
+						kuzzleController.createUser(user, function() {
+							kuzzleController.initPubSub();
+							resolve();
+						});
+					} else {
+						//user has been found in localstorage from userController
+						kuzzleController.initPubSub();
+						resolve();
+					}
+			});
+	}
+```
+
+We ask Kuzzle to give use an id if we Cabble do not found one in localstorage (see userController for details) .
+Then we init the publication subscriptions via initPubSub for the three collections :
+
+
+```javascript
+	initPubSub: function() {
+
+		//positions collection
+		kuzzleController.publishPositions();
+		kuzzleController.subscribeToPositions();
+
+		//users collection
+		kuzzleController.subscribeToUsers();
+
+
+		//rides collection
+		kuzzleController.subscribeToRides();
+	},
+```
 
 
 ## Positions management
 Positions collection allow to update the current position of the taxi and customer for all users.
 We also use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box.
 
-Thus we have to update position :
--every time geolocalisation from user change
+### publishPositions
 
-To keep it simple, we will update user position every Y time.
+Cabble has to send the positions changes for user in order to synchronize all positions in all other Cabble instance.
+To keep it simple we will send position every 3000 milliseconds : 
+```javascript
+	publishPositions: function() {
+		setInterval(
+			function() {
+				gisController.getGeoLoc().
+				then(gisController.setUserPosition).
+				then(function() {
+					var userPosition = gisController.getUserPosition();
+					var userId = userController.getUserId();
+					var userType = userController.getUserType();
 
-We have to update filtering position:
--every time we zoom into the map,
--every time the user move into the map,
--every time we move the viewport in map (the user change the brwoser side, the user change his phone orientation, ...)
--every time the user change from state taxi to customer (if we are customer, we are interesting for taxi and vice versa, filter must chnage accordingly).
+					if (!userPosition) {
+						console.log("no position for user");
+						return;
+					}
+					if (!userType)
+						return;
 
+					//we send a non perisistant document : our current position
+					kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
+						userId: userId,
+						type: userType,
+						position: {
+							lat: userPosition.lat,
+							lon: userPosition.lng
+						},
+						roomName: userSubscribedRoom
+					}, false);
+				});
+			}, 3000);
+	}
+```
 
-To keep it simple, we will not listen to all these events and intead force the filtering to be change every X time.
+Here we get information about user id and type from `userController`, current positions from `gisController.geoLoc` and send 
+it as a document with `kuzzle.create`. This document will be not persisted in Kuzzle (i.e last argument of create is `false`).
 
-and filtering 
+The `roomName` attribute is not important for the positions listening purpose. It is related to the user state change listening, and will be explain 
+in the user management section.
 
 ### subscribeToPositions
 
-### publishPositions
+Cabble must propose to the user some "candidates" for a ride in the curent map bounding box.
+
+By candidates, we mean taxis if the current user is a customer and vice versa.
+
+Before describing the susbcribing procedure, let enumerate all the events that can change this filetering.
+Cabble has to change filtering for positions every time that user :
+
+ * zoom into the map,
+ * move into the map,
+ * change the viewport size (by changing browser size, by changing his phone orientation, ...)
+ * change from state taxi to customer (if we are customer, we are interesting for taxi and vice versa, filter must chnage accordingly).
+
+To keep it simple, we will not listen to all these events but instead force the filtering to be change every 1000 milliseconds.
+
+```javascript
+	// and so we must for idempotence purpose
+	if (refreshFilterTimerSubPosition)
+		clearInterval(refreshFilterTimerSubPosition);
+
+	refreshFilterTimerSubPosition = setInterval(function() {
+		//subscribe for candidates in bounding box for the current user type here.
+		...
+	}, 1000);
+```
+
+
+The subscribe filter for bounding box for the current use type is computed as follow :
+
+```javascript
+	var
+		bound = gisController.getMapBounds(),
+		user = userController.getUser(),
+		filterUserType = userController.getCandidateType(),
+		filter = {
+			and: [{
+			term: {
+				type: filterUserType
+				}
+			}, {
+				geoBoundingBox: {
+				position: {
+					top_left: {
+						lat: bound.neCorner.lat,
+						lon: bound.swCorner.lng
+					},
+					bottom_right: {
+						lat: bound.swCorner.lat,
+						lon: bound.neCorner.lng
+						}
+					}
+				}
+			}]
+		};
+```
+
+
+Then we will subscribe to positions with our current filter.
+
+```javascript
+	if (positionsSubscribeRoom) {
+		kuzzle.unsubscribe(positionsSubscribeRoom);
+	}
+
+	positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
+		if (error) {
+			console.error(error);
+			return;
+		}
+
+		if (message.action == "create") {
+			assocRoomToUser[message._source.roomName] = message._source.userId;
+			var candidatePosition = message._source.position;
+			var candidateType = message._source.type;
+			var candidateId = message._source.userId;
+
+			if (candidateType === userController.getUserType())
+				return;
+				gisController.addMarker(candidatePosition, candidateType, candidateId);
+		}
+	});
+```
 
 ## Users management
 
