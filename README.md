@@ -12,12 +12,12 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 
 <figure>
   <img src="./docs/cabble-sketch.png"  width="400" >
-  <figcaption style="width:300px;" >A customer ask a taxi for a ride from a Cabble instance.</figcaption>  
+  <figcaption style="width:300px;" >A customer ask a taxi for a ride.</figcaption>  
 </figure>
 
 <figure>
   <img src="./docs/cabble-sketch2.png"  width="400" >
-   <figcaption style="width:300px;" >On his own Cabble, the taxi see the customer and the ride proposal. He can accept or decline it.</figcaption>  
+   <figcaption style="width:300px;" >The taxi see in realtime the ride proposal. He can accept or decline it. </figcaption>  
 </figure>
 
 
@@ -30,7 +30,7 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 
 <figure >
 	<img src="./assets/img/customeranimated.gif" width="40" >
-	<figcaption >The same customer asking a ride.</figcaption>
+	<figcaption >A customer asking for a ride.</figcaption>
 </figure>
 
 <figure>
@@ -39,13 +39,12 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 </figure>
 <figure>
 	<img src="./assets/img/taxianimated.gif"  width="40" >
-	<figcaption >The same customer asking a ride.</figcaption>
+	<figcaption >A taxi proposing a ride.</figcaption>
 </figure>
-
 
 <figure>
 	<img src="./assets/img/unknown.jpg" width="40" >
-	<figcaption>The user has not choose betweeen ask some customers or ask a taxi.</figcaption>
+	<figcaption>The user has not choose betweeen beeing a customer or beeing a taxi.</figcaption>
 </figure>
 
 
@@ -70,19 +69,9 @@ Now, you can try to use the todolist at http://localhost
 ## How to run this demo without docker
 
 * You need to have a running [Kuzzle](https://github.com/kuzzleio/kuzzle).
-* Configure the `script.js` file for change the Kuzzle URL if you have changed the default Kuzzle installation
+* Configure the `config.js` file for change the Kuzzle URL if you have changed the default Kuzzle installation
 * You can directly open the `index.html` file in your browser.
  
-**Note:**
-
-In order to avoid problem with Cross-Origin by opening the file directly in your browser, you can also use nginx. With docker, you can use something like
-
-    $ docker run -d -p 80:80 -v $(pwd)/todolist/:/usr/share/nginx/html nginx
-    
-And access to the URL http://localhost
-
-
-
 
 # The three Authors
 

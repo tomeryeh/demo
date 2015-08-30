@@ -27,6 +27,10 @@ app.use("/css/", function(req, res, next) {
 	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
 
+app.use("/config.js", function(req, res, next) {
+	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
+});
+
 app.use("/livereload.js", function(req, res, next) {
 	res.sendFile(appsDir + req.client._httpMessage.req.originalUrl);
 });
