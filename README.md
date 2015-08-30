@@ -9,45 +9,15 @@ Cabble eases customers life as well: they can now hail a taxi with their fingert
 
 Stay tuned! Upcoming versions of Cabble will also include social functionalities like the possibility for customers to rate their taxis, to comment their ride, to share their trip to their favorite social network, and more!
 
-
+<span>
 <figure>
   <img src="./docs/cabble-sketch.png"  width="400" >
-  <figcaption style="width:300px;" >A customer ask a taxi for a ride.</figcaption>  
+  <figcaption style="width:300px;" >Cabble overview : A customer ask a taxi for a ride.</figcaption>  
 </figure>
-
-<figure>
-  <img src="./docs/cabble-sketch2.png"  width="400" >
-   <figcaption style="width:300px;" >The taxi see in realtime the ride proposal. He can accept or decline it. </figcaption>  
-</figure>
+</span>
 
 
-#Iconography
-
-<figure>
-	<img src="./assets/img/customer.png" width="40" >
-	<figcaption>The icon for the customer.</figcaption>
-</figure>
-
-<figure >
-	<img src="./assets/img/customeranimated.gif" width="40" >
-	<figcaption >A customer asking for a ride.</figcaption>
-</figure>
-
-<figure>
-	<img src="./assets/img/taxi.jpg"  width="40" >
-	<figcaption >The icon for the customer.</figcaption>
-</figure>
-<figure>
-	<img src="./assets/img/taxianimated.gif"  width="40" >
-	<figcaption >A taxi proposing a ride.</figcaption>
-</figure>
-
-<figure>
-	<img src="./assets/img/unknown.jpg" width="40" >
-	<figcaption>The user has not choose betweeen beeing a customer or beeing a taxi.</figcaption>
-</figure>
-
-
+A brief overview of Cabble and a step-by-step tutorial can be found [here](./docs/tutorial.md).
 
 #How to install Cabble
 

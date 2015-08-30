@@ -4,15 +4,69 @@ This demo will show you how to use the geolocalisation filtering fro Kuzzle.
 It will also show you quite complex process to 
 
 
+
+#Sketchup User interface Cabble in three screens.
+
+
+This is the basic process in three sceens Cabble rely on.
+Here, this is the customer who propose the ride, but it can be the taxi.
+
+<span>
+	<figure>
+		<img src="./cabble-sketch.png"  width="400" >
+		<figcaption style="width:300px;" >Step 1 : a customer ask a taxi for a ride.</figcaption>  
+	</figure>
+</span>
+
+<span>
+	<figure>
+		<img src="./cabble-sketch2.png"  width="400" >
+		<figcaption style="width:300px;" >Step 2  :The taxi see in realtime the ride proposal. He can accept or decline it. </figcaption>  
+	</figure>
+</span>
+
+
+<span>
+	<figure>
+		<img src="./cabble-sketch3.png"  width="400" >
+		<figcaption style="width:300px;" >Step 3 : The ride has been accepted by the taxi. A blue button in bottom right position appears for both taxi and customer screen. 
+		They can end the riden at anytime, and (in a futur version) give an evaluation to the ride. </figcaption>  
+	</figure>
+</span>
+
+
+## Iconography
+
+<figure>
+	<img src="../assets/img/customer.png" width="40" >
+	<figcaption>The icon for the customer.</figcaption>
+</figure>
+
+<figure >
+	<img src="../assets/img/customeranimated.gif" width="40" >
+	<figcaption >A customer asking for a ride.</figcaption>
+</figure>
+
+<figure>
+	<img src="../assets/img/taxi.jpg"  width="40" >
+	<figcaption >The icon for the customer.</figcaption>
+</figure>
+<figure>
+	<img src="../assets/img/taxianimated.gif"  width="40" >
+	<figcaption >A taxi proposing a ride.</figcaption>
+</figure>
+
+<figure>
+	<img src="../assets/img/unknown.jpg" width="40" >
+	<figcaption>The user has not choose ye betweeen a customer or beeing a taxi.</figcaption>
+</figure>
+
+
+
 # The three controllers 
 
-  * `gisController` (gis for Geolocalisation Information System) is devoted to details about map rendering and manipulating markers.
-Cabble use [Leafletjs](http://leafletjs.com/) for rendering. Cabble also use webAPI geolocalisation functionality.
-  * `userController` allow to deal with localstorage as a persistance user information data).
-  * `kuzzleController` is devoted to all the PubSub (Publication Subscription) with Kuzzle.
 
-
-Then we have our entrypoint in app.js.
+The entry point for Cabble is [app.js](../src/apps.js).
 This file can be resume to the following snippet with Promise :
 
 ```javascript
@@ -22,6 +76,12 @@ This file can be resume to the following snippet with Promise :
 ```
 
 Corresponding to  :
+
+  * `gisController` (gis for Geolocalisation Information System) is devoted to details about map rendering and manipulating markers.
+Cabble use [Leafletjs](http://leafletjs.com/) for rendering. Cabble also use webAPI geolocalisation functionality.
+  * `userController` allow to deal with localstorage as a persistance user information data).
+  * `kuzzleController` is devoted to all the PubSub (Publication Subscription) with Kuzzle.
+
 
 * init the `gisController` : the user will be geolocalised, and visible on the center of the newly rendered map with [Leafletjs](http://leafletjs.com/),
 * init the `userController` : if previous user store is "session" in [Leafletjs](http://leafletjs.com/) we load them,
