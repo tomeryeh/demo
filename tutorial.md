@@ -245,23 +245,23 @@ It will be used for the user management purpose who come next.
 Every time the user choose to change between taxi and customer type, Cabble must update the user in localstorage (`userController`) and the view (`gisController`). Then Cabble send this information to Kuzzle (and so to all the others Cabble users as in subscribeToUsers).
 
 ```javascript
-publishUserType: function(userType) {
-			if (!userType)
-				return;
+	publishUserType: function(userType) {
+		if (!userType)
+		return;
 
-			userController.setUserType(userType).then(function() {
-				gisController.setUserType(userType);
-				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
-					function(error, response) {
-						if (error) {
-							console.log(error);
-							return;
-						}
-						kuzzleController.subscribeToUsers();
-						kuzzleController.subscribeToPositions();
-					});
-			});
-		},
+		userController.setUserType(userType).then(function() {
+			gisController.setUserType(userType);
+			kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
+				function(error, response) {
+					if (error) {
+						console.log(error);
+						return;
+					}
+					kuzzleController.subscribeToUsers();
+					kuzzleController.subscribeToPositions();
+				});
+		});
+	}
 ```
 
 
