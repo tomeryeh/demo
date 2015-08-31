@@ -11,13 +11,17 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 
 <span>
 <figure>
+<a href="./docs/cabble-sketch.png" >
   <img src="./docs/cabble-sketch.png"  width="400" >
+  </a >
   <figcaption style="width:300px;" >Cabble overview : A customer ask a taxi for a ride.</figcaption>  
 </figure>
 </span>
 
 
-A brief overview of Cabble and a step-by-step tutorial can be found [here](./docs/tutorial.md).
+A brief overview  of Cabble can be found [here](./docs/overview.md).
+
+A step-by-step tutorial can be found [here](./docs/tutorial.md).
 
 #How to install Cabble
 
