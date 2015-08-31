@@ -28,8 +28,8 @@ Basically in Cabble, an user need to know all the others users in a boundbox aro
 
 This requirement is done by using the geolocalisation filtering from Kuzzle.
 
-This, and all the publications and subscriptions used by Kuzzle will be described in the
- step-by-step tutorial [here](./docs/tutorial.md).
+All the publications and subscriptions used by Kuzzle will be described in the
+ step-by-step tutorial [here](./docs/tutorial.md) the geolocalisation filtering will be shown in the section [here](./docs/tutorial.md#user_subscription)
 
 #How to install Cabble
 

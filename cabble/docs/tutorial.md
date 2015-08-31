@@ -147,34 +147,15 @@ A `roomName` attribute is send withing the userId.
 
  This `userSubRoomName` attribute is not important for the positions listening purpose. It is closely related to the user state change listening who come next in the [Users management section](#user_subscription).
 
-### Subscribe To Positions changing
+### <a name="sub_to_pos" ></a> Subscribe To Positions changing
 
 Cabble must propose to the user some "candidates" for a ride in the curent map bounding box.
 
 By candidates, we mean taxis if the current user is a customer and vice versa.
 
-Before describing the susbcribing procedure, let enumerate all the events that can change this filetering.
-Cabble has to change filtering for positions every time that user :
-
- * zoom or move into the map,
- * change the viewport size (by changing browser size, by changing his phone orientation, ...)
- * change from state taxi to customer (if user is a customer, he is interesting for taxi and vice versa, marker on map must reflect that).
-
-To keep it simple, we will not listen to all these events but instead blindly force the filtering to be change every 1000 milliseconds.
-
-```javascript
-	// we remove deprecated timer if any first
-	if (refreshFilterTimerSubPosition)
-		clearInterval(refreshFilterTimerSubPosition);
-
-	refreshFilterTimerSubPosition = setInterval(function() {
-		//subscribe for candidates in bounding box for the current user type here.
-		...
-	}, 1000);
-```
 
 
-The subscribe filter for bounding box with the current use type is computed as follow :
+The subscribe filter for bounding box with the current use type is computed as follow in subscribeToPositions:
 
 ```javascript
 	var
@@ -215,10 +196,31 @@ To do so Cabble keep the id of the last subscribe and cancel it if exist :
 	//adding a new subscribe :
 	positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter,
 		....
-
 ```
 
-Then Cabble will subscribe for positions change with our current filter.
+
+
+In fact there are plenty of cases where we have to change the bounding box of interest :
+
+ * zoom or pan into the map,
+ * change the viewport size (by changing browser size, by changing the phone orientation, ...)
+ * change from state taxi to customer (if user is a customer, he is interesting for taxi and vice versa, marker on map must reflect that).
+
+To keep it simple, we will NOT listen to all these events but instead blindly force the filtering to be change every 1000 milliseconds : 
+
+```javascript
+	// we remove deprecated timer if any first
+	if (refreshFilterTimerSubPosition)
+		clearInterval(refreshFilterTimerSubPosition);
+
+	refreshFilterTimerSubPosition = setInterval(function() {
+		//subscribe for candidates in bounding box for the current user type here.
+		
+		...
+	}, 1000);
+```
+
+When Cabbel recive a positions change with our current filter, we add a marker on gis 
 
 ```javascript
 	function(error, message) {
