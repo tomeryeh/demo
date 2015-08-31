@@ -85,7 +85,7 @@ window.kuzzleController = (function() {
 								lat: userPosition.lat,
 								lon: userPosition.lng
 							},
-							roomName: userSubRoomName
+							userSubRoomName: userSubRoomName
 						}, false);
 					});
 				}, 3000);
@@ -154,14 +154,17 @@ window.kuzzleController = (function() {
 					}
 
 					if (message.action == "create") {
-						assocRoomToUser[message._source.roomName] = message._source.userId;
 						var candidatePosition = message._source.position;
-						var candidateType = message._source.type;
-						var candidateId = message._source.userId;
+						if(!gisController.isTooFarAway([candidatePosition.lat,candidatePosition.lon])){
+							var candidateType = message._source.type;
+							var candidateId = message._source.userId;
 
-						if (candidateType === userController.getUserType())
-							return;
-						gisController.addMarker(candidatePosition, candidateType, candidateId);
+							assocRoomToUser[message._source.userSubRoomName] = message._source.userId;
+
+							if (candidateType === userController.getUserType())
+								return;
+							gisController.addMarker(candidatePosition, candidateType, candidateId);
+						}
 					}
 				});
 			}, refreshInterval);
@@ -185,15 +188,11 @@ window.kuzzleController = (function() {
 		},
 
 		publishUserType: function(userType) {
-			console.log("puslibi suer " + userType);
 			if (!userType)
 				return;
 
 			userController.setUserType(userType).then(function() {
-
 				gisController.onUserChangeType();
-
-				console.log("send new user type to kuzzle " + userType);
 				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
 					function(error, response) {
 						if (error) {
@@ -229,18 +228,16 @@ window.kuzzleController = (function() {
 				if (!message || message.action != "off")
 					return;
 
-
-
 				//if this user was not on our map nothing to do
-				var userWithSameStatus = assocRoomToUser[message.roomName];
-				if (!userWithSameStatus)
+				var userId = assocRoomToUser[message.roomName];
+				if (!userId)
 					return;
-				//else we remove it from the map
-				gisController.removeCandidate(userWithSameStatus);
+				//else we remove it from the map.
+				gisController.removeCandidate(userId);
 				//if we where also in a ride with this candidate, we must end it.
 				if (currentRide &&
-					(currentRide._source.taxi === userWithSameStatus 
-						|| currentRide._source.customer === userWithSameStatus)) {
+					(currentRide._source.taxi === userId 
+						|| currentRide._source.customer === userId)) {
 					kuzzleController.finishRide();
 				}
 			});
@@ -276,11 +273,16 @@ window.kuzzleController = (function() {
 			rideFilter.term[userType] = userController.getUserId();
 			filter.and = [rideFilter, statusFilter];
 
+			console.log("filtering ");
+			console.log(filter);
+
 			kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;
 				}
+				console.log("recive a message");
+				console.log(message);
 				kuzzleController.manageRideProposal(message);
 			});
 		},
@@ -416,6 +418,20 @@ window.kuzzleController = (function() {
 			});
 		},
 
+		declineCurrentRideProposal: function(candidateId){
+			console.log("descline ride proposale from " + userController.getUserId() + "  and  " + candidateId) ;
+			var
+				rideProposal = {},
+				myUserType = userController.getUserType();
+
+			rideProposal.customer = myUserType === 'taxi' ? candidateId : userController.getUserId();
+			rideProposal.taxi = myUserType === 'customer' ? candidateId : userController.getUserId();
+			rideProposal.status = 'proposed_by_' + myUserType;
+			rideProposal.position = gisController.getUserPosition();
+
+			kuzzle.update(CABBLE_COLLECTION_RIDES, rideProposal);
+		},
+
 		/**
 		 * declines a ride proposal
 		 *
@@ -425,6 +441,7 @@ window.kuzzleController = (function() {
 				_id: rideProposal._id,
 				status: 'refused_by_' + userController.getUserType()
 			};
+
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
 		},

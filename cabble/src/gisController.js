@@ -17,6 +17,9 @@ window.gisController = (function() {
 	var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 	var assocIdToOtherItemsMark = {};
 
+	//max distance is 20000 kilometers
+	var maxDisanteOfinterest = 20000;
+
 	var candidatesLayer = L.layerGroup([]);
 	var currentRideLayer = L.layerGroup([]);
 	var currentRideMarker = null; //the candidate choosen for the ride
@@ -146,9 +149,14 @@ window.gisController = (function() {
 				controlUI.setAttribute("class", "info_button");
 				controlUI.innerHTML = text;
 				controlUI.title = text;
-				controlUI.href = '#';
-				return controlDiv;
-			}
+
+				var loader = document.createElement("img");
+				loader.setAttribute("class", "loader");
+				loader.src = "/assets/img/loading.gif";
+				controlUI.appendChild(loader);
+					controlUI.href = '#';
+					return controlDiv;
+				}
 		});
 		rideControl = new L.Control.RideControl();
 	}
@@ -283,7 +291,7 @@ window.gisController = (function() {
 		return answerPopupRide;
 	}
 
-	function proposeARidePopup(type, id) {
+	function proposeARidePopup(type, candidateId) {
 		var popupProposeRide = null;
 
 		var proposeCabbleButton = document.createElement("button");
@@ -301,7 +309,7 @@ window.gisController = (function() {
 			loader.src = "/assets/img/loading.gif";
 			proposeCabbleButton.appendChild(loader);
 			proposeCabbleButton.disabled = true;
-			kuzzleController.publishRideProposal(id);
+			kuzzleController.publishRideProposal(candidateId);
 		});
 		footer.appendChild(proposeCabbleButton);
 
@@ -309,10 +317,12 @@ window.gisController = (function() {
 		cancelCabbleButton.setAttribute("class", "cancel_button");
 		cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
 		cancelCabbleButton.addEventListener("click", function() {
+			kuzzleController.declineCurrentRideProposal(candidateId);
 			if (loader) {
 				loader.remove();
 			}
 			proposeCabbleButton.disabled = false;
+
 			map.closePopup(popupProposeRide);
 		});
 
@@ -364,6 +374,11 @@ window.gisController = (function() {
 				otherItemsMark.push(marker);
 				return marker;
 			}
+		},
+		isTooFarAway: function(position){
+			if(!position)
+				return false;
+			return userMarker.getLatLng().distanceTo(L.latLng(position[0], position[1])) > maxDisanteOfinterest;
 		},
 		getGeoLoc: function() {
 			return new Promise(
