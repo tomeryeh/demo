@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+    <!--<script type="text/javascript" src="js/phaser.min.js"></script>-->
+    <script src="https://cdn.socket.io/socket.io-1.3.4.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
+    <script type="text/javascript" src="js/kuzzle.min.js"></script>
+    <script type="text/javascript" src="js/phaser.js"></script>
+    <script type="text/javascript" src="js/boot.js"></script>
+    <script type="text/javascript" src="js/preload.js"></script>
+    <script type="text/javascript" src="js/gametitle.js"></script>
+    <script type="text/javascript" src="js/kuzzle-game.js"></script>
+    <script type="text/javascript" src="js/game-over.js"></script>
+    <script type="text/javascript" src="js/how-to-play.js"></script>
+    <script type="text/javascript" src="js/classes/background.js"></script>
+    <script type="text/javascript" src="js/classes/level.js"></script>
+    <script type="text/javascript" src="js/classes/difficulty.js"></script>
+    <script type="text/javascript" src="js/classes/music.js"></script>
+    <script type="text/javascript" src="js/classes/music-manager.js"></script>
+    <script type="text/javascript" src="js/classes/player.js"></script>
+    <script type="text/javascript" src="js/classes/arrow.js"></script>
+    <script type="text/javascript" src="js/classes/kuzzle-manager.js"></script>
+    <script type="text/javascript" src="js/classes/soundeffect.js"></script>
+    <script type="text/javascript" src="js/classes/keyboard.js"></script>
+    <script type="text/javascript" src="js/classes/hit-zone.js"></script>
+    <script type="text/javascript" src="js/classes/spell.js"></script>
+    <script type="text/javascript" src="js/classes/text.js"></script>
+    <script type="text/javascript" src="js/classes/scorebar.js"></script>
+
+</head>
+
+<body>
+    <script type="text/javascript">
+        var game;
+        var arrowHero = function (w, h) {
+            var height = h || $(window).height();
+            var width = w || $(window).width();
+                
+            game = new Phaser.Game(width, height, Phaser.AUTO, 'kuzzle-game');
+
+            game.state.add('boot', boot);
+            game.state.add('preload', preload);
+            game.state.add('gametitle', GameTitle);
+            game.state.add('howtoplay', HowToPlay);
+            game.state.add('kuzzlegame', KuzzleGame);
+            game.state.add('gameover', GameOver);
+
+            game.state.start('boot');
+        };
+
+        $(window).load(function() {
+            $('body').css({
+                'padding': 0,
+                'margin':0
+            });
+            arrowHero();
+            $(window).on('resize', function() {
+                location.reload();
+            });
+        });
+    </script>
+</body>
+</html>
