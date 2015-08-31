@@ -71,7 +71,6 @@ window.gisController = (function() {
 	}
 
 	function createUserMarker(position) {
-
 		return new Promise(
 			function(resolve, reject) {
 				var userType = userController.getUserType();
@@ -96,9 +95,6 @@ window.gisController = (function() {
 
 				var tileURL = 'http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png';
 				//'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ'
-
-				candidatesLayer = L.layerGroup([]);
-				currentRideLayer = L.layerGroup([]);
 
 				map = L.map('map-canvas', {
 					layers: [candidatesLayer]
@@ -284,7 +280,6 @@ window.gisController = (function() {
 
 		answerPopupRide = L.popup().setContent(contentPopup);
 		answerPopupRide.options.minWidth = 500;
-
 		return answerPopupRide;
 	}
 
@@ -365,12 +360,6 @@ window.gisController = (function() {
 					marker.openPopup();
 				});
 
-				//we must choose between adding popup and thumble element.
-				//adding popup
-				//marker.openPopup();
-
-				//thumble element.
-
 				assocIdToOtherItemsMark[id] = marker;
 				otherItemsMark.push(marker);
 				return marker;
@@ -400,14 +389,6 @@ window.gisController = (function() {
 
 			candidatesLayer.removeLayer(marker);
 			currentRideLayer.removeLayer(marker);
-			/*
-			if (currentRideMarker == marker) {
-				currentRideLayer.removeLayer(marker);
-				currentRideMarker = null;
-			} else {
-				
-			}
-			*/
 
 			var indiceMarker = otherItemsMark.indexOf(marker);
 			if (indiceMarker >= 0) {
@@ -425,7 +406,8 @@ window.gisController = (function() {
 		getUserPosition: function() {
 			return userMarker.getLatLng();
 		},
-		setUserType: function(type) {
+		onUserChangeType: function() {
+			var type = userController.getUserType();
 			userMarker.setIcon(getIcon(type));
 			userPopup.getContent().querySelector(".chooseTaxi").disabled = (type === "taxi");
 			userPopup.getContent().querySelector(".chooseCustomer").disabled = (type === "customer");
@@ -552,12 +534,13 @@ window.gisController = (function() {
 			rideControl = null;
 
 		},
-		showPopupRideProposal: function(sourceId, targetId, rideProposal) {
+		onRideProposal: function(sourceId, targetId, rideProposal) {
 
 			var markerSource = assocIdToOtherItemsMark[sourceId];
 			var userType = userController.getUserType();
 
-			//the source from ride is not know from GIS (not visible in current map or his position are not alread sended
+			//the source from ride is not know from GIS (not visible in current 
+			//map or his position are not alread sended
 			if (!markerSource) {
 
 				var markerType = userController.getCandidateType();
@@ -582,7 +565,6 @@ window.gisController = (function() {
 			var popupProposeRide = answerToRidePopup(sourceId, targetId, rideProposal);
 			markerSource
 				.bindPopup(popupProposeRide);
-			//.openPopup();
 		}
 	};
 

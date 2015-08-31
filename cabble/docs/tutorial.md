@@ -31,7 +31,7 @@ After the `gisController.init` call, the user is geolocalised, and visible on th
 
 We will focus on [`kuzzleController`](../src/kuzzleController.js). When some call will be done to the two other controllers (gisController and userController) we will explain brievely their meaning if ir is not self explanatory.
 
-# The three collections in [`kuzzleController`](../src/kuzzleController.js)
+# The three collections in kuzzleController
 
 Cabble deal with three collections :
 
@@ -92,15 +92,15 @@ Then Cabble init the publication subscriptions via initPubSub for the three coll
 ```
 The three following sections will describe : 
 
- * the positions pub sub, 
- * the user pub sub, 
- * the ride pub sub, 
+ * the positions pub sub,
+ * the user pub sub,
+ * the ride pub sub.
 
 ## Positions management
 Positions collection allow to update the current position of the taxi and customer (publishPositions).
 Cabble also use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box (subscribeToPositions).
 
-### publishPositions
+### publish positions changing
 
 Cabble has to send the positions changes for user in order to synchronize all positions in all other Cabble instance.
 To keep it simple Cabble will send position every 3000 milliseconds : 
@@ -143,7 +143,7 @@ it as a document with `kuzzle.create`. This document will be not persisted in Ku
 The `roomName` attribute is not important for the positions listening purpose. It is related to the user state change listening, and will be explain 
 in the user management section.
 
-### subscribeToPositions
+### Subscribe To Positions changing
 
 Cabble must propose to the user some "candidates" for a ride in the curent map bounding box.
 
@@ -246,10 +246,10 @@ It will be used for the user management purpose who come next.
 
 ## Users management
 
+The User management refer to linstening changing of user type.
 
 
-
-### publishUsers
+### Publish an user change
 
 Every time the user choose to change between taxi and customer type, Cabble must update the user in localstorage (`userController`) and the view (`gisController`). Then Cabble send this information to Kuzzle (and so to all the others Cabble users as in subscribeToUsers).
 
@@ -259,7 +259,7 @@ Every time the user choose to change between taxi and customer type, Cabble must
 		return;
 
 		userController.setUserType(userType).then(function() {
-			gisController.setUserType(userType);
+			gisController.onUserChangeType();
 			kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
 				function(error, response) {
 					if (error) {
@@ -273,8 +273,13 @@ Every time the user choose to change between taxi and customer type, Cabble must
 	}
 ```
 
+We first set in localstorage the new userType with `userController.setUserType`.
+Then with `onUserChangeType` Cabble will update the user icon in GIS.
+It will also remove all the candidates because they now mismatch the user type of interest.
+Finally we re-add the `subscribeToUsers` and `subscribeToPositions` because we must change theirs filtering accordinly to the new user type.
 
-### subscribeToUsers
+
+### Subscribe to users change
 
 
 ```javascript
@@ -289,7 +294,6 @@ Every time the user choose to change between taxi and customer type, Cabble must
 		if (userSubscribedRoom)
 			kuzzle.unsubscribe(userSubscribedRoom);
 
-
 		userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, 
 						userStatus, function(error, message) {
 			if (error) {
@@ -297,7 +301,8 @@ Every time the user choose to change between taxi and customer type, Cabble must
 				return false;
 			}
 
-			//we are instersting to unscribe i.e user change status interest
+			//we are interesting in user unscribe i.e user not 
+			//subscribing to the 'type' field
 			if (!message || message.action != "off")
 				return;
 
@@ -316,12 +321,20 @@ Every time the user choose to change between taxi and customer type, Cabble must
 	}
 ```
 
+`userSubscribedRoom` is keep as a global variable because it unikely identify the user.
+
+
 ## Rides management
 
+The rides management is closely related to the [overview](./overview.md) :
 
-(a ride is first proposed than it can be canceled by user , declined (because user is already in an other ride) or accepted and finally finished).
+ * first a ride is proposed by a customer or a taxi, 
+ * the ride can be declined by candidate or accepted,
+ * if accepted, the ride can be set has finished anytime by the taxi or the customer.
 
-## subscribeToRides
+We will first describe how Cabbe listen to ride informations with Kuzzle.
+
+### Subscribing to the Rides messages
 
 
 ```javascript
@@ -360,139 +373,159 @@ Every time the user choose to change between taxi and customer type, Cabble must
 			}
 			kuzzleController.manageRideProposal(message);
 		});
-	},
+	}
 ```
 
+Nothing too complicated here, the `filter` is about ride :
+
+ * every candidates (i.e filter on taxi if i am a customer and vice versa ) (done by the snippet with status "proposed\_by\_..., refused\_by\_... and accepted\_by\_...) 
+ * related to me (the snippet  :
+ 	
+		rideFilter.term[userType] = userController.getUserId();)
+
+For readability the callback from response is done in `kuzzleController.manageRideProposal`
+described in next section.
+
+
+### Managing the Rides messages
+
+We describe here how we deal with a ride message in  manaeRideProposal.
 
 ```javascript
-	manageRideProposal: function(rideProposal) {
-		var rideInfo = rideProposal._source;
-
-		if (!rideInfo || !rideInfo.status) {
+	if (rideInfo.status.indexOf('proposed_by') !== -1) {
+		if (!userController.isAvailable()) {
+			this.declineRideProposal(rideProposal);
 			return;
 		}
+	}
+```
+If user is no availalable (i.e already involve in an other ride), the ride is silently declined.
 
-		if (rideInfo.status.indexOf('proposed_by') !== -1) {
-			if (!userController.isAvailable()) {
-				this.declineRideProposal(rideProposal);
-				return;
-			} else {
-				var candidateType = (rideInfo.status === "proposed_by_taxi") ? "taxi" : "customer";
-				var userType = userController.getUserType();
+```javascript
+	else {
+		var proposedByTaxi = rideInfo.status === "proposed_by_taxi";
+		var candidateType = (proposedByTaxi) ? "taxi" : "customer";
+		var userType = userController.getUserType();
 
-				//TODO REMOVE user has change his state between the last time he listening to ride
-				if (userType === candidateType)
-					return;
-				var target = (rideInfo.status === "proposed_by_taxi") ? rideInfo.customer : rideInfo.taxi;
-				var source = (rideInfo.status === "proposed_by_taxi") ? rideInfo.taxi : rideInfo.customer;
-				gisController.showPopupRideProposal(source, target, rideProposal);
-			}
-		} else if (rideInfo.status.indexOf('refused_by') !== -1) {
-			gisController.onRideRefused(rideProposal);
-			currentRide = null;
-		} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
-			currentRide = rideProposal;
-			gisController.onRideAccepted(rideProposal);
-		} else if (rideInfo.status.indexOf('completed') !== -1) {
-			currentRide = null;
-			gisController.onRideEnded(rideInfo);
-		}
+		// a ride recive and current Cabble user has changing his type.
+		if (userType === candidateType)
+			return;
+		var target = (proposedByTaxi) ? rideInfo.customer : rideInfo.taxi;
+		var source = (proposedByTaxi) ? rideInfo.taxi : rideInfo.customer;
+		gisController.onRideProposal(source, target, rideProposal);
+	} 
+```
+
+Else we send the ride to the gisController. The `onRideProposal` will add the candidate on the map if needed with an animated icon. A click or a tap on this marker will show a ride proposal.
+
+```javascript
+	if (rideInfo.status.indexOf('refused_by') !== -1) {
+		gisController.onRideRefused(rideProposal);
+		currentRide = null;
+	} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
+		currentRide = rideProposal;
+		gisController.onRideAccepted(rideProposal);
+	} else if (rideInfo.status.indexOf('completed') !== -1) {
+		currentRide = null;
+		gisController.onRideEnded(rideInfo);
 	}
 ```
 
-## Propose a Ride
+### Propose a Ride
 
+When the user click on a candidate, he has the possibility to propose a ride.
+This will be done by a document creation on the CABBLE_COLLECTION_RIDES in the publishRideProposal method.
 
 ```javascript
-publishRideProposal: function(candidateId) {
-	var
-		rideProposal = {},
-		myUserType = userController.getUserType();
-
-	rideProposal.customer = myUserType === 'taxi' ? candidateId : userController.getUserId();
-	rideProposal.taxi = myUserType === 'customer' ? candidateId : userController.getUserId();
-	rideProposal.status = 'proposed_by_' + myUserType;
-	rideProposal.position = gisController.getUserPosition();
-
-	if (currentRide) {
-		this.declineRideProposal(currentRide);
-	}
-
-	kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, function(error, response) {
+	kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, 
+		function(error, response) {
 		if (error) {
 			console.error(error);
 			return false;
 		}
 		currentRide = response.result;
-	});
-	}
+	});	
 ```
 
 
-### Accept a Ride porposal
+### Accept a Ride proposal
+
+
+The ride acceptation is define in `acceptRideProposal`.
+
+
+In this function, we first publish the ride acceptance by updating the document corresponding to the ride.
 
 ```javascript
+	acceptRideProposal: function(rideProposal) {
+		var
+			myUserType = userController.getUserType(),
+			acceptedRide = {
+				_id: rideProposal._id,
+				status: 'accepted_by_' + myUserType
+			};
+			
 
-		acceptRideProposal: function(rideProposal) {
-			var
-				myUserType = userController.getUserType(),
-				acceptedRide = {
-					_id: rideProposal._id,
-					status: 'accepted_by_' + myUserType
-				},
-				// All rides, except this one, proposed by others and involving me
-				listProposal = {
-					filter: {
-						and: [{
-							term: {
-								status: 'proposed_by_' + (myUserType === 'taxi' ? 'customer' : 'taxi')
-							}
-						}, {
-							not: {
-								ids: {
-									values: [rideProposal._id]
-								}
-							}
-						}]
+		userController.setAvailable(false);
+		kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
+		currentRide = rideProposal;
+		gisController.onRideAccepted(currentRide);
+```
+
+Then Cabble decline all the other rides proposal.
+
+```javascript
+		// All rides, except this one, proposed by others and involving me
+		var listProposal = {
+			filter: {
+				and: [{
+					term: {
+						status: 'proposed_by_' + 
+							(myUserType === 'taxi' ? 'customer' : 'taxi')
 					}
-				},
-				userSubFilter = {
-					term: {}
-				};
+				}, {
+					not: {
+						ids: {
+							values: [rideProposal._id]
+						}
+					}
+				}]
+			}
+		};
 
-			userSubFilter.term[myUserType] = userController.getUserId();
-			listProposal.filter.and.push(userSubFilter);
+		userSubFilter.term[myUserType] = userController.getUserId();
+		listProposal.filter.and.push(userSubFilter);
 
-			userController.setAvailable(false);
-			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
-			currentRide = rideProposal;
-			gisController.onRideAccepted(currentRide);
+		var userSubFilter = {
+			term: {}
+		};
 
-			/*
-			At this point, we have 1 accepted ride proposal, and possibly multiple
-			ride proposed in the meantime.
-			So here we list these potential proposals and gracefully decline these
-			 */
-			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(error, searchResult) {
-				if (error) {
+		/*
+		At this point, we have 1 accepted ride proposal, and possibly multiple
+		ride proposed in the meantime.
+		So here we list these potential proposals and gracefully decline these
+		 */
+		kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal,
+			function(error, searchResult) {
+			if (error) {
 					console.log(error);
 					return false;
 				}
 
 				searchResult.hits.hits.forEach(function(element) {
-					// element is not a ride document, but it contains the _id element we need to decline the ride
+					// element is not a ride document, but it contains
+					// the _id element we need to decline the ride
 					kuzzleController.declineRideProposal(element);
 				});
-			});
-		}
+		});
 ```
 
 
-### Decline or Finish a Ride
+### Decline a Ride
 
+Decline a ride is simply update the document rideProposal in Kuzzle :
 
 ```javascript
-
 	declineRideProposal: function(rideProposal) {
 		var declinedRide = {
 			_id: rideProposal._id,
@@ -501,7 +534,14 @@ publishRideProposal: function(candidateId) {
 
 		kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
 	},
+```
 
+
+### Finish a Ride
+
+Finsih a ride is simply update the document rideProposal in Kuzzle and update the user state :
+
+```javascript
 	finishRide: function() {
 		if (!currentRide) {
 			console.log("no curent ride");

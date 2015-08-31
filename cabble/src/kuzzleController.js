@@ -189,7 +189,7 @@ window.kuzzleController = (function() {
 				return;
 
 			userController.setUserType(userType).then(function() {
-				gisController.setUserType(userType);
+				gisController.onUserChangeType();
 				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
 					function(error, response) {
 						if (error) {
@@ -209,20 +209,20 @@ window.kuzzleController = (function() {
 			var userStatus = {
 				exists: {
 					field: 'type'
-						//type: [userController.getUserType() === "taxi" ? "customer" : "taxi"]
 				}
 			};
 			if (userSubscribedRoom)
 				kuzzle.unsubscribe(userSubscribedRoom);
 
 
-			userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus, function(error, message) {
+			userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus,
+				function(error, message) {
 				if (error) {
 					console.error(error);
 					return false;
 				}
 
-				//we are instersting to unscribe i.e user change status interest
+				//we are interesting to user unscribe i.e user change status interest
 				if (!message || message.action != "off")
 					return;
 
@@ -232,9 +232,10 @@ window.kuzzleController = (function() {
 					return;
 				//else we remove it from the map
 				gisController.removeCandidate(userWithSameStatus);
-				//if we where aslo in a ride with this candidate, we must break it
+				//if we where also in a ride with this candidate, we must end it.
 				if (currentRide &&
-					(currentRide._source.taxi === userWithSameStatus || currentRide._source.customer === userWithSameStatus)) {
+					(currentRide._source.taxi === userWithSameStatus 
+						|| currentRide._source.customer === userWithSameStatus)) {
 					kuzzleController.finishRide();
 				}
 			});
@@ -291,19 +292,21 @@ window.kuzzleController = (function() {
 			}
 
 			if (rideInfo.status.indexOf('proposed_by') !== -1) {
+				var proposedByTaxi = rideInfo.status === "proposed_by_taxi";
 				if (!userController.isAvailable()) {
 					this.declineRideProposal(rideProposal);
 					return;
 				} else {
-					var candidateType = (rideInfo.status === "proposed_by_taxi") ? "taxi" : "customer";
+					var candidateType = (proposedByTaxi) ? "taxi" : "customer";
 					var userType = userController.getUserType();
 
-					//TODO REMOVE user has change his state between the last time he listening to ride
+					 //the current Cabble user has changing his type.
 					if (userType === candidateType)
 						return;
-					var target = (rideInfo.status === "proposed_by_taxi") ? rideInfo.customer : rideInfo.taxi;
-					var source = (rideInfo.status === "proposed_by_taxi") ? rideInfo.taxi : rideInfo.customer;
-					gisController.showPopupRideProposal(source, target, rideProposal);
+
+					var target = (proposedByTaxi) ? rideInfo.customer : rideInfo.taxi;
+					var source = (proposedByTaxi) ? rideInfo.taxi : rideInfo.customer;
+					gisController.onRideProposal(source, target, rideProposal);
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
 				gisController.onRideRefused(rideProposal);
@@ -340,7 +343,8 @@ window.kuzzleController = (function() {
 				this.declineRideProposal(currentRide);
 			}
 
-			kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, function(error, response) {
+			kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, 
+				function(error, response) {
 				if (error) {
 					console.error(error);
 					return false;
@@ -359,9 +363,14 @@ window.kuzzleController = (function() {
 				acceptedRide = {
 					_id: rideProposal._id,
 					status: 'accepted_by_' + myUserType
-				},
-				// All rides, except this one, proposed by others and involving me
-				listProposal = {
+				};
+				
+			userController.setAvailable(false);
+			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
+			currentRide = rideProposal;
+			gisController.onRideAccepted(currentRide);
+
+			var	listProposal = {
 					filter: {
 						and: [{
 							term: {
@@ -375,24 +384,22 @@ window.kuzzleController = (function() {
 							}
 						}]
 					}
-				},
-				userSubFilter = {
-					term: {}
 				};
 
-			userSubFilter.term[myUserType] = userController.getUserId();
-			listProposal.filter.and.push(userSubFilter);
-
-			userController.setAvailable(false);
-			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
-			currentRide = rideProposal;
-			gisController.onRideAccepted(currentRide);
 
 			/*
 			At this point, we have 1 accepted ride proposal, and possibly multiple
 			ride proposed in the meantime.
 			So here we list these potential proposals and gracefully decline these
 			 */
+			var	userSubFilter = {
+					term: {}
+				};
+
+			userSubFilter.term[myUserType] = userController.getUserId();
+			listProposal.filter.and.push(userSubFilter);
+
+		
 			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(error, searchResult) {
 				if (error) {
 					console.log(error);
@@ -400,7 +407,7 @@ window.kuzzleController = (function() {
 				}
 
 				searchResult.hits.hits.forEach(function(element) {
-					// element is not a ride document, but it contains the _id element we need to decline the ride
+					//element is not a ride document, but it contains the _id element we need to decline the ride
 					kuzzleController.declineRideProposal(element);
 				});
 			});

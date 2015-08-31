@@ -19,9 +19,17 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 </span>
 
 
-A brief overview  of Cabble can be found [here](./docs/overview.md).
+### How the User Interface work ?
+A brief overview of Cabble can be found [here](./docs/overview.md).
 
-A step-by-step tutorial can be found [here](./docs/tutorial.md).
+
+### What will you learn with this demo ?
+Basically in Cabble, an user need to know all the others users in a boundbox around him.
+
+This requirement is done by using the geolocalisation filtering from Kuzzle.
+
+This, and all the publications and subscriptions used by Kuzzle will be described in the
+ step-by-step tutorial [here](./docs/tutorial.md).
 
 #How to install Cabble
 
@@ -44,7 +52,7 @@ Now, you can try to use the todolist at http://localhost
 
 * You need to have a running [Kuzzle](https://github.com/kuzzleio/kuzzle).
 * Configure the `config.js` file for change the Kuzzle URL if you have changed the default Kuzzle installation
-* You can directly open the `index.html` file in your browser.
+* Your webserver must serve index.html (and allow assets,css and lib )
  
 
 # The three Authors

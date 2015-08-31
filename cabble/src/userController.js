@@ -24,7 +24,7 @@ window.userController = (function() {
 						if (value)
 							user = value;
 						if (user.whoami.type) {
-							gisController.setUserType(user.whoami.type);
+							gisController.onUserChangeType();
 							gisController.closePopupForUser();
 						}
 						resolve();
