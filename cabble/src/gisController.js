@@ -77,7 +77,7 @@ window.gisController = (function() {
 		return new Promise(
 			function(resolve, reject) {
 				var userType = userController.getUserType();
-				userPopup = createUserPopup(userType);
+				userPopup = createUserPopup();
 				userMarker = L.marker(position, {})
 					.bindPopup(userPopup);
 
@@ -161,7 +161,9 @@ window.gisController = (function() {
 		rideControl = new L.Control.RideControl();
 	}
 
-	function createUserPopup(userType) {
+	function createUserPopup() {
+
+		var userType = userController.getUserType();
 
 		var contentString = "";
 
@@ -317,7 +319,7 @@ window.gisController = (function() {
 		cancelCabbleButton.setAttribute("class", "cancel_button");
 		cancelCabbleButton.appendChild(document.createTextNode("Cancel"));
 		cancelCabbleButton.addEventListener("click", function() {
-			kuzzleController.declineCurrentRideProposal(candidateId);
+			kuzzleController.declineRideProposal(kuzzleController.getRideProposalForCandidateId(candidateId));
 			if (loader) {
 				loader.remove();
 			}
@@ -462,6 +464,8 @@ window.gisController = (function() {
 		},
 		onRideRefused: function(ride) {
 			var rideInfo = ride._source;
+			if(!rideInfo)
+				return;
 
 			var marker = assocIdToOtherItemsMark[rideInfo.customer];
 			if (!marker)
@@ -474,16 +478,30 @@ window.gisController = (function() {
 
 			marker.setIcon(userController.getCandidateType() == "taxi" ? taxiIcon : customerIcon);
 
-			var contentPopup = document.createElement("div");
+			var contentRefusedPopup = document.createElement("div");
 			var titleText = "the ride has been refused !";
 
 			var header = document.createElement("h1");
 			header.appendChild(document.createTextNode(titleText));
-			contentPopup.appendChild(header);
+			contentRefusedPopup.appendChild(header);
 
-			popup.setContent(contentPopup);
+			var previousContent = popup.getContent();
+
+			var loader = previousContent.querySelector(".loader");
+			if (loader)
+				loader.remove();
+
+			var okButton = previousContent.querySelector(".ok_button");
+			okButton.disabled = false;
+
+			var cancelButton = previousContent.querySelector(".cancel_button");
+			cancelButton.disabled = false;
+
+			popup.setContent(contentRefusedPopup);
+
 			setTimeout(function() {
 				marker.closePopup();
+				popup.setContent(previousContent);
 			}, 3000);
 		},
 		onRideAccepted: function(ride) {

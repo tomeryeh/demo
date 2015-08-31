@@ -147,12 +147,11 @@ A `roomName` attribute is send withing the userId.
 
  This `userSubRoomName` attribute is not important for the positions listening purpose. It is closely related to the user state change listening who come next in the [Users management section](#user_subscription).
 
-### <a name="sub_to_pos" ></a> Subscribe To Positions changing
+<a name="sub_to_pos" ></a>
+###  Subscribe To Positions changing
 
-Cabble must propose to the user some "candidates" for a ride in the curent map bounding box.
-
-By candidates, we mean taxis if the current user is a customer and vice versa.
-
+Cabble propose to the user some "candidates" for a ride in the curent map bounding box.
+A candidate is a taxi if the current user is a customer and vice versa.
 
 
 The subscribe filter for bounding box with the current use type is computed as follow in subscribeToPositions:

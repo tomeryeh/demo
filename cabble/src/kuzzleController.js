@@ -73,7 +73,6 @@ window.kuzzleController = (function() {
 						var userType = userController.getUserType();
 
 						if (!userPosition) {
-							console.log("no position for user");
 							return;
 						}
 						if (!userType)
@@ -275,9 +274,6 @@ window.kuzzleController = (function() {
 			rideFilter.term[userType] = userController.getUserId();
 			filter.and = [rideFilter, statusFilter];
 
-			console.log("filtering ");
-			console.log(filter);
-
 			kuzzle.subscribe(CABBLE_COLLECTION_RIDES, filter, function(error, message) {
 				if (error) {
 					console.error(error);
@@ -317,11 +313,13 @@ window.kuzzleController = (function() {
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
 				gisController.onRideRefused(rideProposal);
+				currentRide = null;
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				currentRide = rideProposal;
 				gisController.onRideAccepted(rideProposal);
 			} else if (rideInfo.status.indexOf('completed') !== -1) {
 				gisController.onRideEnded(rideInfo);
+				currentRide = null;
 			}
 		},
 
@@ -354,8 +352,7 @@ window.kuzzleController = (function() {
 					console.error(error);
 					return false;
 				}
-				console.log("ride created");
-				console.log(response);
+
 				assocRideProposalCandidateId[candidateId] = response;
 			});
 		},
@@ -412,22 +409,14 @@ window.kuzzleController = (function() {
 				}
 
 				searchResult.hits.hits.forEach(function(element) {
-					//element is not a ride document, but it contains the _id element we need to decline the ride
+					//element is not a ride document, but it contains the _id of the ride
 					kuzzleController.declineRideProposal(element);
 				});
 			});
 		},
 
-		declineCurrentRideProposal: function(candidateId){
-			var rideProposed = assocRideProposalCandidateId[candidateId];
-			if(rideProposed){
-				kuzzle.update(CABBLE_COLLECTION_RIDES, {
-					_id : rideProposed._id,
-					status : 'refused_by_' + userController.getUserType()
-					});
-
-				delete assocRideProposalCandidateId[candidateId];
-			}
+		getRideProposalForCandidateId: function(candidateId){
+			return assocRideProposalCandidateId[candidateId];
 		},
 
 		/**
@@ -440,11 +429,11 @@ window.kuzzleController = (function() {
 				status: 'refused_by_' + userController.getUserType()
 			};
 
-			if(assocRideProposalCandidateId[candidateId])
-				delete assocRideProposalCandidateId[candidateId];
-
+			//if(assocRideProposalCandidateId[candidateId])
+			//	delete assocRideProposalCandidateId[candidateId];
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
+			gisController.onRideRefused(rideProposal);
 		},
 
 		/**
@@ -468,6 +457,7 @@ window.kuzzleController = (function() {
 				delete assocRideProposalCandidateId[currentRide._source.customer];
 
 			userController.setAvailable(true);
+			currentRide = null;
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
 		}
 	};
