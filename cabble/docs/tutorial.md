@@ -100,7 +100,7 @@ The three following sections will describe :
 Positions collection allow to update the current position of the taxi and customer (publishPositions).
 Cabble also use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box (subscribeToPositions).
 
-### publish positions changing
+###  <a name="pub_pos" ></a> Publish positions changing
 
 Cabble has to send the positions changes for user in order to synchronize all positions in all other Cabble instance.
 To keep it simple Cabble will send position every 3000 milliseconds : 
@@ -130,7 +130,7 @@ To keep it simple Cabble will send position every 3000 milliseconds :
 							lat: userPosition.lat,
 							lon: userPosition.lng
 						},
-						roomName: userSubscribedRoom
+						roomName: userSubRoomName
 					}, false);
 				});
 			}, 3000);
@@ -251,7 +251,7 @@ The User management refer to linstening changing of user type.
 
 ### Publish an user change
 
-Every time the user choose to change between taxi and customer type, Cabble must update the user in localstorage (`userController`) and the view (`gisController`). Then Cabble send this information to Kuzzle (and so to all the others Cabble users as in subscribeToUsers).
+Every time the user choose to change between taxi and customer type, Cabble must update the user in localstorage (`userController`) and the view (`gisController`). Then Cabble send this information to Kuzzle.
 
 ```javascript
 	publishUserType: function(userType) {
@@ -273,14 +273,13 @@ Every time the user choose to change between taxi and customer type, Cabble must
 	}
 ```
 
-We first set in localstorage the new userType with `userController.setUserType`.
-Then with `onUserChangeType` Cabble will update the user icon in GIS.
+Cabble first set in localstorage the new userType with `userController.setUserType`.
+Then it updates the user icon in GIS (in `onUserChangeType`).
 It will also remove all the candidates because they now mismatch the user type of interest.
-Finally we re-add the `subscribeToUsers` and `subscribeToPositions` because we must change theirs filtering accordinly to the new user type.
-
+Finally we re-add the `subscribeToUsers` and `subscribeToPositions` because we must 
+change theirs filtering accordingly to the new user type.
 
 ### Subscribe to users change
-
 
 ```javascript
 	subscribeToUsers: function() {
@@ -291,10 +290,10 @@ Finally we re-add the `subscribeToUsers` and `subscribeToPositions` because we m
 				field: 'type'
 			}
 		};
-		if (userSubscribedRoom)
-			kuzzle.unsubscribe(userSubscribedRoom);
+		if (userSubRoomName)
+			kuzzle.unsubscribe(userSubRoomName);
 
-		userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, 
+		userSubRoomName = kuzzle.subscribe(CABBLE_COLLECTION_USERS, 
 						userStatus, function(error, message) {
 			if (error) {
 				console.error(error);
@@ -321,7 +320,11 @@ Finally we re-add the `subscribeToUsers` and `subscribeToPositions` because we m
 	}
 ```
 
-`userSubscribedRoom` is keep as a global variable because it unikely identify the user.
+`userSubRoomName` is keep as a global variable because it's identify the user that listening to the userStatus document.
+The candidate corresponding to this roomName has send his position (see the previous section [Publish positions](#pub_pos))
+and his id. So we have to keep the association between user and rom in `assocRoomToUser`.
+
+Thanks to this `assocRoomToUser`, Cabble retrieve the userid and remove this candidate with mismatching type and remove it from the map with `gisController.removeCandidate(userWithSameStatus);`.
 
 
 ## Rides management

@@ -20,7 +20,7 @@ window.kuzzleController = (function() {
 
 		//the room we are susbscribe to currently
 		positionsSubscribeRoom,
-		userSubscribedRoom,
+		userSubRoomName,
 
 		//the current ride if 
 		currentRide = null;
@@ -85,7 +85,7 @@ window.kuzzleController = (function() {
 								lat: userPosition.lat,
 								lon: userPosition.lng
 							},
-							roomName: userSubscribedRoom
+							roomName: userSubRoomName
 						}, false);
 					});
 				}, 3000);
@@ -185,20 +185,24 @@ window.kuzzleController = (function() {
 		},
 
 		publishUserType: function(userType) {
+			console.log("puslibi suer " + userType);
 			if (!userType)
 				return;
 
 			userController.setUserType(userType).then(function() {
+
 				gisController.onUserChangeType();
+
+				console.log("send new user type to kuzzle " + userType);
 				kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
 					function(error, response) {
 						if (error) {
 							console.log(error);
 							return;
 						}
-						kuzzleController.subscribeToUsers();
-						kuzzleController.subscribeToPositions();
 					});
+				kuzzleController.subscribeToUsers();
+				kuzzleController.subscribeToPositions();
 			});
 		},
 
@@ -211,11 +215,10 @@ window.kuzzleController = (function() {
 					field: 'type'
 				}
 			};
-			if (userSubscribedRoom)
-				kuzzle.unsubscribe(userSubscribedRoom);
+			if (userSubRoomName)
+				kuzzle.unsubscribe(userSubRoomName);
 
-
-			userSubscribedRoom = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus,
+			userSubRoomName = kuzzle.subscribe(CABBLE_COLLECTION_USERS, userStatus,
 				function(error, message) {
 				if (error) {
 					console.error(error);
@@ -225,6 +228,8 @@ window.kuzzleController = (function() {
 				//we are interesting to user unscribe i.e user change status interest
 				if (!message || message.action != "off")
 					return;
+
+
 
 				//if this user was not on our map nothing to do
 				var userWithSameStatus = assocRoomToUser[message.roomName];
@@ -371,21 +376,20 @@ window.kuzzleController = (function() {
 			gisController.onRideAccepted(currentRide);
 
 			var	listProposal = {
-					filter: {
-						and: [{
-							term: {
-								status: 'proposed_by_' + (myUserType === 'taxi' ? 'customer' : 'taxi')
+				filter: {
+					and: [{
+						term: {
+							status: 'proposed_by_' + (myUserType === 'taxi' ? 'customer' : 'taxi')
+						}
+					}, {
+						not: {
+							ids: {
+								values: [rideProposal._id]
 							}
-						}, {
-							not: {
-								ids: {
-									values: [rideProposal._id]
-								}
-							}
-						}]
-					}
-				};
-
+						}
+					}]
+				}
+			};
 
 			/*
 			At this point, we have 1 accepted ride proposal, and possibly multiple
@@ -393,13 +397,12 @@ window.kuzzleController = (function() {
 			So here we list these potential proposals and gracefully decline these
 			 */
 			var	userSubFilter = {
-					term: {}
-				};
+				term: {}
+			};
 
 			userSubFilter.term[myUserType] = userController.getUserId();
 			listProposal.filter.and.push(userSubFilter);
 
-		
 			kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal, function(error, searchResult) {
 				if (error) {
 					console.log(error);
