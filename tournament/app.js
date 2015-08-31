@@ -9,7 +9,7 @@ Game.prototype = {
 
         game.state.add('game-init', GameInitState);
 
-        game.state.add('game-round', GameRoundState);
+//        game.state.add('game-round', GameRoundState);
 
         game.state.add('game-round-no-monster', GameRoundNoMonsterState);
 

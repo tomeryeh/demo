@@ -1,9 +1,9 @@
 function MainIntroState() {}
 MainIntroState.prototype = {
-    create: function() {
+    create: function () {
         this.tweenFadeState();
     },
-    tweenFadeState: function() {
+    tweenFadeState: function () {
         this.game.stateTransition.to('main-menu');
     }
 };
