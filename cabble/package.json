@@ -1,0 +1,20 @@
+{
+  "name": "taxi-kuzzle",
+  "version": "0.0.0",
+  "description": "Taxi with Kuzzle",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Emilie Esposito Eric Alvernhe Sebastien Cottinet",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "express": "~4.12.0",
+    "grunt": "~0.4.5",
+    "grunt-config-dir": "~0.3.2",
+    "grunt-jsbeautifier": "~0.2.8",
+    "grunt-contrib-watch": "~0.6.1",
+    "underscore": "~1.8.3",
+    "grunt-contrib-less": "~1.0.1"
+  }
+}

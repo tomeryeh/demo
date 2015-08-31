@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+	<link rel="stylesheet" type="text/css" href="./css/style.css">
+
+
+</head>
+<title>Welcome to Cabble</title>
+
+<body>
+
+	<div id="map-canvas"></div>
+
+	<!-- for Promise -->
+	<script src="./lib/vendors/bluebird.min.js"></script>
+
+	<!-- for local save user info -->
+	<script src="./lib/vendors/localforage.js"></script>
+
+	<!-- for Kuzzle -->
+	<script src="./lib/vendors/socket.io.js"></script>
+	<script type="text/javascript" src="./lib/kuzzle.min.js"></script>
+
+	<!-- GIS vendor solution : leaflet -->
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+
+	<!-- gis code for Cabble-->
+	<script src="./src/gisController.js"></script>
+
+	<!-- user info from locla storage-->
+	<script src="./src/userController.js"></script>
+
+	<!-- Kuzzle code-->
+	<script src="../config.js"></script>
+	<script src="./src/kuzzleController.js"></script>
+
+	<!-- entry point-->
+	<script src="./src/app.js"></script>
+
+	<script src="//localhost:35729/livereload.js"></script>
+
+</body>
+
+</html>
