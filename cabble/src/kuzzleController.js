@@ -18,6 +18,8 @@ window.kuzzleController = (function() {
 		//	it became no more relevant to show it.)
 		assocRoomToUser = {},
 
+		assocRideProposalCandidateId = {},
+
 		//the room we are susbscribe to currently
 		positionsSubscribeRoom,
 		userSubRoomName,
@@ -281,8 +283,6 @@ window.kuzzleController = (function() {
 					console.error(error);
 					return false;
 				}
-				console.log("recive a message");
-				console.log(message);
 				kuzzleController.manageRideProposal(message);
 			});
 		},
@@ -317,12 +317,10 @@ window.kuzzleController = (function() {
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
 				gisController.onRideRefused(rideProposal);
-				currentRide = null;
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				currentRide = rideProposal;
 				gisController.onRideAccepted(rideProposal);
 			} else if (rideInfo.status.indexOf('completed') !== -1) {
-				currentRide = null;
 				gisController.onRideEnded(rideInfo);
 			}
 		},
@@ -356,7 +354,9 @@ window.kuzzleController = (function() {
 					console.error(error);
 					return false;
 				}
-				currentRide = response.result;
+				console.log("ride created");
+				console.log(response);
+				assocRideProposalCandidateId[candidateId] = response;
 			});
 		},
 
@@ -419,17 +419,15 @@ window.kuzzleController = (function() {
 		},
 
 		declineCurrentRideProposal: function(candidateId){
-			console.log("descline ride proposale from " + userController.getUserId() + "  and  " + candidateId) ;
-			var
-				rideProposal = {},
-				myUserType = userController.getUserType();
+			var rideProposed = assocRideProposalCandidateId[candidateId];
+			if(rideProposed){
+				kuzzle.update(CABBLE_COLLECTION_RIDES, {
+					_id : rideProposed._id,
+					status : 'refused_by_' + userController.getUserType()
+					});
 
-			rideProposal.customer = myUserType === 'taxi' ? candidateId : userController.getUserId();
-			rideProposal.taxi = myUserType === 'customer' ? candidateId : userController.getUserId();
-			rideProposal.status = 'proposed_by_' + myUserType;
-			rideProposal.position = gisController.getUserPosition();
-
-			kuzzle.update(CABBLE_COLLECTION_RIDES, rideProposal);
+				delete assocRideProposalCandidateId[candidateId];
+			}
 		},
 
 		/**
@@ -441,6 +439,9 @@ window.kuzzleController = (function() {
 				_id: rideProposal._id,
 				status: 'refused_by_' + userController.getUserType()
 			};
+
+			if(assocRideProposalCandidateId[candidateId])
+				delete assocRideProposalCandidateId[candidateId];
 
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
@@ -459,6 +460,12 @@ window.kuzzleController = (function() {
 				_id: currentRide._id,
 				status: 'completed'
 			};
+
+			if(assocRideProposalCandidateId[currentRide._source.taxi])
+				delete assocRideProposalCandidateId[currentRide._source.taxi];
+
+			if(assocRideProposalCandidateId[currentRide._source.customer])
+				delete assocRideProposalCandidateId[currentRide._source.customer];
 
 			userController.setAvailable(true);
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);

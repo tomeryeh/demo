@@ -277,7 +277,7 @@ window.gisController = (function() {
 		cancelCabbleButton.setAttribute("class", "cancel_button");
 		cancelCabbleButton.appendChild(document.createTextNode(cancelMessage));
 		cancelCabbleButton.addEventListener("click", function(event) {
-			map.closePopup(popupProposeRide);
+			map.closePopup(answerPopupRide);
 			kuzzleController.declineRideProposal(rideProposal);
 			acceptCabbleButton.disabled = false;
 		});
