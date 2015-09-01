@@ -377,6 +377,28 @@ window.gisController = (function() {
 				return marker;
 			}
 		},
+
+		boundToCabs: function(){
+
+			var distance  = 0;
+			var mostDistanceMark = null;
+			for (var i = 0; i < otherItemsMark.length; i++) {
+				var currentDistance = userMarker.getLatLng().distanceTo(otherItemsMark[i].getLatLng());
+				if(currentDistance > distance){
+					distance = currentDistance;
+					mostDistanceMark = otherItemsMark[i];
+				}
+			}
+
+			if(mostDistanceMark){
+				var positions = [];
+				var userCoord = userMarker.getLatLng();
+				var mostDistantCoord = mostDistanceMark.getLatLng();
+				positions.push([mostDistantCoord.lat, mostDistantCoord.lng]);
+				positions.push([userCoord.lat + -1 * (mostDistantCoord.lat - userCoord.lat),userCoord.lng + -1 * (mostDistantCoord.lng - userCoord.lng)]);
+				map.fitBounds(positions, {padding: L.point(50, 50)});
+			}
+		},
 		isTooFarAway: function(position){
 			if(!position)
 				return false;
@@ -455,6 +477,9 @@ window.gisController = (function() {
 			then(createUserMarker).
 			then(createMap).
 			then(function() {
+				setInterval(function() {
+					gisController.boundToCabs();
+				}, 3000);
 				if (!userController.getUserType())
 					userMarker.openPopup();
 			});
@@ -584,14 +609,7 @@ window.gisController = (function() {
 
 				markerSource = this.addMarker(markerPosition, markerType, sourceId);
 
-				var positions = [];
-				for (var i = 0; i < otherItemsMark.length; i++) {
-					positions.push([otherItemsMark[i].getLatLng().lat, otherItemsMark[i].getLatLng().lng]);
-				}
-				positions.push([userMarker.getLatLng().lat, userMarker.getLatLng().lng]);
-				map.fitBounds(positions, {
-					padding: L.point(100, 100)
-				});
+				this.boundToCabs();
 			}
 			markerSource.setIcon(userController.getCandidateType() == "taxi" ? taxiIconAnimated : customerIconAnimated);
 
