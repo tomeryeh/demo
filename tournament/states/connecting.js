@@ -161,13 +161,51 @@ ConnectingState.prototype = {
         case Configuration.events.PLAYER_JOINED:
           if (data._source.player.id !== game.player.id) {
             Players[data._source.player.id] = data._source.player;
-            if (!gameStarted) {
-              self.drawLobby(true);
+            Players[data._source.player.id].updated = false;
+            Players[data._source.player.id].hp = Configuration.player.hp;
+
+            if (gameStarted) {
+              text = game.add.text(game.camera.width / 2, 32, "A new challenger appears: " + data._source.player.username);
+              text.fixedToCamera = true;
+              text.font = 'Arial';
+              text.fontWeight = 'bold';
+              text.fontSize = 24;
+              text.align = 'center';
+              var grd = text.context.createLinearGradient(0, 0, 0, text.height);
+              grd.addColorStop(0, '#8ED6FF');
+              grd.addColorStop(1, '#004CB3');
+              text.fill = grd;
+              text.anchor.set(0.5);
+              text.alpha = 0.0;
+              var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
+              game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+
+              if (typeof self.drawLobby === 'function') {
+                self.drawLobby();
+              }
+            }
+            else if (typeof self.drawLobby === 'function') {
+              self.drawLobby();
             }
           }
           break;
 
         case Configuration.events.PLAYER_LEFT:
+          text = game.add.text(game.camera.width / 2, 32, "Player " + Players[data._source.id].username + " left the game");
+          text.fixedToCamera = true;
+          text.font = 'Arial';
+          text.fontWeight = 'bold';
+          text.fontSize = 24;
+          text.align = 'center';
+          var grd = text.context.createLinearGradient(0, 0, 0, text.height);
+          grd.addColorStop(0, '#8ED6FF');
+          grd.addColorStop(1, '#004CB3');
+          text.fill = grd;
+          text.anchor.set(0.5);
+          text.alpha = 0.0;
+          var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
+          game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+
           if (Players[data._source.id]) {
             if (Players[data._source.id].sprite) {
               Players[data._source.id].sprite.body.enable = false;
@@ -208,18 +246,10 @@ ConnectingState.prototype = {
           Room.rules = data._source.rules;
           Room.winner = undefined;
 
-          Object.keys(Players).forEach(function (id) {
-            Players[id].updated = false;
-            Players[id].hp = Configuration.player.hp;
-          });
-
-          if (gameStarted) {
-            this.game.stateTransition.to('game-init', true, false);
+          if (typeof game.state.states.lobby.startGame === 'function') {
+            game.state.states.lobby.startGame(gameStarted);
+            gameStarted = true;
           }
-          else {
-            self.countDown();
-          }
-          gameStarted = true;
           break;
         case Configuration.events.GAME_END:
           Room.winner = data._source.winner;
@@ -227,9 +257,8 @@ ConnectingState.prototype = {
           break;
 
         case Configuration.events.PLAYER_UPDATE:
-          if (data._source.id !== game.player.id) {
+          if (data._source.id !== game.player.id && typeof self.updatePlayer === 'function') {
             self.updatePlayer(data._source);
-            Players[data._source.id].updated = true;
           }
           break;
       }
@@ -237,6 +266,15 @@ ConnectingState.prototype = {
 
     connectTextTweenOut.start();
     kuzzle.create(Room.id, {event: Configuration.events.PLAYER_JOINED, player: game.player});
+    if (Room.state === 'game_launched') {
+      var interval = setInterval(function () {
+        if (game.state.states.lobby.startGame) {
+          game.state.states.lobby.startGame(false);
+          clearInterval(interval);
+        }
+      }, 1000);
+      gameStarted = true;
+    }
   },
 
   roomRequest: function() {
@@ -247,8 +285,8 @@ ConnectingState.prototype = {
       myId;
 
     myId = kuzzle.subscribe(Configuration.server.room, { exists: { field: 'id' } }, function (error, data) {
-      if (data._source && data._source.id === myId && data._source.roomId) {
-        Room.id = data._source.roomId;
+      if (data._source && data._source.id === myId && data._source.room) {
+        Room = data._source.room;
         Players = {};
 
         data._source.players.forEach(function (p) {

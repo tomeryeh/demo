@@ -160,7 +160,7 @@ GameRoundNoMonsterState.prototype = {
     self.fullscreenKey.onDown.add(self.fullScreen, self);
     self.quitKey.onDown.add(self.quitGame, self);
 
-    self.initPlayers();
+//    self.initPlayers();
 
     blurSprite = game.add.sprite(0, 0);
     blurSprite.width = game.width;
@@ -186,8 +186,8 @@ GameRoundNoMonsterState.prototype = {
     self.update();
   },
 
-  initPlayers: function () {
-    Object.keys(Players).forEach(function (pid) {
+  initPlayer: function (pid) {
+//    Object.keys(Players).forEach(function (pid) {
       if (!Players[pid] || pid === game.player.id) {
         return false;
       }
@@ -216,8 +216,9 @@ GameRoundNoMonsterState.prototype = {
         });
       }
 
-      Players[pid].initialized = true;
-    });
+      Players[pid].updated = true;
+
+//    });
   },
 
   addPlayer: function (id, look) {
@@ -303,6 +304,10 @@ GameRoundNoMonsterState.prototype = {
       return false;
     }
 
+    if (!p.updated) {
+      self.initPlayer(data.id);
+    }
+
     p.sprite.x = data.x;
     p.sprite.y = data.y;
     p.sprite.body.velocity.x = data.vx;
@@ -366,7 +371,7 @@ GameRoundNoMonsterState.prototype = {
       lastPlayerCoordsY = player.y;
     }
 
-    if(game.time.now > updateTimer && live && ((player.x != lastPlayerCoordsX || player.y != lastPlayerCoordsY) || shooted || hasDamaged.length > 0)) {
+    if(game.time.now > updateTimer && live) { // && ((player.x != lastPlayerCoordsX || player.y != lastPlayerCoordsY) || shooted || hasDamaged.length > 0)) {
       updateTimer = game.time.now + updateRate;
 
       kuzzle.create(Room.id, {
@@ -429,7 +434,7 @@ GameRoundNoMonsterState.prototype = {
         px,
         py;
 
-      if (id === game.player.id || !p.initialized || !p.updated) {
+      if (id === game.player.id || !p.updated) {
         return false;
       }
 

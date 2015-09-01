@@ -8,7 +8,7 @@ var Configuration = {
 		room: 'tournament-server-room',
 		minPlayersPerRoom: 2,
 		maxPlayersPerRoom: 8,
-		kuzzleUrl: 'http://192.168.1.72:7512'
+		kuzzleUrl: 'http://localhost:7512'
 	},
 
 	player: {

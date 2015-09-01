@@ -44,6 +44,23 @@ LobbyState.prototype = {
     self.drawLobby();
   },
 
+  startGame: function (gameStarted) {
+    Object.keys(Players).forEach(function (id) {
+      Players[id].updated = false;
+      Players[id].hp = Configuration.player.hp;
+    });
+
+    this.game.stateTransition.to('game-init', true, false);
+/*
+    if (gameStarted) {
+      this.game.stateTransition.to('game-init', true, false);
+    }
+    else {
+      self.countDown();
+    }
+*/
+  },
+
   drawLobby: function () {
     var yCoord = -68;
     var delay = 0;
@@ -100,7 +117,7 @@ LobbyState.prototype = {
       delay += 100;
     });
   },
-
+/*
   cd: function () {
     countdown.text = String.fromCharCode(199) + ' ' + countingDown + '!!';
     game.add.tween(countdown.scale).from({x: 3.0, y: 3.0}, 800, Phaser.Easing.Bounce.Out).start();
@@ -139,7 +156,7 @@ LobbyState.prototype = {
         }, 10000);
       }, 2000);
   },
-
+*/
   tweenTint: function (obj, startColor, endColor, time) {
     // create an object to tween with our step value at 0
     var colorBlend = {step: 0};

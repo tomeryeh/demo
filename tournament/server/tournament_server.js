@@ -30,7 +30,7 @@ function startServer() {
 			return false;
 		}
 
-		if (data._source && data._source.roomId) {
+		if (data._source && data._source.room && data._source.room.id) {
 			return false;
 		}
 
@@ -45,7 +45,7 @@ function startServer() {
 				players.push(Rooms[roomId].players[p]);
 			});
 
-			notify(Configuration.server.room, { id: data._source.id, roomId: roomId, players: players });
+			notify(Configuration.server.room, { id: data._source.id, room: Rooms[roomId], players: players });
 		}
 	});
 }
@@ -73,6 +73,7 @@ function addPlayer(playerData) {
 	Players[playerData.id] = room.id;
 	room.players[playerData.id] = playerData;
 	room.players[playerData.id].hp = Configuration.player.hp;
+	room.players[playerData.id].state = 'playing';
 
 	return room.id;
 }
@@ -101,6 +102,7 @@ function createRoom () {
 	},
 	roomId = room.id;
 
+	logger.info('Creating new room: ', room.id);
 	Rooms[room.id] = room;
 
 	kuzzle.subscribe(room.id, { exists: { field: 'event' } }, function (error, data) {
@@ -118,6 +120,7 @@ function createRoom () {
 
 		switch (data._source.event) {
 			case Configuration.events.PLAYER_JOINED:
+				logger.info('Player ' + data._source.player.username + ' joined the game');
 				if (Object.keys(room.players).length >= Configuration.server.minPlayersPerRoom && room.state !== 'game_launched') {
 					// We got enough connected players to start a new game on that room
 					startNewGame(room.id);
@@ -133,6 +136,7 @@ function createRoom () {
 							delete Players[id];
 						});
 
+						logger.info('Not enough players remaining on room ', room.id, '. Destroying it.');
 						delete Rooms[room.id];
 					}
 					else {
@@ -164,6 +168,14 @@ function startNewGame (roomId) {
 		room = Rooms[roomId],
 		nextTeam = 'blue';
 
+	/*
+	 The room has been destroyed between the moment we launched a delayed
+	 new game, and the moment the game really starts
+  */
+	if (!room) {
+		return false;
+	}
+
 	if (room.players.length > 2 && (room.players.length % 2) === 0) {
 			modes.push({id: 'TM', label: 'Team Deathmatch!'});
 	}
@@ -189,6 +201,7 @@ function startNewGame (roomId) {
 	});
 
 	setTimeout(function () {
+		logger.info('Room', room.id, ': launching new game');
 		notify(room.id, { event: Configuration.events.GAME_START, rules: room.rules });
 	}, 5000);
 }
@@ -208,6 +221,7 @@ function checkWinner(roomId) {
 
 	if (Rooms[roomId].rules.mode.id === 'FFA') {
 		if (alivePlayers.length === 1) {
+			logger.info('Room', roomId, ': player', Rooms[roomId].players[alivePlayers].username, 'wins');
 			notify(room.id, { event: Configuration.events.GAME_END, winner: alivePlayers[0] });
 			setTimeout(function () {
 				startNewGame(roomId);
@@ -225,6 +239,7 @@ function checkWinner(roomId) {
 		});
 
 		if (teams.blue === 0 || teams.red === 0) {
+			logger.info('Room', roomId, ': team', (teams.blue !== 0 ? 'blue' : 'red'), 'wins');
 			notify(room.id, {event: Configuration.events.GAME_END, winner: (teams.blue !== 0 ? 'blue' : 'red')})
 			setTimeout(function () {
 				startNewGame(roomId);
