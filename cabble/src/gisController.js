@@ -12,13 +12,17 @@ window.gisController = (function() {
 	var userPopup;
 	var userPosition;
 
-	var rideControl; //use to manage current ride accepted
+	var defaultUserPosition =[48.8566140, 2.352222];
+
+	var userDraggable = false;
+
+	
 
 	var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
 	var assocIdToOtherItemsMark = {};
 
 	//max distance is 20000 kilometers
-	var maxDisanteOfinterest = 20000;
+	var maxDisanteOfinterest = 200000000;
 
 	var candidatesLayer = L.layerGroup([]);
 	var currentRideLayer = L.layerGroup([]);
@@ -26,6 +30,9 @@ window.gisController = (function() {
 
 	var iconSize = [38, 38];
 	var popupAnchor = [0, -22];
+
+	var rideControl; //use to manage current ride accepted
+	var geolocControl = null;
 
 	var taxiIcon = L.icon({
 		iconUrl: "assets/img/taxi.jpg",
@@ -78,11 +85,18 @@ window.gisController = (function() {
 			function(resolve, reject) {
 				var userType = userController.getUserType();
 				userPopup = createUserPopup();
-				userMarker = L.marker(position, {})
-					.bindPopup(userPopup);
+				if(userMarker)
+					map.removeLayer(userMarker);
+				userMarker = L.marker(position, {
+					draggable:userDraggable
+				}
+				).bindPopup(userPopup);
+
+				userMarker.on("dragend",function(){
+					defaultUserPosition = [userMarker.getLatLng().lat,userMarker.getLatLng().lng];
+				});
 
 				userMarker.setIcon(getIcon(userType));
-
 				resolve(position);
 			}.bind(this)
 		);
@@ -128,6 +142,39 @@ window.gisController = (function() {
 
 				resolve(position);
 			}).bind(this);
+	}
+
+
+	function createGeolocControl() {
+
+		var pinUserPosition		= "Define the user position by drag";
+		var unpinUserPosition	= "Use the manual geolocalisation";
+		L.Control.GeoControl = L.Control.extend({
+			options: {
+				position: 'bottomleft',
+			},
+			onAdd: function(map) {
+				var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
+				L.DomEvent
+					.addListener(controlDiv, 'click', L.DomEvent.stopPropagation)
+					.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
+					.addListener(controlDiv, 'click', function() {
+						userDraggable = !userDraggable;
+						createUserMarker(userMarker.getLatLng());
+						controlUI.innerHTML = userDraggable ? pinUserPosition : unpinUserPosition;
+						userMarker.addTo(map);
+					});
+
+				var text = unpinUserPosition;
+				var controlUI = L.DomUtil.create('button', 'leaflet-draw-edit-remove', controlDiv);
+				controlUI.setAttribute("class", "info_button");
+				controlUI.innerHTML = text;
+				controlUI.title = text;
+				controlUI.href = '#';
+				return controlDiv;
+				}
+		});
+		geolocControl = new L.Control.GeoControl();
 	}
 
 	function createRideControl() {
@@ -396,7 +443,7 @@ window.gisController = (function() {
 				var mostDistantCoord = mostDistanceMark.getLatLng();
 				positions.push([mostDistantCoord.lat, mostDistantCoord.lng]);
 				positions.push([userCoord.lat + -1 * (mostDistantCoord.lat - userCoord.lat),userCoord.lng + -1 * (mostDistantCoord.lng - userCoord.lng)]);
-				map.fitBounds(positions, {padding: L.point(50, 50)});
+				map.fitBounds(positions, {padding: L.point(200, 200)});
 			}
 		},
 		isTooFarAway: function(position){
@@ -407,6 +454,8 @@ window.gisController = (function() {
 		getGeoLoc: function() {
 			return new Promise(
 				function(resolve, reject) {
+					if(userDraggable)
+						resolve([gisController.getUserPosition().lat,gisController.getUserPosition().lng]);
 					if (navigator.geolocation) {
 						browserSupportFlag = true;
 						navigator.geolocation.getCurrentPosition(function(position) {
@@ -414,8 +463,7 @@ window.gisController = (function() {
 							resolve([position.coords.latitude + (chrome ? 0.05 : 0), position.coords.longitude]);
 							//resolve([position.coords.latitude, position.coords.longitude]);
 						}, function() {
-							//TODO ask for user to give it a position
-							reject();
+							resolve(defaultUserPosition);
 						});
 					}
 				}
@@ -438,7 +486,8 @@ window.gisController = (function() {
 		setUserPosition: function(position) {
 			return new Promise(
 				function(resolve, reject) {
-					userMarker.setLatLng(L.latLng(position[0], position[1]));
+					if(position)
+						userMarker.setLatLng(L.latLng(position[0], position[1]));
 					resolve();
 				});
 		},
@@ -480,6 +529,9 @@ window.gisController = (function() {
 				setInterval(function() {
 					gisController.boundToCabs();
 				}, 3000);
+				if (!geolocControl)
+					createGeolocControl();
+				map.addControl(geolocControl);
 				if (!userController.getUserType())
 					userMarker.openPopup();
 			});
