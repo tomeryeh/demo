@@ -12,8 +12,7 @@ window.userController = (function() {
 		userId: null,
 		whoami: {
 			type: '',
-			available: true,
-			disconnect: false
+			available: true
 		},
 	};
 
@@ -54,7 +53,6 @@ window.userController = (function() {
 		setAvailable: function(available) {
 			user.whoami.available = available;
 		},
-
 		/**
 		 * type candidate is "taxi" if user is a "customer" and vice versa.
 		 *

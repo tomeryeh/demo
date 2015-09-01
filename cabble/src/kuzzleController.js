@@ -3,11 +3,13 @@
  *	all the Kuzzle pub sub methods.
  *
  **/
-window.kuzzleController = (function() {
-	var
-		kuzzle = Kuzzle.init(config.kuzzleUrl),
 
-		//the three collections we are interesting to
+ 
+
+
+
+window.kuzzleController = (function() {
+	var	kuzzle = Kuzzle.init(config.kuzzleUrl),
 		CABBLE_COLLECTION_POSITIONS = 'cabble-positions',
 		CABBLE_COLLECTION_USERS = 'cabble-users',
 		CABBLE_COLLECTION_RIDES = 'cabble-rides',
@@ -175,6 +177,7 @@ window.kuzzleController = (function() {
 		///////////////////////////////////////// USERS PUBSUB //////////////////////////////////////
 
 		createUser: function(user, callBack) {
+			console.log("create user ");
 			kuzzle.create(CABBLE_COLLECTION_USERS, user.whoami, true, function(error, response) {
 				if (error) {
 					console.error(error);
@@ -188,18 +191,13 @@ window.kuzzleController = (function() {
 			});
 		},
 		disconnectUser: function(){
-			console.log("disconnected");
-			alert("disconnected");
-			userController.getUser().whoami.disconnect = true;
-			kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
-				function(error, response) {
-					if (error) {
-						console.log(error);
-						return;
-					}
+			if (positionsSubscribeRoom) {
+				kuzzle.unsubscribe(positionsSubscribeRoom);
+			}
 
-				}
-			);
+			if (userSubRoomName)
+				kuzzle.unsubscribe(userSubRoomName);
+
 		},
 		publishUserType: function(userType) {
 			if (!userType)
@@ -246,6 +244,8 @@ window.kuzzleController = (function() {
 				var userId = assocRoomToUser[message.roomName];
 				if (!userId)
 					return;
+
+			
 				//else we remove it from the map.
 				gisController.removeCandidate(userId);
 				//if we where also in a ride with this candidate, we must end it.
@@ -260,8 +260,8 @@ window.kuzzleController = (function() {
 		///////////////////////////////////////// RIDES PUBSUB //////////////////////////////////////
 
 		subscribeToRides: function() {
-			var
-				filter = {
+			var	
+			filter = {
 					and: []
 				},
 				rideFilter = {
