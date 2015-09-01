@@ -187,20 +187,20 @@ window.kuzzleController = (function() {
 				}
 			});
 		},
-
 		disconnectUser: function(){
 			console.log("disconnected");
 			alert("disconnected");
-
+			userController.getUser().whoami.disconnect = true;
 			kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
-					function(error, response) {
-						if (error) {
-							console.log(error);
-							return;
-						}
-					});
-		},
+				function(error, response) {
+					if (error) {
+						console.log(error);
+						return;
+					}
 
+				}
+			);
+		},
 		publishUserType: function(userType) {
 			if (!userType)
 				return;
