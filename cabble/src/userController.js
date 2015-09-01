@@ -12,7 +12,8 @@ window.userController = (function() {
 		userId: null,
 		whoami: {
 			type: '',
-			available: true
+			available: true,
+			disconnect: false
 		},
 	};
 

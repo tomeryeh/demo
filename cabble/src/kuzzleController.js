@@ -188,6 +188,19 @@ window.kuzzleController = (function() {
 			});
 		},
 
+		disconnectUser: function(){
+			console.log("disconnected");
+			alert("disconnected");
+
+			kuzzle.update(CABBLE_COLLECTION_USERS, userController.getUser().whoami,
+					function(error, response) {
+						if (error) {
+							console.log(error);
+							return;
+						}
+					});
+		},
+
 		publishUserType: function(userType) {
 			if (!userType)
 				return;
