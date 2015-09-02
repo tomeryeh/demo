@@ -69,3 +69,10 @@ Now, you can try to use the todolist at http://localhost
 
 # Licence
 This demo is published under the MIT licence
+
+# the Icons are from :
+
+Taxi 
+http://alternativeto.net/software/taxi-magic/
+Customer
+https://thenounproject.com/term/meeple/1269/
