@@ -371,7 +371,7 @@ GameRoundNoMonsterState.prototype = {
       lastPlayerCoordsY = player.y;
     }
 
-    if(game.time.now > updateTimer && live) { // && ((player.x != lastPlayerCoordsX || player.y != lastPlayerCoordsY) || shooted || hasDamaged.length > 0)) {
+    if(game.time.now > updateTimer && live) {
       updateTimer = game.time.now + updateRate;
 
       kuzzle.create(Room.id, {
