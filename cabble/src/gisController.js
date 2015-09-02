@@ -80,6 +80,16 @@ window.gisController = (function() {
 		return icon;
 	}
 
+	function hideControl(contr){
+		if (contr)
+			contr.getContainer().style.display = "none";
+	}
+
+	function showControl(contr){
+		if (contr)
+			contr.getContainer().style.display = "inline";
+	}
+
 	/**
 	 * createUserMarker will create a marker on the map
 	 *
@@ -119,7 +129,8 @@ window.gisController = (function() {
 				var tileURL = 'http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png';
 
 				map = L.map('map-canvas', {
-					layers: [candidatesLayer]
+					layers: [candidatesLayer],
+					zoomControl:false
 				});
 
 				L.tileLayer(tileURL, {
@@ -145,6 +156,12 @@ window.gisController = (function() {
 
 				userMarker.addTo(map);
 
+				createRideControl();
+				map.addControl(rideControl);
+				hideControl(rideControl);
+				createGeolocControl();
+				map.addControl(geolocControl);
+
 				resolve(position);
 			}).bind(this);
 	}
@@ -156,7 +173,7 @@ window.gisController = (function() {
 		var unpinUserPosition	= "Use the manual geolocalisation";
 		L.Control.GeoControl = L.Control.extend({
 			options: {
-				position: 'bottomleft',
+				position: 'topright',
 			},
 			onAdd: function(map) {
 				var controlDiv = L.DomUtil.create('div', 'leaflet-draw-toolbar leaflet-bar');
@@ -245,7 +262,7 @@ window.gisController = (function() {
 
 		var contentPop = document.createElement("div");
 
-		var header = document.createElement("h1");
+		var header = document.createElement("div");
 		header.setAttribute("class", "header");
 		header.appendChild(document.createTextNode("Hello from Cabble ! what can i do for you ?"));
 
@@ -310,7 +327,7 @@ window.gisController = (function() {
 
 		var contentPopup = document.createElement("div");
 
-		var header = document.createElement("h1");
+		var header = document.createElement("div");
 		header.setAttribute("class", "header");
 		header.appendChild(document.createTextNode(titleText));
 
@@ -384,7 +401,7 @@ window.gisController = (function() {
 
 		var contentPopup = document.createElement("div");
 
-		var header = document.createElement("h1");
+		var header = document.createElement("div");
 		header.setAttribute("class", "header");
 		var contentHeader = "";
 		if (type === "customer")
@@ -520,14 +537,12 @@ window.gisController = (function() {
 			}
 			assocIdToOtherItemsMark = {};
 
-			if (rideControl)
-				rideControl.removeFrom(map);
+			hideControl(rideControl);
 
 			map.removeLayer(currentRideLayer);
 			map.addLayer(candidatesLayer);
 
 			currentRideMarker = null;
-			rideControl = null;
 		},
 		getMapBounds: function() {
 			var mapBounds = map.getBounds();
@@ -544,9 +559,7 @@ window.gisController = (function() {
 				setInterval(function() {
 					gisController.centererToBoundingCandidates();
 				}, 3000);
-				if (!geolocControl)
-					createGeolocControl();
-				map.addControl(geolocControl);
+				
 				if (!userController.getUserType())
 					userMarker.openPopup();
 			});
@@ -554,15 +567,8 @@ window.gisController = (function() {
 		closePopupForUser: function() {
 			userMarker.closePopup();
 		},
-		onRideRefused: function(ride) {
-			var rideInfo = ride._source;
-			if(!rideInfo)
-				return;
-
-			var marker = assocIdToOtherItemsMark[rideInfo.customer];
-			if (!marker)
-				marker = assocIdToOtherItemsMark[rideInfo.taxi];
-
+		onRideRefused: function(candidateId) {
+			var marker = assocIdToOtherItemsMark[candidateId];
 			if (!marker)
 				return;
 
@@ -573,7 +579,10 @@ window.gisController = (function() {
 			var contentRefusedPopup = document.createElement("div");
 			var titleText = "the ride has been refused !";
 
-			var header = document.createElement("h1");
+
+			//////////well beter use the recreate strat
+
+			var header = document.createElement("div");
 			header.appendChild(document.createTextNode(titleText));
 			contentRefusedPopup.appendChild(header);
 
@@ -593,71 +602,50 @@ window.gisController = (function() {
 
 			setTimeout(function() {
 				marker.closePopup();
-				popup.setContent(previousContent);
+				var popup = proposeARidePopup(userController.getCandidateType(), candidateId);
+				marker.bindPopup(popup);
 			}, 3000);
 		},
-		onRideAccepted: function(ride) {
-			var rideInfo = ride._source;
-
-			var marker = assocIdToOtherItemsMark[rideInfo.customer];
-			if (!marker)
-				marker = assocIdToOtherItemsMark[rideInfo.taxi];
-
+		onRideAccepted: function(candidateId) {
+			var marker = assocIdToOtherItemsMark[candidateId];
+			
 			if (!marker)
 				return;
 
-			if (marker) {
-				var popup = marker.getPopup();
-				var loader = popup.getContent().querySelector(".loader");
-				if (loader)
-					loader.remove();
+			var popup = marker.getPopup();
+			var loader = popup.getContent().querySelector(".loader");
+			if (loader)
+				loader.remove();
 
-				var okButton = popup.getContent().querySelector(".ok_button");
-				okButton.disabled = false;
-
-				var cancelButton = popup.getContent().querySelector(".cancel_button");
-				cancelButton.disabled = false;
-
-				marker.closePopup();
-
-				candidatesLayer.removeLayer(marker);
-				marker.addTo(currentRideLayer);
-
-				marker.setIcon(userController.getCandidateType() == "taxi" ? taxiIcon : customerIcon);
-				currentRideMarker = marker;
-				//toggle layer to ride one (hide all other candidates for ride)
-				map.removeLayer(candidatesLayer);
-				map.addLayer(currentRideLayer);
-			}
-
-			if (!rideControl)
-				createRideControl();
-			map.addControl(rideControl);
-		},
-		onRideEnded: function(ride) {
-			if (rideControl)
-				rideControl.removeFrom(map);
-
-			currentRideLayer.removeLayer(currentRideMarker);
-			currentRideMarker.addTo(candidatesLayer);
-			map.removeLayer(currentRideLayer);
-			map.addLayer(candidatesLayer);
-
-			///Get popup from marker
-			var popup = proposeARidePopup(userController.getCandidateType(), ride[userController.getCandidateType()]);
-
-			currentRideMarker.bindPopup(popup);
-
-			/*
-			var popup = currentRideMarker.getPopup();
-			//rearm ok button for popup.
 			var okButton = popup.getContent().querySelector(".ok_button");
 			okButton.disabled = false;
-			*/
 
-			currentRideMarker = null;
-			rideControl = null;
+			var cancelButton = popup.getContent().querySelector(".cancel_button");
+			cancelButton.disabled = false;
 
+			marker.closePopup();
+
+			candidatesLayer.removeLayer(marker);
+			marker.addTo(currentRideLayer);
+
+			marker.setIcon(userController.getCandidateType() == "taxi" ? taxiIcon : customerIcon);
+			currentRideMarker = marker;
+			//toggle layer to ride one (hide all other candidates for ride)
+			map.removeLayer(candidatesLayer);
+			map.addLayer(currentRideLayer);
+
+			showControl(rideControl);
+		},
+		onRideEnded: function(candidateId) {
+			hideControl(rideControl);
+			if(currentRideMarker){
+				currentRideLayer.removeLayer(currentRideMarker);
+				currentRideMarker.addTo(candidatesLayer);
+				var popup = proposeARidePopup(userController.getCandidateType(), candidateId);
+				currentRideMarker.bindPopup(popup);			
+			}
+			map.removeLayer(currentRideLayer);
+			map.addLayer(candidatesLayer);
 		},
 		onRideProposal: function(sourceId, targetId, rideProposal) {
 

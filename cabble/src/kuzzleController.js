@@ -30,6 +30,10 @@ window.kuzzleController = (function() {
 		currentRide = null;
 
 	return {
+
+		getCurrentRide: function(){
+			return currentRide;
+		},
 		init: function() {
 			return new Promise(
 				function(resolve, reject) {
@@ -327,13 +331,13 @@ window.kuzzleController = (function() {
 					gisController.onRideProposal(source, target, rideProposal);
 				}
 			} else if (rideInfo.status.indexOf('refused_by') !== -1) {
-				gisController.onRideRefused(rideProposal);
+				gisController.onRideRefused(rideProposal._source[userController.getCandidateType()]);
 				currentRide = null;
 			} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
 				currentRide = rideProposal;
-				gisController.onRideAccepted(rideProposal);
+				gisController.onRideAccepted(rideProposal._source[userController.getCandidateType()]);
 			} else if (rideInfo.status.indexOf('completed') !== -1) {
-				gisController.onRideEnded(rideInfo);
+				gisController.onRideEnded(rideProposal._source[userController.getCandidateType()]);
 				currentRide = null;
 			}
 		},
@@ -387,7 +391,7 @@ window.kuzzleController = (function() {
 			userController.setAvailable(false);
 			kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
 			currentRide = rideProposal;
-			gisController.onRideAccepted(currentRide);
+			gisController.onRideAccepted(rideProposal._source[userController.getCandidateType()]);
 
 			var	listProposal = {
 				filter: {
@@ -439,6 +443,8 @@ window.kuzzleController = (function() {
 		 *
 		 */
 		declineRideProposal: function(rideProposal) {
+			if(!rideProposal)
+				return;
 			var declinedRide = {
 				_id: rideProposal._id,
 				status: 'refused_by_' + userController.getUserType()
@@ -448,7 +454,7 @@ window.kuzzleController = (function() {
 			//	delete assocRideProposalCandidateId[candidateId];
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
-			gisController.onRideRefused(rideProposal);
+			gisController.onRideRefused(rideProposal._source[userController.getCandidateType()]);
 		},
 
 		/**
@@ -471,7 +477,7 @@ window.kuzzleController = (function() {
 				delete assocRideProposalCandidateId[currentRide._source.customer];
 
 			userController.setAvailable(true);
-			currentRide = null;
+			//currentRide = null;
 			kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
 		}
 	};
