@@ -19,12 +19,8 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 </span>
 
 
-### How the User Interface work ?
-A brief overview of Cabble can be found [here](./docs/overview.md).
-
-
-### What will you learn with this demo ?
-Basically in Cabble, an user need to know all the others users in a boundbox around him.
+## What will you learn with this demo ?
+Basically in Cabble, an user need to know all the others users in a boundingbox around him.
 
 This requirement is done by using the geolocalisation filtering from Kuzzle.
 
@@ -46,7 +42,12 @@ In this directory you can use the default `docker-compose.yml` with all you need
 $ docker-compose up
 ```
 
-Now, you can try to use the todolist at http://localhost
+Now, you can try to use Cabble at http://localhost
+
+
+### How the User Interface work ?
+A brief overview of Cabble can be found [here](./docs/overview.md).
+
 
 ## How to run this demo without docker
 

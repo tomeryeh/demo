@@ -1,7 +1,7 @@
 # Kuzzle - Cabble tutorial
 
-This demo will show you how to use the geolocalisation filtering with Kuzzle.
-It will also show you quite complex process to 
+
+The most important think about the demo is the geolocalisation filtering with Kuzzle.
 
 # The three controllers 
 
