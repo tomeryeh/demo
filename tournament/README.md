@@ -1,6 +1,6 @@
 # Kuzzle Tournament Demo
 
-**Kuzzle Tournament** is a real-time combat game running in web browsers.
+**Kuzzle Tournament** is a multiplayer combat game running in web browsers.
 
 This demo uses [Kuzzle](http://kuzzle.io) to handle communications between a game server and game clients, and [Phaser](http://phaser.io/) for the graphical part of the game.
 

@@ -12,7 +12,7 @@ These demos show how to use [Kuzzle](https://github.com/kuzzleio/kuzzle) to mana
 
 ## Advanced demos
 
-* [Kuzzle Tournament](tournament/tutorial.md): a real-time combat game
+* [Kuzzle Tournament](tournament/tutorial.md): a multiplayer combat game
 
 # What is Kuzzle
 
