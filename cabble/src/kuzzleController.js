@@ -254,6 +254,8 @@ window.kuzzleController = (function() {
 						|| currentRide._source.customer === userId)) {
 					kuzzleController.finishRide();
 				}
+
+				delete assocRoomToUser[message.roomName];
 			});
 		},
 
@@ -454,7 +456,6 @@ window.kuzzleController = (function() {
 		 */
 		finishRide: function() {
 			if (!currentRide) {
-				console.log("no curent ride");
 				return;
 			}
 

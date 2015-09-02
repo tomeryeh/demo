@@ -16,18 +16,18 @@ window.gisController = (function() {
 
 	var userDraggable = false;
 
-	
-
-	var otherItemsMark = []; //depending on the nature of user this is a cab list or customerlist
+	var otherItemsMark = []; //depending on the nature of user this is a cab list or customer list
 	var assocIdToOtherItemsMark = {};
 
 	//max distance is 20000 kilometers
-	var maxDisanteOfinterest = 200000000;
+	var maxDistanceOfinterest = 200000000;
 
 	var candidatesLayer = L.layerGroup([]);
 	var currentRideLayer = L.layerGroup([]);
-	var currentRideMarker = null; //the candidate choosen for the ride
 
+	var currentRideMarker = null; //the candidate choosen for the ride if any
+
+	//static var about icon configuration
 	var iconSize = [38, 38];
 	var popupAnchor = [0, -22];
 
@@ -80,6 +80,11 @@ window.gisController = (function() {
 		return icon;
 	}
 
+	/**
+	 * createUserMarker will create a marker on the map
+	 *
+	 * @param position LatLng type from http://leafletjs.com/
+	 */
 	function createUserMarker(position) {
 		return new Promise(
 			function(resolve, reject) {
@@ -102,16 +107,16 @@ window.gisController = (function() {
 		);
 	}
 
+	/**
+	 * createMap
+	 *
+	 * @param position LatLng type from http://leafletjs.com/
+	 */
 	function createMap(position) {
 		return new Promise(
 			function(resolve, reject) {
 
-				//setInterval(function() {
-				//	map.panTo(L.latLng(position));
-				//}, 3000);
-
 				var tileURL = 'http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png';
-				//'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6IjZjNmRjNzk3ZmE2MTcwOTEwMGY0MzU3YjUzOWFmNWZhIn0.Y8bhBaUMqFiPrDRW9hieoQ'
 
 				map = L.map('map-canvas', {
 					layers: [candidatesLayer]
@@ -397,6 +402,12 @@ window.gisController = (function() {
 	}
 
 	return {
+		/**
+		 * add a Marker for a candidate (I.e a taxi if user is a customer and vice verca)
+		 * @parma position LatLng type from Lealfet.js
+		 * @type the type of the marker (taxi or customer)
+		 * id the id associated to the candidate
+		 */
 		addMarker: function(position, type, id) {
 			var contentString;
 			var marker;
@@ -425,31 +436,35 @@ window.gisController = (function() {
 			}
 		},
 
-		boundToCabs: function(){
-
+		/**
+		 *  Display the map centered on user, the layout include the farthest
+		 *  candidates.
+		 *
+		 */
+		centererToBoundingCandidates: function(){
 			var distance  = 0;
-			var mostDistanceMark = null;
+			var farthestMark = null;
 			for (var i = 0; i < otherItemsMark.length; i++) {
 				var currentDistance = userMarker.getLatLng().distanceTo(otherItemsMark[i].getLatLng());
 				if(currentDistance > distance){
 					distance = currentDistance;
-					mostDistanceMark = otherItemsMark[i];
+					farthestMark = otherItemsMark[i];
 				}
 			}
 
-			if(mostDistanceMark){
+			if(farthestMark){
 				var positions = [];
 				var userCoord = userMarker.getLatLng();
-				var mostDistantCoord = mostDistanceMark.getLatLng();
-				positions.push([mostDistantCoord.lat, mostDistantCoord.lng]);
-				positions.push([userCoord.lat + -1 * (mostDistantCoord.lat - userCoord.lat),userCoord.lng + -1 * (mostDistantCoord.lng - userCoord.lng)]);
+				var farthestCoord = farthestMark.getLatLng();
+				positions.push([farthestCoord.lat, farthestCoord.lng]);
+				positions.push([userCoord.lat + -1 * (farthestCoord.lat - userCoord.lat),userCoord.lng + -1 * (farthestCoord.lng - userCoord.lng)]);
 				map.fitBounds(positions, {padding: L.point(200, 200)});
 			}
 		},
 		isTooFarAway: function(position){
 			if(!position)
 				return false;
-			return userMarker.getLatLng().distanceTo(L.latLng(position[0], position[1])) > maxDisanteOfinterest;
+			return userMarker.getLatLng().distanceTo(L.latLng(position[0], position[1])) > maxDistanceOfinterest;
 		},
 		getGeoLoc: function() {
 			return new Promise(
@@ -459,9 +474,9 @@ window.gisController = (function() {
 					if (navigator.geolocation) {
 						browserSupportFlag = true;
 						navigator.geolocation.getCurrentPosition(function(position) {
-							var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
-							resolve([position.coords.latitude + (chrome ? 0.05 : 0), position.coords.longitude]);
-							//resolve([position.coords.latitude, position.coords.longitude]);
+							//var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
+							//resolve([position.coords.latitude + (chrome ? 0.05 : 0), position.coords.longitude]);
+							resolve([position.coords.latitude, position.coords.longitude]);
 						}, function() {
 							resolve(defaultUserPosition);
 						});
@@ -527,7 +542,7 @@ window.gisController = (function() {
 			then(createMap).
 			then(function() {
 				setInterval(function() {
-					gisController.boundToCabs();
+					gisController.centererToBoundingCandidates();
 				}, 3000);
 				if (!geolocControl)
 					createGeolocControl();
@@ -661,7 +676,7 @@ window.gisController = (function() {
 
 				markerSource = this.addMarker(markerPosition, markerType, sourceId);
 
-				this.boundToCabs();
+				this.centererToBoundingCandidates();
 			}
 			markerSource.setIcon(userController.getCandidateType() == "taxi" ? taxiIconAnimated : customerIconAnimated);
 
