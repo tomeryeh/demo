@@ -12,7 +12,7 @@ window.gisController = (function() {
 	var userPopup;
 	var userPosition;
 
-	var defaultUserPosition =[48.8566140, 2.352222];
+	var defaultUserPosition = [48.8566140, 2.352222];
 
 	var userDraggable = false;
 
@@ -28,6 +28,7 @@ window.gisController = (function() {
 	var currentRideMarker = null; //the candidate choosen for the ride if any
 
 	//static var about icon configuration
+	var maxWidthPopup = 175;
 	var iconSize = [38, 38];
 	var popupAnchor = [0, -22];
 
@@ -80,12 +81,12 @@ window.gisController = (function() {
 		return icon;
 	}
 
-	function hideControl(contr){
+	function hideControl(contr) {
 		if (contr)
 			contr.getContainer().style.display = "none";
 	}
 
-	function showControl(contr){
+	function showControl(contr) {
 		if (contr)
 			contr.getContainer().style.display = "inline";
 	}
@@ -100,15 +101,14 @@ window.gisController = (function() {
 			function(resolve, reject) {
 				var userType = userController.getUserType();
 				userPopup = createUserPopup();
-				if(userMarker)
+				if (userMarker)
 					map.removeLayer(userMarker);
 				userMarker = L.marker(position, {
-					draggable:userDraggable
-				}
-				).bindPopup(userPopup);
+					draggable: userDraggable
+				}).bindPopup(userPopup);
 
-				userMarker.on("dragend",function(){
-					defaultUserPosition = [userMarker.getLatLng().lat,userMarker.getLatLng().lng];
+				userMarker.on("dragend", function() {
+					defaultUserPosition = [userMarker.getLatLng().lat, userMarker.getLatLng().lng];
 				});
 
 				userMarker.setIcon(getIcon(userType));
@@ -130,7 +130,7 @@ window.gisController = (function() {
 
 				map = L.map('map-canvas', {
 					layers: [candidatesLayer],
-					zoomControl:false
+					zoomControl: false
 				});
 
 				L.tileLayer(tileURL, {
@@ -160,17 +160,16 @@ window.gisController = (function() {
 				map.addControl(rideControl);
 				hideControl(rideControl);
 				createGeolocControl();
-				map.addControl(geolocControl);
+				
 
 				resolve(position);
 			}).bind(this);
 	}
 
-
 	function createGeolocControl() {
 
-		var pinUserPosition		= "Define the user position by drag";
-		var unpinUserPosition	= "Use the manual geolocalisation";
+		var pinUserPosition = "enabled drag user";
+		var unpinUserPosition = "Use the manual geolocalisation";
 		L.Control.GeoControl = L.Control.extend({
 			options: {
 				position: 'topright',
@@ -194,9 +193,10 @@ window.gisController = (function() {
 				controlUI.title = text;
 				controlUI.href = '#';
 				return controlDiv;
-				}
+			}
 		});
 		geolocControl = new L.Control.GeoControl();
+		map.addControl(geolocControl);
 	}
 
 	function createRideControl() {
@@ -223,9 +223,9 @@ window.gisController = (function() {
 				loader.setAttribute("class", "loader");
 				loader.src = "/assets/img/loading.gif";
 				controlUI.appendChild(loader);
-					controlUI.href = '#';
-					return controlDiv;
-				}
+				controlUI.href = '#';
+				return controlDiv;
+			}
 		});
 		rideControl = new L.Control.RideControl();
 	}
@@ -305,7 +305,7 @@ window.gisController = (function() {
 		});
 		var popupChooseUserType = L.popup().setContent(contentPop);
 
-		popupChooseUserType.options.minWidth = 500;
+		popupChooseUserType.options.mawWidth = maxWidthPopup;
 		return popupChooseUserType;
 	}
 
@@ -358,7 +358,7 @@ window.gisController = (function() {
 		contentPopup.appendChild(footer);
 
 		answerPopupRide = L.popup().setContent(contentPopup);
-		answerPopupRide.options.minWidth = 500;
+		answerPopupRide.options.maxsWidth = maxWidthPopup;
 		return answerPopupRide;
 	}
 
@@ -414,7 +414,7 @@ window.gisController = (function() {
 		contentPopup.appendChild(footer);
 
 		popupProposeRide = L.popup().setContent(contentPopup);
-		popupProposeRide.options.minWidth = 500;
+		popupProposeRide.options.maxWidth = maxWidthPopup;
 		return popupProposeRide;
 	}
 
@@ -458,18 +458,18 @@ window.gisController = (function() {
 		 *  candidates.
 		 *
 		 */
-		centererToBoundingCandidates: function(){
-			var distance  = 0;
+		centererToBoundingCandidates: function() {
+			var distance = 0;
 			var farthestMark = null;
 			for (var i = 0; i < otherItemsMark.length; i++) {
 				var currentDistance = userMarker.getLatLng().distanceTo(otherItemsMark[i].getLatLng());
-				if(currentDistance > distance){
+				if (currentDistance > distance) {
 					distance = currentDistance;
 					farthestMark = otherItemsMark[i];
 				}
 			}
 
-			if(farthestMark){
+			if (farthestMark) {
 				var positions = [];
 				var userCoord = userMarker.getLatLng();
 				var farthestCoord = farthestMark.getLatLng();
@@ -478,21 +478,20 @@ window.gisController = (function() {
 				map.fitBounds(positions, {padding: L.point(200, 200)});
 			}
 		},
-		isTooFarAway: function(position){
-			if(!position)
+		isTooFarAway: function(position) {
+			return false;
+			if (!position)
 				return false;
 			return userMarker.getLatLng().distanceTo(L.latLng(position[0], position[1])) > maxDistanceOfinterest;
 		},
 		getGeoLoc: function() {
 			return new Promise(
 				function(resolve, reject) {
-					if(userDraggable)
-						resolve([gisController.getUserPosition().lat,gisController.getUserPosition().lng]);
+					if (userDraggable)
+						resolve([gisController.getUserPosition().lat, gisController.getUserPosition().lng]);
 					if (navigator.geolocation) {
 						browserSupportFlag = true;
 						navigator.geolocation.getCurrentPosition(function(position) {
-							//var chrome = window.navigator.userAgent.indexOf("Chrome") > 0;
-							//resolve([position.coords.latitude + (chrome ? 0.05 : 0), position.coords.longitude]);
 							resolve([position.coords.latitude, position.coords.longitude]);
 						}, function() {
 							resolve(defaultUserPosition);
@@ -518,7 +517,7 @@ window.gisController = (function() {
 		setUserPosition: function(position) {
 			return new Promise(
 				function(resolve, reject) {
-					if(position)
+					if (position)
 						userMarker.setLatLng(L.latLng(position[0], position[1]));
 					resolve();
 				});
@@ -559,7 +558,7 @@ window.gisController = (function() {
 				setInterval(function() {
 					gisController.centererToBoundingCandidates();
 				}, 3000);
-				
+
 				if (!userController.getUserType())
 					userMarker.openPopup();
 			});
@@ -578,7 +577,6 @@ window.gisController = (function() {
 
 			var contentRefusedPopup = document.createElement("div");
 			var titleText = "the ride has been refused !";
-
 
 			//////////well beter use the recreate strat
 
@@ -638,11 +636,11 @@ window.gisController = (function() {
 		},
 		onRideEnded: function(candidateId) {
 			hideControl(rideControl);
-			if(currentRideMarker){
+			if (currentRideMarker) {
 				currentRideLayer.removeLayer(currentRideMarker);
 				currentRideMarker.addTo(candidatesLayer);
 				var popup = proposeARidePopup(userController.getCandidateType(), candidateId);
-				currentRideMarker.bindPopup(popup);			
+				currentRideMarker.bindPopup(popup);
 			}
 			map.removeLayer(currentRideLayer);
 			map.addLayer(candidatesLayer);

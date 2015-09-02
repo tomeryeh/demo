@@ -9,15 +9,6 @@
 		//	- positions change
 		//	- user status change
 		//	- ride change
-		.then(kuzzleController.init).then(
-			function(){
-				  window.addEventListener('beforeunload', function () {
-						if (typeof kuzzleController.disconnectUser === 'function') {
-							kuzzleController.disconnectUser();
-					}
-				});
-		});
-
-
+		.then(kuzzleController.init);
 
 })();
