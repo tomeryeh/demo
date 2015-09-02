@@ -9,10 +9,9 @@ var
 	Kuzzle = require('../lib/kuzzle.min.js'),
 	Players = {},
 	Rooms = {},
-	rawConfigData = fs.readFileSync('../config.js', 'utf8'),
+  	Configuration = require('../config.js'),
 	kuzzle;
 
-eval(rawConfigData);
 kuzzle = Kuzzle.init(Configuration.server.kuzzleUrl);
 startServer();
 

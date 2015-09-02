@@ -8,7 +8,7 @@ var Configuration = {
 		room: 'tournament-server-room',
 		minPlayersPerRoom: 2,
 		maxPlayersPerRoom: 8,
-		kuzzleUrl: 'http://localhost:7512'
+		kuzzleUrl: 'http://192.168.1.99:7512'
 	},
 
 	player: {
@@ -25,3 +25,9 @@ var Configuration = {
 		PLAYER_DIE: 7,
 	}
 };
+
+(function () {
+  if (typeof module === 'object' && module.exports) {
+	module.exports = Configuration;
+  }
+})();

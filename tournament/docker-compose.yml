@@ -1,9 +1,15 @@
-demo:
+front:
   image: nginx
   volumes:
     - ".:/usr/share/nginx/html"
   ports:
     - "80:80"
+
+server:
+  image: node:0.12.7
+  command: sh -c "cd /var/app/server && npm start"
+  volumes:
+    - ".:/var/app/server"
 
 kuzzle:
   image: kuzzleio/kuzzle:alpha
@@ -12,12 +18,11 @@ kuzzle:
   links:
     - elasticsearch
     - redis
-  environment:
-    - LIKE_A_VIRGIN=1
 
 redis:
   image: redis:3.0.2
 
 elasticsearch:
   image: elasticsearch:1.5.2
-  command: elasticsearch --cluster.name=arrow
+  command: elasticsearch --cluster.name=tournament
+
