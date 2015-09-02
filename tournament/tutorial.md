@@ -2,7 +2,7 @@
 
 **Kuzzle Tournament** is a multiplayer combat game running in web browsers.
 
-This is an advanced tutorial, meant to only explain these specific features of Kuzzle:
+This is an advanced tutorial, meant to only explain these specific Kuzzle features:
 
 * How to setup an application server working in pair with Kuzzle
 * How to handle client disconnections
@@ -92,4 +92,4 @@ Here is how an ``on`` or ``off`` notification looks like:
 The game server has to use the ``roomName`` field to identify who exactly left the game. This ID is unique and serves as a subscription ID.  
 Since this ID is generated when subscribing to a room, the game client sends it to the game server when asking for a game room. That's how the game server can know which player exactly left the game.
 
-This is a bit of a hassle, so in future versions of Kuzzle, we plan to add subscriptions metadata, to help application designers to better handle this kind of problem by letting them add custom data to these events.
+This is a bit of a hassle, so in future versions of Kuzzle, we plan to add subscriptions metadata, to help application designers to better handle this kind of problem by letting them add custom data along with these events.
