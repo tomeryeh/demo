@@ -555,6 +555,11 @@ window.gisController = (function() {
 			then(createUserMarker).
 			then(createMap).
 			then(function() {
+
+				if (!navigator.geolocation) {
+					alert("You can use Cabble without geoloc by dragging the user.\n For this purpose you must first click on the button use the manual geolocalisation")
+				}
+
 				setInterval(function() {
 					gisController.centererToBoundingCandidates();
 				}, 3000);
