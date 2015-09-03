@@ -20,7 +20,7 @@ This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-
 
 To make a basic chat application work, you need:
 * a connection to a back-end server
-* a message listener
+* a message listener 
 * a way to send your own messages
 
 Because this tutorial would be very short and dull with these features alone, we added these ones:
