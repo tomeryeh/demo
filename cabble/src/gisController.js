@@ -48,7 +48,7 @@ window.gisController = (function() {
 	});
 
 	var unknowIcon = L.icon({
-		iconUrl: "assets/img/unknown.jpg",
+		iconUrl: "assets/img/unknown.png",
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
 	});
