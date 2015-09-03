@@ -1,35 +1,62 @@
-
 #Sketchup User interface Cabble in three screens.
 
 
 This is the basic process in three sceens Cabble rely on.
+
+On Cabble, the user (you) is always centered on the map.
+The user cna be a taxi or a customer, he will see some candidates (i.e some taxi if you are a customer and vice versa).
+You can propose a ride to a candidate or accept a proposed ride.
+
+
+
+
+
 Here, this is the customer who propose the ride, but it can be the taxi.
 
+<div >Step 1 : The customer see some taxi.</div>
 <a href="./cabble-sketch.png" >
-<img style="vertical-align:middle" src="./cabble-sketch.png" width="300">
+<img style="vertical-align:middle" src="./cabble-sketch.png"  width="100%">
 </a>
-<span style="vertical-align:middle" class="align">Step 1 : a customer ask a taxi for a ride.</span>
 
+<br>
 
+<div>Setp 2 : The customer click on the taxi icon and propose a ride with the popped dialog. </div>
 <a href="./cabble-sketch2.png" >
-<img style="vertical-align:middle" src="./cabble-sketch2.png" width="300">
+<img style="vertical-align:middle" src="./cabble-sketch2.png"  width="100%">
 </a>
-<span>Setp 2  :The taxi see in realtime the ride proposal.  </span>
 
+<br>
+
+<div>Step 3 : The ride has been accepted by the taxi.
+A blue button in bottom right position appears on both taxi and customer screen. They can end the ride at anytime.</div>
 <a href="./cabble-sketch3.png" >
-<img style="vertical-align:middle" src="./cabble-sketch3.png" width="300">
+<img  src="./cabble-sketch3.png" width="100%">
 </a>
-<span style="height:200px" >Step 3 : The ride has been accepted by the taxi. A blue button in bottom right position appears for both taxi and customer screen. 
-		They can end the riden at anytime, and (in a futur version) give an evaluation to the ride. 
- </span>
 
 
-Each action is cancelable.
+Well that's it ! you can test the application alone with two browsers by "cheating" on the geolocalisation for both taxi and customer (see next section).
 
-## Iconography
+#Without Geolocalisation
 
- * <img src="../assets/img/customer.png" width="40" >The icon for the customer
- * <img src="../assets/img/customeranimated.gif" width="40" >A customer asking for a ride
- * <img src="../assets/img/taxi.jpg"  width="40" >The icon for the customer.
- * <img src="../assets/img/taxianimated.gif"  width="40" >A taxi proposing a ride.
- * <img src="../assets/img/unknown.jpg" width="40" >The user has not choose ye betweeen a customer or beeing a taxi.
+Suppose :
+
+ * your navigator has no geolocalisation,
+ * you don't want to send your real position,
+ * no other user than you use Cabble in your town (it is a shame),
+ * you want to test the demo with two browsers, with faking positions for your taxi an customer.
+
+Then you can :
+
+ * click on the top right button,
+ * drag your user where you want.
+
+
+ Warning : because we use localstorage for saving user information you mus use differents browsers for test.
+
+# Iconography
+
+ * <img src="../assets/img/customer.png" width="40" > The icon for the customer
+ * <img src="../assets/img/customeranimated.gif" width="40" > A customer asking for a ride
+ * <img src="../assets/img/taxi.png"  width="40" > The icon for the customer.
+ * <img src="../assets/img/taxianimated.gif"  width="40" > A taxi proposing a ride.
+ * <img src="../assets/img/unknown.png" width="40" > The user has not yet choosen betweeen beeing a customer or a taxi.

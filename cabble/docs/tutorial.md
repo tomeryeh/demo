@@ -1,9 +1,10 @@
 # Kuzzle - Cabble tutorial
 
-This demo will show you how to use the geolocalisation filtering with Kuzzle.
-It will also show you quite complex process to 
+The highlight between Cabble and other demos is the geolocalisation filtering.
+It will be explicited in [subscribe to positions changing](#sub_to_pos).
 
-# The three controllers 
+
+# The three controllers.
 
 The entry point for Cabble is [app.js](../src/app.js).
 This file can be resume to the following snippet with Promise :
@@ -17,30 +18,22 @@ This file can be resume to the following snippet with Promise :
 Corresponding to  :
 
   * [`gisController`](../src/gisController.js) (gis is for Geolocalisation Information System) is devoted to map rendering and manipulating markers.
-Cabble use [Leafletjs](http://leafletjs.com/) for rendering. gisController also use webAPI geolocalisation functionality.
-After the `gisController.init` call, the user is geolocalised, and visible on the center of the newly rendered map with [Leafletjs](http://leafletjs.com/),
+Cabble use the awesome [Leafletjs](http://leafletjs.com/) for rendering. After the `gisController.init` call, the user is geolocalised, and visible on the center of the newly rendered map.
   * [`userController`](../src/userController.js) allow to deal with localstorage as a persistance user information data.
-  After the `userController.init`, if a previous user exist in storage, his id and type are loaded,
-  * [`kuzzleController`](../src/kuzzleController.js) is devoted to all the PubSub (Publication Subscription) with Kuzzle.
-  After the `kuzzleController.init`, connection to Kuzzle for pubsub positions, user status, and rides are enabled.
+  After the `userController.init`, the previous user saved into localstorage is loaded.
+  * [`kuzzleController`](../src/kuzzleController.js) is devoted to all the PubSub (Publication-Subscription) with Kuzzle.
+  After the `kuzzleController.init`, pubsub with Kuzzle for positions, user status, and rides are avaialable.
 
 
-We will focus on [`kuzzleController`](../src/kuzzleController.js). When some call will be done to the two other controllers (gisController and userController) we will explain brievely their meaning if ir is not self explanatory.
+We will focus on [`kuzzleController`](../src/kuzzleController.js). When some call will be done to gisController or userController we will explain brievely their meaning if ir is not self explanatory.
 
 # The three collections in kuzzleController
 
-Cabble deal with three collections :
+Cabble deal with three collections : `CABBLE_COLLECTION_POSITIONS`, `CABBLE_COLLECTION_USERS` and `CABBLE_COLLECTION_RIDES`.
 
-```javascript
-	CABBLE_COLLECTION_POSITIONS = 'cabble-positions',
-	CABBLE_COLLECTION_USERS = 'cabble-users',
-	CABBLE_COLLECTION_RIDES = 'cabble-rides';
-```
-
-* `CABBLE_COLLECTION_POSITIONS` will be used to synchronize all the users positions on the map. It will also be used to filter all the user from Cabble to only deal with the candidates fitting the bounding box from our current map view.
-* `CABBLE_COLLECTION_USERS` will be used to send the change in user status (an user can choose to be a taxi first and then become a customer). In order to leave user focus on his goal, Cabble does not show Taxi if the user is a taxi and vice versa. 
-* `CABBLE_COLLECTION_RIDES` will be used to send and update the ride status along it life cicle 
-
+* `CABBLE_COLLECTION_POSITIONS` will be used for the geolocalisation.
+* `CABBLE_COLLECTION_USERS` will be used to send the change in user status (an user can choose to be a taxi first and then become a customer). In order to leave user focus on his goal, Cabble does not show Taxi if the user is a taxi and vice versa.
+* `CABBLE_COLLECTION_RIDES` will be used to send and update the ride status into Cabble.
 
 
 The init for kuzzleController is : 
@@ -67,8 +60,7 @@ The init for kuzzleController is :
 	}
 ```
 
-Cabble ask for Kuzzle to give to the current user an id if Cabble does not found one in localstorage (see fetchFromLocalStorage in userController for details).
-Then Cabble init the publication subscriptions via initPubSub for the three collections :
+Cabble ask for Kuzzle for an id if no user is already found in localstorage (see fetchFromLocalStorage in userController for details). Then Cabble init the publication subscriptions via initPubSub for the three collections :
 
 
 ```javascript
@@ -81,25 +73,32 @@ Then Cabble init the publication subscriptions via initPubSub for the three coll
 		//users collection
 		kuzzleController.subscribeToUsers();
 
-
 		//rides collection
 		kuzzleController.subscribeToRides();
 	},
 ```
 The three following sections will describe : 
 
- * the positions pub sub,
- * the user pub sub,
- * the ride pub sub.
+ * the positions pub-sub,
+ * the user pub-sub,
+ * the ride pub-sub.
+
+
 
 ## Positions management
-Positions collection allow to update the current position of the taxi and customer (publishPositions).
-Cabble also use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box (subscribeToPositions).
+Cabble publish as a non persitant document the current user position into Positions collection (see publish a position udpate).
 
-### Publish positions
+Cabble use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box (subscribeToPositions) to listening to candidates near the current user position (see Subscribe to position updates).
+
+
+
+### Publish a position udpate
 
 Cabble has to send the positions changes for user in order to synchronize all positions in all other Cabble instance.
-To keep it simple Cabble will send position every 3000 milliseconds : 
+For real time purpose we can use the [watchPosition](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition) from webapi with Leaflet.js, but to keep it simple Cabble will send position every 3000 milliseconds : 
+
+
+<a name="pub_room_name" ></a>
 ```javascript
 	publishPositions: function() {
 		setInterval(
@@ -132,29 +131,17 @@ To keep it simple Cabble will send position every 3000 milliseconds :
 			}, 3000);
 	}
 ```
-
-Cabble get information about user id and type from `userController` , current positions from `gisController.geoLoc` and send 
+Cabble send informations about user id and type ("taxi" or "customer") , current geolocalisation and send 
 it as a document with `kuzzle.create`. This document will be not persisted in Kuzzle (i.e last argument of `kuzzle.create` is `false`).
 
-<b><a name="pub_room_name" ></a> Sending association between userSubRoomName and userId</b>
-
-A `roomName` attribute is send withing the userId.
-
-```javascript
-	userId: userId,
-	userSubRoomName: userSubRoomName
-```
-
- This `userSubRoomName` attribute is not important for the positions listening purpose. It is closely related to the user state change listening who come next in the [Users management section](#user_subscription).
-
 <a name="sub_to_pos" ></a>
-###  Subscribe To Positions changing
+###  Subscribe To Position updates
 
 Cabble propose to the user some "candidates" for a ride in the curent map bounding box.
 A candidate is a taxi if the current user is a customer and vice versa.
 
 
-The subscribe filter for bounding box with the current use type is computed as follow in subscribeToPositions:
+The subscribe filter for bounding box with the current use type is computed as follow in `subscribeToPositions` :
 
 ```javascript
 	var
@@ -183,29 +170,13 @@ The subscribe filter for bounding box with the current use type is computed as f
 		};
 ```
 
-Suppose that, looking for distants candidates, the user zoom out into the map.
-Cabble does not want to keep tracking for previous deprecated positions change filtering.
-To do so Cabble keep the id of the last subscribe and cancel it if exist :
-
-```javascript
-	//remove last deprecated subscribe :
-	if (positionsSubscribeRoom) {
-		kuzzle.unsubscribe(positionsSubscribeRoom);
-	}
-	//adding a new subscribe :
-	positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter,
-		....
-```
-
-
-
-In fact there are plenty of cases where we have to change the bounding box of interest :
+There are plenty of cases where we have to change the bounding box of interest :
 
  * zoom or pan into the map,
  * change the viewport size (by changing browser size, by changing the phone orientation, ...)
  * change from state taxi to customer (if user is a customer, he is interesting for taxi and vice versa, marker on map must reflect that).
 
-To keep it simple, we will NOT listen to all these events but instead blindly force the filtering to be change every 1000 milliseconds : 
+To keep it simple, we will NOT listen to all these events but instead blindly force the filtering to be change every 10000 milliseconds  :
 
 ```javascript
 	// we remove deprecated timer if any first
@@ -216,11 +187,19 @@ To keep it simple, we will NOT listen to all these events but instead blindly fo
 		//subscribe for candidates in bounding box for the current user type here.
 		
 		...
-	}, 1000);
+		//remove last deprecated subscribe :
+		if (positionsSubscribeRoom) {
+			kuzzle.unsubscribe(positionsSubscribeRoom);
+		}
+		//adding a new subscribe :
+		positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter,
+		....
+	}, 10000);
 ```
 
-When Cabbel recive a positions change with our current filter, we add a marker on gis 
+When Cabble recive a position change for our current filter , we add the candidate or update his position on the map. 
 
+<a name="update_room_name" ></a>
 ```javascript
 	function(error, message) {
 		if (error) {
@@ -236,24 +215,19 @@ When Cabbel recive a positions change with our current filter, we add a marker o
 
 			if (candidateType === userController.getUserType())
 				return;
+			//adding the marker into the map.
 			gisController.addMarker(candidatePosition, candidateType, candidateId);
 		}
 	});
 ```
 
+That it ! for the geolocalisation filtering process, we are done !
 
-<b> <a name="update_room_name" ></a>Keeping updated the association between userSubRoomName and userId</b>
-
-Cabble update the association between a roomName and the userId. This is unrelated to positions pubSub.
-```javascript
-	assocRoomToUser[message._source.userSubRoomName] = message._source.userId;
-```
-It will be used for the [Users management subscription](#user_subscription) purpose who come next.
-
+The following section are about Cabble management for user change and ride porposal.
 
 ## Users management
 
-The User management refer to linstening changing of user type.
+The User management refer to listen to user changing type or disconnection (i.e unscribe to the collection).
 
 ### Publish an user change
 
@@ -279,39 +253,29 @@ Every time the user choose to change between taxi and customer type, Cabble must
 	}
 ```
 
-First Cabble set in localstorage the new userType with `userController.setUserType`.
-Then it updates the user icon in GIS (in `onUserChangeType`).
-It will also remove all the candidates because they now mismatch the user type of interest.
 Finally we re-add the `subscribeToUsers` and `subscribeToPositions` because we must 
-change theirs filtering accordingly to the new user type.
+change theirs filters accordingly to the new user type.
 
 ### <a name="user_subscription" ></a> Subscribe to users change
 
-The subscribing to users change is done with the method `subscribeToUsers`.
-This is the tricky part of the Kuzzle code. We will explain here why we have keep an 
-association `assocRoomToUser` in the positions management.
+The subscribing to users change is done in `subscribeToUsers`.
 
 ```javascript
 	subscribeToUsers: function() {
-		if (!userController.getUserType())
-			return;
 		var userStatus = {
 			exists: {
 				field: 'type'
 			}
 		};
-		if (userSubRoomName)
-			kuzzle.unsubscribe(userSubRoomName);
+		...
 
-		userSubRoomName = kuzzle.subscribe(CABBLE_COLLECTION_USERS, 
+		kuzzle.subscribe(CABBLE_COLLECTION_USERS, 
 						userStatus, function(error, message) {
 			if (error) {
 				console.error(error);
 				return false;
 			}
 
-			//we are interesting in user unscribe i.e user not 
-			//subscribing to the 'type' field
 			if (!message || message.action != "off")
 				return;
 
@@ -321,46 +285,41 @@ association `assocRoomToUser` in the positions management.
 				return;
 			//else we remove it from the map
 			gisController.removeCandidate(userId);
-			//if we where also in a ride with this candidate, we must break it
-			if (currentRide && (currentRide._source.taxi === userId 
-					|| currentRide._source.customer === userId)) {
-				kuzzleController.finishRide();
-			}
+			...
 		});
 	}
 ```
 
-The message `message` that we recieve to the end of the subscription do not contain the `userId`. 
-But it has the attribute `roomName` that identify uniquely the user.
+The user subscribe is only intented to remove the disconnnected candidates, and the candidates having canging theirs types.
+This is done by listening to the user collection with a filter `field: 'type'` only on action `off`.
 
-To found the `userId` from `roomName`, we have keep this association into the object `assocRoomToUser`.
-This object `assocRoomToUser` is updated via pub sub Position process :
 
- * association `userSubRoomName` `userId` in Publish position in the snippet [Sending assoc roomname user id](#pub_room_name) ...
- * ...and are recive on Subscribe to position with the snippet [Keeping updated the association between roomName and userId](#update_room_name)
+`message` does not contain the `userId` , but the attribute `roomName` that identify uniquely the user.
+Thanks to this `assocRoomToUser`, Cabble retrieve the `userId` and remove this candidate from the map with `gisController.removeCandidate(userId);`. 
+
+### About `assocRoomToUser` updating
+This object `assocRoomToUser` was updated into pub-sub Position process :
+
+ * to publish association, `userSubRoomName` and `userId` are send with in the snippet [Sending assoc roomname user id](#pub_room_name) 
+ * and are recive on Subscribe with the snippet [Keeping updated the association between roomName and userId](#update_room_name)
  
-
-The candidate corresponding to this roomName has send his positions (see the previous section 
-and his id. So we have to keep the association between user and rom in `assocRoomToUser`.
-
-Thanks to this `assocRoomToUser`, Cabble retrieve the userid and remove this candidate with mismatching type and remove it from the map with `gisController.removeCandidate(userWithSameStatus);`.
 
 
 ## Rides management
 
-The rides management is closely related to the [overview](./overview.md) :
+The rides management is closely related to the [overview sketching up](./overview.md) :
 
  * first a ride is <b>proposed</b> by a customer or a taxi, 
  * the ride can be <b>declined</b> by candidate or <b>accepted</b>,
- * if accepted, the ride can be set has <b>ended</b>  anytime by the taxi or the customer.
+ * finally the ride can be <b>completed</b> anytime by both taxi or customer.
 
-To deal with the creation of ride (i.e <b>proposed</b>) and with the three state : <b>declined</b>, <b>accepted</b> and <b>completed</b>, we orgnanise Cabble code has follow : 
+The proposition of a ride correspond to a ride creation.
+ <b>proposed</b>, <b>declined</b> and <b>completed</b> are the three states for a ride.
 
- * the subscription process `publishRideProposal` will delegate all the states changing in `manageRideProposal`.
- * the creation ride is done in method subsection "Propose a Ride".
- * we have three update process each corresponding to a state changing.
+ * the subscription process `publishRideProposal` will delegate all the states changing managemenet in `manageRideProposal`.
+ * the creation/proposition ride is done in method subsection "Propose a Ride".
+ * we have three update process, each corresponding to a state changing.
  
-
 
 ### Subscribing to the Rides messages
 
@@ -411,10 +370,12 @@ Nothing too complicated here, the `filter` ride is about  :
 		rideFilter.term[userType] = userController.getUserId();)
 
 
-### Propose a Ride
+### Propose a Ride pub-sub
 
-When the user click on a candidate, he has the possibility to propose a ride.
-This will be done by a document creation on the CABBLE_COLLECTION_RIDES in the publishRideProposal method.
+When the user click on a candidate icon, a popup appear and the user has the possibility to propose a ride.
+
+A ride correspond to a document in the CABBLE_COLLECTION_RIDES.
+This is done in the publishRideProposal method :
 
 ```javascript
 	kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, 
@@ -428,7 +389,9 @@ This will be done by a document creation on the CABBLE_COLLECTION_RIDES in the p
 ```
 
 
-The Subcription part answer in manageRideProposal is :
+The <b>Subcription</b> part answer in manageRideProposal.
+
+If user is no availalable (i.e already involve in an other ride), the ride is silently declined.
 
 ```javascript
 	if (rideInfo.status.indexOf('proposed_by') !== -1) {
@@ -438,8 +401,7 @@ The Subcription part answer in manageRideProposal is :
 		}
 	}
 ```
-If user is no availalable (i.e already involve in an other ride), the ride is silently declined.
-
+Else we notify the candidate by the `onRideProposal` method (the candidate icon will blink)
 ```javascript
 	else {
 		var proposedByTaxi = rideInfo.status === "proposed_by_taxi";
@@ -455,15 +417,11 @@ If user is no availalable (i.e already involve in an other ride), the ride is si
 	} 
 ```
 
-
-
 ### Accept a Ride proposal
 
-
-The ride acceptation is define in `acceptRideProposal`.
-
-
-In this function, we first publish the ride acceptance by updating the document corresponding to the ride.
+The candidate has the ability from a popup to decline or accept the ride.
+In case of acceptation, the action will be send to Kuzzle with `acceptRideProposal`.
+In this function , we first publish the ride acceptance by updating the document corresponding to the ride.
 
 ```javascript
 	acceptRideProposal: function(rideProposal) {
@@ -575,7 +533,6 @@ The Subcription part answer in manageRideProposal is :
 		gisController.onRideEnded(rideInfo);
 	}
 ```
-
 
 ### Finish a Ride
 
