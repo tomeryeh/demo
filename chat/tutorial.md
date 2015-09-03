@@ -1,6 +1,6 @@
 # Kuzzle - Chat Tutorial
 
-This demo will show you how to create a simple chat program, with multi-rooms support, using Kuzzle as a back-end.
+This demo will show you how to create a simple chat program with multi-room support using Kuzzle as a back-end.
 
 This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
 
@@ -11,7 +11,7 @@ This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-
 * [Sending messages to Kuzzle](#sending-messages-to-kuzzle)
 * [Counting the number of users in our room](#counting-the-number-of-users-in-our-room)
 * [Multiple rooms support](#multiple-rooms-support)
-	* [Getting all documents of a data collection](#getting-all-documents-of-a-data-collection)
+	* [Getting all documents of a data collection](#getting-all-documents-of-a-data-collection <!--"getting all the documents"-->
 	* [Creating a new persisted document](#creating-a-new-persisted-document)
 	* [Deleting a persisted document](#deleting-a-persisted-document)
 
@@ -25,12 +25,12 @@ To make a basic chat application work, you need:
 
 Because this tutorial would be very short and dull with these features alone, we added these ones:
 
-* multi-rooms support, allowing users to create, switch and delete rooms
-* display the number of users connected to the same room than us
+* multi-room support, allowing users to create, switch and delete rooms
+* display the number of users connected to the same room as us <!--La structure comparative se construit ainsi "the same ...as"-->
 
 All these features are implemented in the ``js/app.js`` file.
 
-This tutorial will explain all lines of codes involving Kuzzle. There are only a handful of these, every other lines of code in the javascript file handle the chat interface.
+This tutorial will explain all lines of code involving Kuzzle. There are only a handful of these, every other lines of code in the javascript file handles the chat interface.
 
 ## Connecting to Kuzzle
 
@@ -47,7 +47,7 @@ And... done. You can now send and receive realtime messages, or store and retrie
 
 ## Listening to incoming messages
 
-The 'listenMessages' function, starting line 16 of the file ``js/app.js``, listen to incoming chat messages and display them in the chat message box.
+The 'listenMessages' function, starting line 16 of the file ``js/app.js``, listens to incoming chat messages and displays them in the chat message box.
 
 Kuzzle manages these notifications using *subscriptions*. Unlike a chat application, where you simply subscribe to a *room* or a *topic*, with Kuzzle you subscribe to *documents* instead.
 
@@ -56,7 +56,7 @@ Because this chat application has multiple rooms support, we'll filter messages 
 
 Here is how it works:
 
-* If we have already subscribed to Kuzzle, we unsubscribe first, using the subscription ID provided by Kuzzle when we call the ``subscribe`` function:  
+* If we have already subscribed to Kuzzle, first we unsubscribe using the subscription ID provided by Kuzzle when we call the ``subscribe`` function:  
 ```js
 if (subcriptionId) {
 	kuzzle.unsubscribe(subcriptionId);
@@ -78,7 +78,7 @@ The next function of this tutorial starts at line 49, and is used to send chat m
 
 Since we have configured our chat application to listen to messages sent to the ``CHAT_MSG_COLLECTION`` data collection, and since we filter messages depending on their ``chatRoom`` member, we have to send messages following these rules.
 
-Oh, and we really should include our user name, too, so that each client receiving a message can display it.  
+Oh, and we really should include our user name too, so that each client receiving a message can display it.  
 And because we generate a random user color when the chat application starts,  we'll propagate this information too.
 
 This gives us this piece of code:  
@@ -98,7 +98,7 @@ By default, the ``create`` function will send a publish/subscribe message, meani
 
 ## Counting the number of users in our room
 
-Next, we want to display the number of users in our room. To do that, we'll simply ask Kuzzle to tell us how many users share the same subscription than us.  
+Next, we want to display the number of users in our room. To do that, we'll simply ask Kuzzle to tell us how many users share the same subscription as us.  
 This brings us to the ``updateUserCount`` function, starting line 68 of the file, and to this particular line of code:
 
 ```js
@@ -112,15 +112,16 @@ The callback function is used to display the obtained Kuzzle response.
 
 Now that we covered subscriptions and publish/subscribe messages, it's time to show you how to deal with persisted documents.
 
-To do that, we'll allow our little chat application to handle multiple rooms. The rooms list will be stored in Kuzzle, using a (very small) document per room, in a data collection stored in the ``CHAT_ROOM_COLLECTION`` global variable.
+To do that, we'll allow our little chat application to handle multiple rooms. The room list will be stored in Kuzzle, using a (very small) document per room, in a data collection stored in the ``CHAT_ROOM_COLLECTION`` global variable.
 The next 3 sections will show you how to search, count, store, and delete persisted documents.
+<!--"room list" "room" est au singulier car il a la fonction d'adjectif. Un adjectif est invariable en anglais-->
 
 ### Getting all documents of a data collection
 
 Before manipulating our room documents, we want to display the complete list of available rooms to our users.  
-This is what the ``refreshRooms`` function do, starting line 81 of the file.
+This is what the ``refreshRooms`` function does, starting line 81 of the file.
 
-We won't cover how to get one specific document in this tutorial. Instead, we'll ask Kuzzle to give us all documents stored in the ``CHAT_ROOM_COLLECTION`` data collection:
+We won't cover how to get one specific document in this tutorial. Instead, we'll ask Kuzzle to give us all the documents stored in the ``CHAT_ROOM_COLLECTION`` data collection:
 
 ```js
 kuzzle.search(CHAT_ROOM_COLLECTION, {}, function (error, rooms) {
@@ -152,7 +153,7 @@ var query = {
 kuzzle.count(CHAT_ROOM_COLLECTION, query, function (error, response) {
 ```
 
-If the returned document count is greater than 0, then a room already exists with the same name and we stop our document creation there.
+If the returned document count is greater than 0, then a room already exists with the same name and we'll stop our document creation there.
 
 **Note:** the ``count`` and ``search`` functions behave exactly the same way, the only change is that ``count`` returns a document count, while ``search`` returns all found documents, thus making it slower than ``count``.
 
@@ -184,4 +185,4 @@ kuzzle.delete(CHAT_ROOM_COLLECTION, whoami.chatRoomId, function (error, response
 The callback is called once the document has been removed from Kuzzle.
 
 Before calling the ``delete`` method, this function performs a ``countSubscription``, exactly like in the [Counting the number of users in our room](#counting-the-number-of-users-in-our-room) section of this tutorial.  
-This is done to ensure an user is alone in the room he wants to remove.
+This is done to ensure a user is alone in the room he wants to remove.
