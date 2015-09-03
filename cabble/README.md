@@ -10,26 +10,26 @@ Cabble eases customers life as well: they can now hail a taxi with their fingert
 Stay tuned! Upcoming versions of Cabble will also include social functionalities like the possibility for customers to rate their taxis, to comment their ride, to share their trip to their favorite social network, and more!
 
 <span>
-<figure>
+<div  >Cabble overview : A customer ask a taxi for a ride : </div>  
+
 <a href="./docs/cabble-sketch.png" >
-  <img src="./docs/cabble-sketch.png"  width="400" >
+  <img src="./docs/cabble-sketch.png"  width="100%" >
   </a >
-  <figcaption style="width:300px;" >Cabble overview : A customer ask a taxi for a ride.</figcaption>  
-</figure>
+  
 </span>
 
 
-### How the User Interface work ?
+## What will you learn with this demo ?
+
+Basically in Cabble, an user need to know all the others users in a boundbox around him.
+So that's it : you will learn to use <b>the geolocalisation filtering</b> into Kuzzle.
+THis and all the publications and subscriptions used by Cabble will be described in the
+ [step-by-step tutorial](./docs/tutorial.md#sub_to_pos). 
+
+## How the User Interface work ?
 A brief overview of Cabble can be found [here](./docs/overview.md).
 
 
-### What will you learn with this demo ?
-Basically in Cabble, an user need to know all the others users in a boundbox around him.
-
-This requirement is done by using the geolocalisation filtering from Kuzzle.
-
-All the publications and subscriptions used by Kuzzle will be described in the
- step-by-step tutorial [here](./docs/tutorial.md) the geolocalisation filtering will be shown in the section [Subscribe To Positions changing](./docs/tutorial.md#sub_to_pos)
 
 #How to install Cabble
 
@@ -68,11 +68,9 @@ Now, you can try to use the todolist at http://localhost
  * [Leafletjs](http://leafletjs.com/) (awesome library for drawing map with OpenStreetMap Database)
 
 # Licence
-This demo is published under the MIT licence
+This demo is published under the [MIT](https://opensource.org/licenses/MIT) licence
 
-# the Icons are from :
+# The beautiful icons are from :
+https://www.elegantthemes.com/blog/freebie-of-the-week/beautiful-flat-icons-for-free
 
-Taxi 
-http://alternativeto.net/software/taxi-magic/
-Customer
-https://thenounproject.com/term/meeple/1269/
+Under the [GPL](http://www.gnu.org/licenses/gpl-2.0.html) licence.

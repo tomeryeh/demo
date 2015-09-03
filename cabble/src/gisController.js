@@ -36,7 +36,7 @@ window.gisController = (function() {
 	var geolocControl = null;
 
 	var taxiIcon = L.icon({
-		iconUrl: "assets/img/taxi.jpg",
+		iconUrl: "assets/img/taxi.png",
 		iconSize: iconSize,
 		popupAnchor: popupAnchor
 	});
