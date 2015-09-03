@@ -4,7 +4,7 @@ The highlight between Cabble and other demos is the geolocalisation filtering.
 It will be explicited in [subscribe to positions changing](#sub_to_pos).
 
 
-# The three controllers.
+# The three controllers
 
 The entry point for Cabble is [app.js](../src/app.js).
 This file can be resume to the following snippet with Promise :
@@ -25,18 +25,18 @@ Cabble use the awesome [Leafletjs](http://leafletjs.com/) for rendering. After t
   After the `kuzzleController.init`, pubsub with Kuzzle for positions, user status, and rides are avaialable.
 
 
-We will focus on [`kuzzleController`](../src/kuzzleController.js). When some call will be done to gisController or userController we will explain brievely their meaning if ir is not self explanatory.
+We will focus our tutorial on [`kuzzleController`](../src/kuzzleController.js). When some call will be done to gisController or userController we will explain brievely their meaning if it is not self explanatory.
 
 # The three collections in kuzzleController
 
-Cabble deal with three collections : `CABBLE_COLLECTION_POSITIONS`, `CABBLE_COLLECTION_USERS` and `CABBLE_COLLECTION_RIDES`.
+Cabble deal with three concepts, associated to three collections :
 
 * `CABBLE_COLLECTION_POSITIONS` will be used for the geolocalisation.
 * `CABBLE_COLLECTION_USERS` will be used to send the change in user status (an user can choose to be a taxi first and then become a customer). In order to leave user focus on his goal, Cabble does not show Taxi if the user is a taxi and vice versa.
 * `CABBLE_COLLECTION_RIDES` will be used to send and update the ride status into Cabble.
 
 
-The init for kuzzleController is : 
+Pub-sub on this three collections will be done in the init from kuzzleController :
 ```javascript
 	return {
 		init: function() {
@@ -77,24 +77,29 @@ Cabble ask for Kuzzle for an id if no user is already found in localstorage (see
 		kuzzleController.subscribeToRides();
 	},
 ```
+
 The three following sections will describe : 
 
  * the positions pub-sub,
  * the user pub-sub,
  * the ride pub-sub.
 
-
-
 ## Positions management
-Cabble publish as a non persitant document the current user position into Positions collection (see publish a position udpate).
 
-Cabble use the geolocalisation filtering from Kuzzle to be aware of candidates in the user map bounding box (subscribeToPositions) to listening to candidates near the current user position (see Subscribe to position updates).
+Position Pub-sub management correspond to the two following steps :
+
+ * A Cabble user send his position change in order to be visible to the others users.
+From a Kuzzle point of view, this is done by the creation of a non persisted document with some attributes `position`, `type`, `userId` and `userSubRoomName`.
 
 
+ * Some Cabble users may want to be aware of this user, if he is not too far from them.
+From a Kuzzle point of view, this is done by a subscription on documents where position attribute match a filter based on geolocalisation.
+
+We will describe more in details this two aspects in the next two sections.
 
 ### Publish a position udpate
 
-Cabble has to send the positions changes for user in order to synchronize all positions in all other Cabble instance.
+Cabble has to send the positions changes for user in order to be synchronized with all others Cabble instances.
 For real time purpose we can use the [watchPosition](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition) from webapi with Leaflet.js, but to keep it simple Cabble will send position every 3000 milliseconds : 
 
 
@@ -117,7 +122,7 @@ For real time purpose we can use the [watchPosition](https://developer.mozilla.o
 					if (!userType)
 						return;
 
-					//Cabble send a non perisistant document : our current position
+					//Cabble send a non persistant document : our current position
 					kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
 						type: userType,
 						position: {
@@ -131,14 +136,13 @@ For real time purpose we can use the [watchPosition](https://developer.mozilla.o
 			}, 3000);
 	}
 ```
-Cabble send informations about user id and type ("taxi" or "customer") , current geolocalisation and send 
-it as a document with `kuzzle.create`. This document will be not persisted in Kuzzle (i.e last argument of `kuzzle.create` is `false`).
+
 
 <a name="sub_to_pos" ></a>
 ###  Subscribe To Position updates
 
 Cabble propose to the user some "candidates" for a ride in the curent map bounding box.
-A candidate is a taxi if the current user is a customer and vice versa.
+A candidate is a taxi near the user if it is a customer and vice versa.
 
 
 The subscribe filter for bounding box with the current use type is computed as follow in `subscribeToPositions` :
@@ -197,7 +201,7 @@ To keep it simple, we will NOT listen to all these events but instead blindly fo
 	}, 10000);
 ```
 
-When Cabble recive a position change for our current filter , we add the candidate or update his position on the map. 
+When Cabble receive a position change for our current filter , we add the candidate or update his position on the map.
 
 <a name="update_room_name" ></a>
 ```javascript
@@ -223,7 +227,11 @@ When Cabble recive a position change for our current filter , we add the candida
 
 That it ! for the geolocalisation filtering process, we are done !
 
-The following section are about Cabble management for user change and ride porposal.
+
+### hey ! but what about this `assocRoomToUser` var ?
+
+`assocRoomToUser` has nothing to do with geolocalisation position, but all with user management who come next.
+
 
 ## Users management
 
@@ -301,7 +309,7 @@ Thanks to this `assocRoomToUser`, Cabble retrieve the `userId` and remove this c
 This object `assocRoomToUser` was updated into pub-sub Position process :
 
  * to publish association, `userSubRoomName` and `userId` are send with in the snippet [Sending assoc roomname user id](#pub_room_name) 
- * and are recive on Subscribe with the snippet [Keeping updated the association between roomName and userId](#update_room_name)
+ * and are receive on Subscribe with the snippet [Keeping updated the association between roomName and userId](#update_room_name)
  
 
 
@@ -319,7 +327,44 @@ The proposition of a ride correspond to a ride creation.
  * the subscription process `publishRideProposal` will delegate all the states changing managemenet in `manageRideProposal`.
  * the creation/proposition ride is done in method subsection "Propose a Ride".
  * we have three update process, each corresponding to a state changing.
- 
+
+
+### Propose a Ride pub-sub
+
+When the user click on a candidate icon, a popup appear and the user has the possibility to propose a ride.
+Propose a ride in Cabble correspond to create a document `rideproposal` in Kuzzle :
+
+```javascript
+	kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true,
+		function(error, response) {
+		if (error) {
+			console.error(error);
+			return false;
+		}
+		currentRide = response.result;
+	});
+```
+
+### Accept, Decline or Finish  a Ride
+
+Changing the state of a ride in Cabble correspond to updating the 'status' attribute from the 'ride' document in Kuzzle.
+As an exemple here is the `finishRide` publication :
+```javascript
+	finishRide: function() {
+		if (!currentRide) {
+			console.log("no curent ride");
+			return;
+		}
+
+		var finishedRide = {
+			_id: currentRide._id,
+			status: 'completed'
+		};
+
+		userController.setAvailable(true);
+		kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
+	}
+```
 
 ### Subscribing to the Rides messages
 
@@ -369,203 +414,4 @@ Nothing too complicated here, the `filter` ride is about  :
  	
 		rideFilter.term[userType] = userController.getUserId();)
 
-
-### Propose a Ride pub-sub
-
-When the user click on a candidate icon, a popup appear and the user has the possibility to propose a ride.
-
-A ride correspond to a document in the CABBLE_COLLECTION_RIDES.
-This is done in the publishRideProposal method :
-
-```javascript
-	kuzzle.create(CABBLE_COLLECTION_RIDES, rideProposal, true, 
-		function(error, response) {
-		if (error) {
-			console.error(error);
-			return false;
-		}
-		currentRide = response.result;
-	});	
-```
-
-
-The <b>Subcription</b> part answer in manageRideProposal.
-
-If user is no availalable (i.e already involve in an other ride), the ride is silently declined.
-
-```javascript
-	if (rideInfo.status.indexOf('proposed_by') !== -1) {
-		if (!userController.isAvailable()) {
-			this.declineRideProposal(rideProposal);
-			return;
-		}
-	}
-```
-Else we notify the candidate by the `onRideProposal` method (the candidate icon will blink)
-```javascript
-	else {
-		var proposedByTaxi = rideInfo.status === "proposed_by_taxi";
-		var candidateType = (proposedByTaxi) ? "taxi" : "customer";
-		var userType = userController.getUserType();
-
-		// a ride recive and current Cabble user has changing his type.
-		if (userType === candidateType)
-			return;
-		var target = (proposedByTaxi) ? rideInfo.customer : rideInfo.taxi;
-		var source = (proposedByTaxi) ? rideInfo.taxi : rideInfo.customer;
-		gisController.onRideProposal(source, target, rideProposal);
-	} 
-```
-
-### Accept a Ride proposal
-
-The candidate has the ability from a popup to decline or accept the ride.
-In case of acceptation, the action will be send to Kuzzle with `acceptRideProposal`.
-In this function , we first publish the ride acceptance by updating the document corresponding to the ride.
-
-```javascript
-	acceptRideProposal: function(rideProposal) {
-		var
-			myUserType = userController.getUserType(),
-			acceptedRide = {
-				_id: rideProposal._id,
-				status: 'accepted_by_' + myUserType
-			};
-			
-
-		userController.setAvailable(false);
-		kuzzle.update(CABBLE_COLLECTION_RIDES, acceptedRide);
-		currentRide = rideProposal;
-		gisController.onRideAccepted(currentRide);
-```
-
-
-The Subcription part answer in manageRideProposal is :
-```javascript
-	if (rideInfo.status.indexOf('refused_by') !== -1) {
-		gisController.onRideRefused(rideProposal);
-		currentRide = null;
-	} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
-		currentRide = rideProposal;
-		gisController.onRideAccepted(rideProposal);
-	} else if (rideInfo.status.indexOf('completed') !== -1) {
-		currentRide = null;
-		gisController.onRideEnded(rideInfo);
-	}
-```
-
-
-Then Cabble decline all the other rides proposal.
-
-```javascript
-		// All rides, except this one, proposed by others and involving me
-		var listProposal = {
-			filter: {
-				and: [{
-					term: {
-						status: 'proposed_by_' + 
-							(myUserType === 'taxi' ? 'customer' : 'taxi')
-					}
-				}, {
-					not: {
-						ids: {
-							values: [rideProposal._id]
-						}
-					}
-				}]
-			}
-		};
-
-		userSubFilter.term[myUserType] = userController.getUserId();
-		listProposal.filter.and.push(userSubFilter);
-
-		var userSubFilter = {
-			term: {}
-		};
-
-		/*
-		At this point, we have 1 accepted ride proposal, and possibly multiple
-		ride proposed in the meantime.
-		So here we list these potential proposals and gracefully decline these
-		 */
-		kuzzle.search(CABBLE_COLLECTION_RIDES, listProposal,
-			function(error, searchResult) {
-			if (error) {
-					console.log(error);
-					return false;
-				}
-
-				searchResult.hits.hits.forEach(function(element) {
-					// element is not a ride document, but it contains
-					// the _id element we need to decline the ride
-					kuzzleController.declineRideProposal(element);
-				});
-		});
-```
-
-
-### Decline a Ride
-
-Decline a ride is simply update the document rideProposal in Kuzzle :
-
-```javascript
-	declineRideProposal: function(rideProposal) {
-		var declinedRide = {
-			_id: rideProposal._id,
-			status: 'refused_by_' + userController.getUserType()
-		};
-
-		kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
-	},
-```
-
-
-The Subcription part answer in manageRideProposal is :
-```javascript
-	if (rideInfo.status.indexOf('refused_by') !== -1) {
-		gisController.onRideRefused(rideProposal);
-		currentRide = null;
-	} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
-		currentRide = rideProposal;
-		gisController.onRideAccepted(rideProposal);
-	} else if (rideInfo.status.indexOf('completed') !== -1) {
-		currentRide = null;
-		gisController.onRideEnded(rideInfo);
-	}
-```
-
-### Finish a Ride
-
-Finsih a ride is simply update the document rideProposal in Kuzzle and update the user state :
-
-```javascript
-	finishRide: function() {
-		if (!currentRide) {
-			console.log("no curent ride");
-			return;
-		}
-
-		var finishedRide = {
-			_id: currentRide._id,
-			status: 'completed'
-		};
-
-		userController.setAvailable(true);
-		kuzzle.update(CABBLE_COLLECTION_RIDES, finishedRide);
-	}
-```
-
-
-The Subcription part answer in manageRideProposal is :
-```javascript
-	if (rideInfo.status.indexOf('refused_by') !== -1) {
-		gisController.onRideRefused(rideProposal);
-		currentRide = null;
-	} else if (rideInfo.status.indexOf('accepted_by') !== -1) {
-		currentRide = rideProposal;
-		gisController.onRideAccepted(rideProposal);
-	} else if (rideInfo.status.indexOf('completed') !== -1) {
-		currentRide = null;
-		gisController.onRideEnded(rideInfo);
-	}
-```
+Then Cabble manage each state changing in `manageRideProposal`.

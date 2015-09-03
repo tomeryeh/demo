@@ -55,15 +55,14 @@ window.kuzzleController = (function() {
 		},
 		initPubSub: function() {
 
-			//positions collection
+			//Positions collection
 			kuzzleController.publishPositions();
 			kuzzleController.subscribeToPositions();
 
-			//users collection
+			//Users collection
 			kuzzleController.subscribeToUsers();
 
-
-			//rides collection
+			//Rides collection
 			kuzzleController.subscribeToRides();
 		},
 
@@ -86,7 +85,7 @@ window.kuzzleController = (function() {
 						if (!userType)
 							return;
 
-						//we send a non perisistant document : our current position
+						//we send a non persistant document : our current position
 						kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
 							userId: userId,
 							type: userType,
@@ -155,7 +154,6 @@ window.kuzzleController = (function() {
 					});
 				}
 
-
 				if (positionsSubscribeRoom) {
 					kuzzle.unsubscribe(positionsSubscribeRoom);
 				}
@@ -179,7 +177,6 @@ window.kuzzleController = (function() {
 					}
 				});
 			}
-			
 		},
 
 		///////////////////////////////////////// USERS PUBSUB //////////////////////////////////////
@@ -261,7 +258,7 @@ window.kuzzleController = (function() {
 					}
 
 					delete assocRoomToUser[message.roomName];
-				});
+			});
 		},
 
 		///////////////////////////////////////// RIDES PUBSUB //////////////////////////////////////
