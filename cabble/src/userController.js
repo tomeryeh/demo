@@ -42,7 +42,7 @@ window.userController = (function() {
 		 */
 		setUserType: function(type) {
 			user.whoami.type = type;
-			return this.setInLocalStorage();
+			return this.setInSessionStorage();
 		},
 		getUserId: function() {
 			return user.whoami._id;

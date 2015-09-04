@@ -94,16 +94,16 @@ window.gisController = (function() {
 	/**
 	 * createUserMarker will create a marker on the map
 	 *
-	 * @param position LatLng type from http://leafletjs.com/
 	 */
-	function createUserMarker(position) {
+	function createUserMarker() {
 		return new Promise(
 			function(resolve, reject) {
 				var userType = userController.getUserType();
 				userPopup = createUserPopup();
+
 				if (userMarker)
 					map.removeLayer(userMarker);
-				userMarker = L.marker(position, {
+				userMarker = L.marker(defaultUserPosition, {
 					draggable: userDraggable
 				}).bindPopup(userPopup);
 
@@ -112,7 +112,7 @@ window.gisController = (function() {
 				});
 
 				userMarker.setIcon(getIcon(userType));
-				resolve(position);
+				resolve();
 			}.bind(this)
 		);
 	}
@@ -120,9 +120,8 @@ window.gisController = (function() {
 	/**
 	 * createMap
 	 *
-	 * @param position LatLng type from http://leafletjs.com/
 	 */
-	function createMap(position) {
+	function createMap() {
 		return new Promise(
 			function(resolve, reject) {
 
@@ -148,13 +147,13 @@ window.gisController = (function() {
 				};
 				L.control.layers(baseMaps, overlayMaps).addTo(map);
 
-				if (!position) {
+				//if (!position) {
 					map.fitWorld();
-				} else {
-					map.setView([position[0], position[1]], 15);
-				}
+				//}
+				// else {
+				//	map.setView([position[0], position[1]], 15);
+				//}
 
-				userMarker.addTo(map);
 
 				createRideControl();
 				map.addControl(rideControl);
@@ -162,7 +161,7 @@ window.gisController = (function() {
 				createGeolocControl();
 				
 
-				resolve(position);
+				resolve();
 			}).bind(this);
 	}
 
@@ -493,6 +492,7 @@ window.gisController = (function() {
 						resolve([gisController.getUserPosition().lat, gisController.getUserPosition().lng]);
 					if (navigator.geolocation) {
 						browserSupportFlag = true;
+
 						navigator.geolocation.getCurrentPosition(function(position) {
 							resolve([position.coords.latitude, position.coords.longitude]);
 						}, function() {
@@ -553,22 +553,31 @@ window.gisController = (function() {
 			};
 		},
 		init: function() {
-			return this.getGeoLoc().
-			then(createUserMarker).
-			then(createMap).
-			then(function() {
+			return createUserMarker().
+				then(createMap).
+				then(this.getGeoLoc).
+				then(this.setUserPosition).
+				then(function(position) {
+					new Promise(
+						function(resolve,reject){
+							if (!navigator.geolocation) {
+								alert("You can use Cabble without geoloc by dragging the user.\n For this purpose you must first click on the button use the manual geolocalisation")
+							}
 
-				if (!navigator.geolocation) {
-					alert("You can use Cabble without geoloc by dragging the user.\n For this purpose you must first click on the button use the manual geolocalisation")
-				}
 
-				setInterval(function() {
-					gisController.centererToBoundingCandidates();
-				}, 3000);
+						userMarker.addTo(map);
+						map.setView(userMarker.getLatLng(), 15);
 
-				if (!userController.getUserType())
-					userMarker.openPopup();
-			});
+						setInterval(function() {
+							gisController.centererToBoundingCandidates();
+						}, 3000);
+
+						if (!userController.getUserType())
+							userMarker.openPopup();
+						resolve();
+						}
+					);
+				});
 		},
 		closePopupForUser: function() {
 			userMarker.closePopup();

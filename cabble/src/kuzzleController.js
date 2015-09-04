@@ -188,7 +188,7 @@ window.kuzzleController = (function() {
 				} else {
 					user.userId = response._id;
 					user.whoami._id = response._id;
-					userController.setInLocalStorage().then(
+					userController.setInSessionStorage().then(
 						callBack
 					);
 				}
