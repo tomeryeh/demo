@@ -19,8 +19,8 @@ Corresponding to  :
 
   * [`gisController`](../src/gisController.js) GIS (<b>G</b>eolocalisation <b>I</b>nformation <b>S</b>ystem) is devoted to map rendering and manipulating markers.
 Cabble use the awesome [Leafletjs](http://leafletjs.com/) library for rendering. After the `gisController.init` call, the user is geolocalised, and visible on the center of the newly rendered map.
-  * [`userController`](../src/userController.js) allow to deal with localstorage as a persistance user information data.
-  After the `userController.init`, the previous user saved into localstorage is loaded.
+  * [`userController`](../src/userController.js) allow to deal with sessionstorage as a persistance user information data.
+  After the `userController.init`, the previous user saved into sessionstorage is loaded.
   * [`kuzzleController`](../src/kuzzleController.js) is devoted to all the PubSub (Publication-Subscription) with Kuzzle.
   After the `kuzzleController.init`, pubsub with Kuzzle for positions, user status, and rides are avaialable.
 
@@ -54,7 +54,7 @@ Pub-sub on this three collections will be done in the init from kuzzleController
 							resolve();
 						});
 					} else {
-						//user has been found in localstorage from userController
+						//user has been found in sessionstorage from userController
 						kuzzleController.initPubSub();
 						resolve();
 					}
@@ -62,7 +62,7 @@ Pub-sub on this three collections will be done in the init from kuzzleController
 	}
 ```
 
-Cabble ask for Kuzzle for an id if no user is already found in localstorage (see fetchFromLocalStorage in userController for details). Then Cabble init the publication subscriptions via initPubSub for the three collections :
+Cabble ask for Kuzzle for an id if no user is already found in sessionstorage (see fetchFromSessionStorage in userController for details). Then Cabble init the publication subscriptions via initPubSub for the three collections :
 
 
 ```javascript

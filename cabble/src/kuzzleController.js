@@ -41,7 +41,7 @@ window.kuzzleController = (function() {
 							resolve();
 						});
 					} else {
-						//user has been found in localstorage from userController
+						//user has been found in sessionstorage from userController
 						kuzzleController.initPubSub();
 
 						window.addEventListener('beforeunload', function() {

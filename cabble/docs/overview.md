@@ -46,8 +46,6 @@ Then you can :
  * drag your user where you want.
 
 
- <b>Warning</b> : because we use localstorage for saving user information, you must use differents browsers for fakng different users.
-
 # Iconography
 
  * <img src="../assets/img/customer.png" width="40" > The icon for the customer

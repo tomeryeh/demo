@@ -20,7 +20,7 @@ window.userController = (function() {
 		init: function() {
 			return new Promise(
 				function(resolve, reject) {
-					userController.fetchFromLocalStorage().then(function(value) {
+					userController.fetchFromSessionStorage().then(function(value) {
 						if (value)
 							user = value;
 						if (user.whoami.type) {
@@ -60,29 +60,31 @@ window.userController = (function() {
 		getCandidateType: function() {
 			return this.getUserType() === "taxi" ? "customer" : "taxi";
 		},
-		fetchFromLocalStorage: function() {
+		fetchFromSessionStorage: function() {
 			return new Promise(
 				function(resolve, reject) {
-					var resolver = Promise.pending();
-					localforage.getItem('cable_user')
-						.then(function(value) {
-							resolve(JSON.parse(value));
-						});
-				});
-
+					var data = null;
+					if(sessionStorage)
+						data = sessionStorage.cable_user;
+					if(data)
+						data = JSON.parse(data)
+					resolve(data);
+				}
+			);
 		},
-		setInLocalStorage: function() {
-			var resolver = Promise.pending();
-			var availability = this.isAvailable();
-			//we do not persist the availability status
-			this.setAvailable(true);
-			localforage.setItem('cable_user', JSON.stringify(user))
-				.then(function() {
+		setInSessionStorage: function() {
+			return new Promise(
+				function(resolve, reject) {
+					var availability = this.isAvailable();
+					if(!sessionStorage)
+						resolve();
+
+					this.setAvailable(true);
+					sessionStorage.cable_user = JSON.stringify(user);
 					this.setAvailable(availability);
-					resolver.resolve();
-				}.bind(this));
-			return resolver.promise;
+					resolve();
+				}.bind(this)
+			);
 		}
 	};
-
 })();
