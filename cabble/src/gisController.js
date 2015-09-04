@@ -168,8 +168,8 @@ window.gisController = (function() {
 
 	function createGeolocControl() {
 
-		var pinUserPosition = "enabled drag user";
-		var unpinUserPosition = "Use the manual geolocalisation";
+		var pinUserPosition = "desabled drag user position";
+		var unpinUserPosition = "enabled drag user position";
 		L.Control.GeoControl = L.Control.extend({
 			options: {
 				position: 'topright',
@@ -187,6 +187,7 @@ window.gisController = (function() {
 					});
 
 				var text = unpinUserPosition;
+
 				var controlUI = L.DomUtil.create('button', 'leaflet-draw-edit-remove', controlDiv);
 				controlUI.setAttribute("class", "info_button");
 				controlUI.innerHTML = text;
@@ -305,7 +306,7 @@ window.gisController = (function() {
 		});
 		var popupChooseUserType = L.popup().setContent(contentPop);
 
-		popupChooseUserType.options.mawWidth = maxWidthPopup;
+		//popupChooseUserType.options.mawWidth = maxWidthPopup;
 		return popupChooseUserType;
 	}
 
@@ -358,7 +359,7 @@ window.gisController = (function() {
 		contentPopup.appendChild(footer);
 
 		answerPopupRide = L.popup().setContent(contentPopup);
-		answerPopupRide.options.maxsWidth = maxWidthPopup;
+		//answerPopupRide.options.maxsWidth = maxWidthPopup;
 		return answerPopupRide;
 	}
 
@@ -414,7 +415,8 @@ window.gisController = (function() {
 		contentPopup.appendChild(footer);
 
 		popupProposeRide = L.popup().setContent(contentPopup);
-		popupProposeRide.options.maxWidth = maxWidthPopup;
+		//popupProposeRide.options.maxWidth = maxWidthPopup;
+		popupProposeRide.options.minWidth = 200;
 		return popupProposeRide;
 	}
 
