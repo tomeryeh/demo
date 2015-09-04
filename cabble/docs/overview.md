@@ -1,17 +1,12 @@
 #Sketchup User interface Cabble in three screens.
 
 
-This is the basic process in three sceens Cabble rely on.
+This is the basic process in three sceens that Cabble rely on.
 
-On Cabble, the user (you) is always centered on the map.
-The user cna be a taxi or a customer, he will see some candidates (i.e some taxi if you are a customer and vice versa).
-You can propose a ride to a candidate or accept a proposed ride.
+On Cabble, the user is always centered on the map.
+The user can be a taxi or a customer, he will see some candidates (i.e some taxi if you are a customer and vice versa).
+The user can propose a ride to a candidate or accept a proposed ride.
 
-
-
-
-
-Here, this is the customer who propose the ride, but it can be the taxi.
 
 <div >Step 1 : The customer see some taxi.</div>
 <a href="./cabble-sketch.png" >
@@ -51,7 +46,7 @@ Then you can :
  * drag your user where you want.
 
 
- Warning : because we use localstorage for saving user information you mus use differents browsers for test.
+ <b>Warning</b> : because we use localstorage for saving user information, you must use differents browsers for fakng different users.
 
 # Iconography
 

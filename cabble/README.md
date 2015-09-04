@@ -22,7 +22,7 @@ Stay tuned! Upcoming versions of Cabble will also include social functionalities
 
 Basically in Cabble, an user need to know all the others users in a boundbox around him.
 So that's it : you will learn to use <b>the geolocalisation filtering</b> into Kuzzle.
-THis and all the publications and subscriptions used by Cabble will be described in the
+This and all the publications and subscriptions used by Cabble will be described in the
  [step-by-step tutorial](./docs/tutorial.md#sub_to_pos). 
 
 ## How the User Interface work ?
