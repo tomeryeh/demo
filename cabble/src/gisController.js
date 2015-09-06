@@ -104,13 +104,13 @@ window.gisController = (function() {
 				if (userMarker)
 					map.removeLayer(userMarker);
 				userMarker = L.marker(defaultUserPosition, {
-					draggable: userDraggable
-				})
-				.on("dragend",function(e){
-					var newPosition = e.target._latlng;
-					gisController.setUserPosition([gisController.getUserPosition().lat,gisController.getUserPosition().lng]);
-				})
-				.bindPopup(userPopup);
+						draggable: userDraggable
+					})
+					.on("dragend", function(e) {
+						var newPosition = e.target._latlng;
+						gisController.setUserPosition([gisController.getUserPosition().lat, gisController.getUserPosition().lng]);
+					})
+					.bindPopup(userPopup);
 
 				userMarker.setIcon(getIcon(userType));
 				resolve();
@@ -118,15 +118,35 @@ window.gisController = (function() {
 		);
 	}
 
-
-	function createTimerPosition(){
-		if(timerUpdatePosition)
+	function createTimerPosition() {
+		if (timerUpdatePosition)
 			clearInterval(timerUpdatePosition);
-		timerUpdatePosition = setInterval(function(){
-			if(kuzzleController)
-				kuzzleController.publishPositions([gisController.getUserPosition().lat,gisController.getUserPosition().lng]);
-		}.bind(this),5000);
+		timerUpdatePosition = setInterval(function() {
+			if (kuzzleController)
+				kuzzleController.publishPositions([gisController.getUserPosition().lat, gisController.getUserPosition().lng]);
+		}.bind(this), 5000);
 	}
+
+	/**
+	 * From lodash
+	 *
+	 */
+
+	function debounce(func, wait, immediate) {
+		var timeout;
+		return function() {
+			var context = this,
+				args = arguments;
+			var later = function() {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+			var callNow = immediate && !timeout;
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+			if (callNow) func.apply(context, args);
+		};
+	};
 
 	/**
 	 * createMap
@@ -138,10 +158,17 @@ window.gisController = (function() {
 
 				var tileURL = 'http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png';
 
+				//updateSubscription position when change window size of zoom, until no other 
+				//updatepositions is already fired less then 1000 millisendonc ago
+				var updateDebounced = debounce(kuzzleController.subscribeToPositions, 1000);
+
 				map = L.map('map-canvas', {
-					layers: [candidatesLayer],
-					zoomControl: false
-				});
+						layers: [candidatesLayer],
+						zoomControl: false,
+						dragging :false
+					})
+					.on("resize", updateDebounced)
+					.on("zoomend", updateDebounced);
 
 				L.tileLayer(tileURL, {
 					maxZoom: 18,
@@ -182,11 +209,10 @@ window.gisController = (function() {
 					.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
 					.addListener(controlDiv, 'click', function() {
 						userDraggable = !userDraggable;
-						if(userDraggable){
+						if (userDraggable) {
 							userMarker.dragging.enable();
 							userMarker.setZIndexOffset(1000);
-						}
-						else {
+						} else {
 							userMarker.dragging.disable();
 							userMarker.setZIndexOffset(0);
 						}
@@ -484,12 +510,13 @@ window.gisController = (function() {
 				var userCoord = userMarker.getLatLng();
 				var farthestCoord = farthestMark.getLatLng();
 				positions.push([farthestCoord.lat, farthestCoord.lng]);
-				positions.push([userCoord.lat + -1 * (farthestCoord.lat - userCoord.lat),userCoord.lng + -1 * (farthestCoord.lng - userCoord.lng)]);
-				map.fitBounds(positions, {padding: L.point(200, 200)});
-			}
-			else {
+				positions.push([userCoord.lat + -1 * (farthestCoord.lat - userCoord.lat), userCoord.lng + -1 * (farthestCoord.lng - userCoord.lng)]);
+				map.fitBounds(positions, {
+					padding: L.point(200, 200)
+				});
+			} else {
 
-				map.setView(this.getUserPosition(),16);
+				map.setView(this.getUserPosition(), 16);
 			}
 		},
 		isTooFarAway: function(position) {
@@ -501,21 +528,21 @@ window.gisController = (function() {
 		getGeoLoc: function() {
 			return new Promise(
 				function(resolve, reject) {
-					if(!userDraggable){
+					if (!userDraggable) {
 						map.locate({
-							watch : true
-						})
-						.on("locationfound", function(e){
-							//bug on Firefox, event locate are send periodically.
-							if(!userDraggable)
-								this.setUserPosition([e.latlng.lat,e.latlng.lng]);
+								watch: true
+							})
+							.on("locationfound", function(e) {
+								//bug on Firefox, event locate are send periodically.
+								if (!userDraggable)
+									this.setUserPosition([e.latlng.lat, e.latlng.lng]);
 							}.bind(this))
-						.on("locationerror",function (e){
-							this.setUserPosition(defaultUserPosition);
-						}.bind(this));
+							.on("locationerror", function(e) {
+								this.setUserPosition(defaultUserPosition);
+							}.bind(this));
 					}
-				resolve();
-			}.bind(this));
+					resolve();
+				}.bind(this));
 		},
 		removeCandidate: function(id) {
 			var marker = assocIdToOtherItemsMark[id];
@@ -534,19 +561,19 @@ window.gisController = (function() {
 		setUserPosition: function(position) {
 			return new Promise(
 				function(resolve, reject) {
-					if (!position){
+					if (!position) {
 						resolve();
 					}
 					var changed = !currentPosition || !(currentPosition[0] === position[0] && currentPosition[1] === position[1]);
-					if(changed){
+					if (changed) {
 						userMarker.setLatLng(L.latLng(position[0], position[1]));
-						kuzzleController.publishPositions([this.getUserPosition().lat,this.getUserPosition().lng]);
+						kuzzleController.publishPositions([this.getUserPosition().lat, this.getUserPosition().lng]);
 						createTimerPosition();
 						currentPosition = position;
 					}
 					this.centererToBoundingCandidates();
 					resolve();
-			}.bind(this));
+				}.bind(this));
 		},
 		getUserPosition: function() {
 			return userMarker.getLatLng();
@@ -579,23 +606,23 @@ window.gisController = (function() {
 		init: function() {
 
 			return createUserMarker().
-				then(createMap).
-				then(this.getGeoLoc.bind(this)).
-				then(function() {
-					new Promise(
-						function(resolve,reject){
-							if (!navigator.geolocation) {
-								alert("You can use Cabble without geoloc by dragging the user.\n For this purpose you must first click on the button use the manual geolocalisation")
-							}
+			then(createMap).
+			then(this.getGeoLoc.bind(this)).
+			then(function() {
+				new Promise(
+					function(resolve, reject) {
+						if (!navigator.geolocation) {
+							alert("You can use Cabble without geoloc by dragging the user.\n For this purpose you must first click on the button use the manual geolocalisation")
+						}
 						userMarker.addTo(map);
 						map.setView(userMarker.getLatLng(), 15);
 
 						if (!userController.getUserType())
 							userMarker.openPopup();
 						resolve();
-						}.bind(this)
-					);
-				}.bind(this));
+					}.bind(this)
+				);
+			}.bind(this));
 		},
 		closePopupForUser: function() {
 			userMarker.closePopup();

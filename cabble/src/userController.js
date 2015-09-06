@@ -64,9 +64,9 @@ window.userController = (function() {
 			return new Promise(
 				function(resolve, reject) {
 					var data = null;
-					if(sessionStorage)
+					if (sessionStorage)
 						data = sessionStorage.cable_user;
-					if(data)
+					if (data)
 						data = JSON.parse(data)
 					resolve(data);
 				}
@@ -76,7 +76,7 @@ window.userController = (function() {
 			return new Promise(
 				function(resolve, reject) {
 					var availability = this.isAvailable();
-					if(!sessionStorage)
+					if (!sessionStorage)
 						resolve();
 
 					this.setAvailable(true);

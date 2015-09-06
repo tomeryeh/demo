@@ -6,14 +6,14 @@
 		//set the marker icon on the map if previous status:=["taxi","customer"] is found in local storage
 		.then(
 			userController.init
-			)
+		)
 		//init kuzzle component to pubsub :
 		//	- positions change
 		//	- user status change
 		//	- ride change
 		.then(kuzzleController.init).
-		catch(function(e){
-			console.log(e);
-		});
+	catch(function(e) {
+		console.log(e);
+	});
 
 })();
