@@ -10,16 +10,15 @@ window.kuzzleController = (function() {
 		CABBLE_COLLECTION_USERS = 'cabble-users',
 		CABBLE_COLLECTION_RIDES = 'cabble-rides',
 
-		refreshFilterTimerSubPosition,
-
 		//used to keep the user type change (suppose an user change from taxi to customer, 
 		//	it became no more relevant to show it.)
 		assocRoomToUser = {},
 
+		positionsSubscribeRoom = null,
+
 		assocRideProposalCandidateId = {},
 
 		//the room we are susbscribe to currently
-		positionsSubscribeRoom,
 		userSubRoomName,
 
 		//the current ride if 
@@ -41,7 +40,7 @@ window.kuzzleController = (function() {
 							resolve();
 						});
 					} else {
-						//user has been found in localstorage from userController
+						//user has been found in sessionstorage from userController
 						kuzzleController.initPubSub();
 
 						window.addEventListener('beforeunload', function() {
@@ -56,7 +55,6 @@ window.kuzzleController = (function() {
 		initPubSub: function() {
 
 			//Positions collection
-			kuzzleController.publishPositions();
 			kuzzleController.subscribeToPositions();
 
 			//Users collection
@@ -68,115 +66,86 @@ window.kuzzleController = (function() {
 
 		///////////////////////////////////////// POSITIONS PUBSUB //////////////////////////////////////
 
-		publishPositions: function() {
-			//we send position for user every 3000 millisecond
-			setInterval(
-				function() {
-					gisController.getGeoLoc().
-					then(gisController.setUserPosition).
-					then(function() {
-						var userPosition = gisController.getUserPosition();
-						var userId = userController.getUserId();
-						var userType = userController.getUserType();
+		publishPositions: function(position) {
+			var userPosition = gisController.getUserPosition();
+			var userId = userController.getUserId();
+			var userType = userController.getUserType();
 
-						if (!userPosition) {
-							return;
-						}
-						if (!userType)
-							return;
+			if (!userPosition) {
+				return;
+			}
+			if (!userType)
+				return;
 
-						//we send a non persistant document : our current position
-						kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
-							userId: userId,
-							type: userType,
-							position: {
-								lat: userPosition.lat,
-								lon: userPosition.lng
-							},
-							userSubRoomName: userSubRoomName
-						}, false);
-					});
-				}, 3000);
+			//we send a non persistant document : our current position
+			kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
+				userId: userId,
+				type: userType,
+				position: {
+					lat: userPosition.lat,
+					lon: userPosition.lng
+				},
+				userSubRoomName: userSubRoomName
+			}, false);
+
 		},
 		subscribeToPositions: function() {
-			var userType = userController.getUserType();
-			var refreshInterval = 5000;
-			if (userType === 'customer') {
-				refreshInterval = 3000;
-			} else if (userType === 'taxi') {
-				refreshInterval = 1000;
-			}
 
-			//we can change user type anytime and our filter rate must change accordingly ()
-			//so we keep a ref to the previous timer to remove it.
-			// and so we must for idempotence purpose
-			if (refreshFilterTimerSubPosition)
-				clearInterval(refreshFilterTimerSubPosition);
-
-			refreshSubsribe();
-			refreshFilterTimerSubPosition = setInterval(function() {
-				refreshSubsribe();
-			}, refreshInterval);
-
-			function refreshSubsribe() {
-				if (!userController.getUserType())
-					return;
-				var
-					bound = gisController.getMapBounds(),
-					user = userController.getUser(),
-					filterUserType = userController.getCandidateType(),
-					filter = {
-						and: [{
-							term: {
-								type: filterUserType
-							}
-						}, {
-							geoBoundingBox: {
-								position: {
-									top_left: {
-										lat: bound.neCorner.lat,
-										lon: bound.swCorner.lng
-									},
-									bottom_right: {
-										lat: bound.swCorner.lat,
-										lon: bound.neCorner.lng
-									}
+			if (!userController.getUserType())
+				return;
+			var
+				bound = gisController.getMapBounds(),
+				user = userController.getUser(),
+				filterUserType = userController.getCandidateType(),
+				filter = {
+					and: [{
+						term: {
+							type: filterUserType
+						}
+					}, {
+						geoBoundingBox: {
+							position: {
+								top_left: {
+									lat: bound.neCorner.lat,
+									lon: bound.swCorner.lng
+								},
+								bottom_right: {
+									lat: bound.swCorner.lat,
+									lon: bound.neCorner.lng
 								}
 							}
-						}]
-					};
-
-				if (currentRide && currentRide.status && currentRide.status.indexOf('accepted') !== -1) {
-					filter.and.push({
-						term: {
-							_id: userController.getUserType() === 'taxi' ? currentRide.customer : currentRide.taxi
 						}
-					});
-				}
+					}]
+				};
 
-				if (positionsSubscribeRoom) {
-					kuzzle.unsubscribe(positionsSubscribeRoom);
-				}
-
-				positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
-					if (error) {
-						console.error(error);
-						return;
-					}
-
-					if (message.action == "create") {
-						var candidatePosition = message._source.position;
-						if (!gisController.isTooFarAway([candidatePosition.lat, candidatePosition.lon])) {
-							var candidateType = message._source.type;
-							var candidateId = message._source.userId;
-							assocRoomToUser[message._source.userSubRoomName] = message._source.userId;
-							if (candidateType === userController.getUserType())
-								return;
-							gisController.addMarker(candidatePosition, candidateType, candidateId);
-						}
+			if (currentRide && currentRide.status && currentRide.status.indexOf('accepted') !== -1) {
+				filter.and.push({
+					term: {
+						_id: userController.getUserType() === 'taxi' ? currentRide.customer : currentRide.taxi
 					}
 				});
 			}
+
+			if (positionsSubscribeRoom) {
+				kuzzle.unsubscribe(positionsSubscribeRoom);
+			}
+			positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter, function(error, message) {
+				if (error) {
+					console.error(error);
+					return;
+				}
+
+				if (message.action == "create") {
+					var candidatePosition = message._source.position;
+					var candidateType = message._source.type;
+					var candidateId = message._source.userId;
+					assocRoomToUser[message._source.userSubRoomName] = message._source.userId;
+					if (candidateType === userController.getUserType())
+						return;
+					gisController.addMarker(candidatePosition, candidateType, candidateId);
+				}
+			});
+
 		},
 
 		///////////////////////////////////////// USERS PUBSUB //////////////////////////////////////
@@ -188,7 +157,7 @@ window.kuzzleController = (function() {
 				} else {
 					user.userId = response._id;
 					user.whoami._id = response._id;
-					userController.setInLocalStorage().then(
+					userController.setInSessionStorage().then(
 						callBack
 					);
 				}
@@ -258,7 +227,7 @@ window.kuzzleController = (function() {
 					}
 
 					delete assocRoomToUser[message.roomName];
-			});
+				});
 		},
 
 		///////////////////////////////////////// RIDES PUBSUB //////////////////////////////////////
@@ -448,8 +417,11 @@ window.kuzzleController = (function() {
 				status: 'refused_by_' + userController.getUserType()
 			};
 
-			//if(assocRideProposalCandidateId[candidateId])
-			//	delete assocRideProposalCandidateId[candidateId];
+			if (assocRideProposalCandidateId[rideProposal._source.taxi])
+				delete assocRideProposalCandidateId[rideProposal._source.taxi];
+
+			if (assocRideProposalCandidateId[rideProposal._source.customer])
+				delete assocRideProposalCandidateId[rideProposal._source.customer];
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
 			gisController.onRideRefused(rideProposal._source[userController.getCandidateType()]);

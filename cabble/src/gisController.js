@@ -10,10 +10,10 @@ window.gisController = (function() {
 	var map;
 	var userMarker;
 	var userPopup;
-	var userPosition;
 
 	var defaultUserPosition = [48.8566140, 2.352222];
-
+	var currentPosition = null; //keep 
+	var timerUpdatePosition = null
 	var userDraggable = false;
 
 	var otherItemsMark = []; //depending on the nature of user this is a cab list or customer list
@@ -94,44 +94,81 @@ window.gisController = (function() {
 	/**
 	 * createUserMarker will create a marker on the map
 	 *
-	 * @param position LatLng type from http://leafletjs.com/
 	 */
-	function createUserMarker(position) {
+	function createUserMarker() {
 		return new Promise(
 			function(resolve, reject) {
 				var userType = userController.getUserType();
 				userPopup = createUserPopup();
+
 				if (userMarker)
 					map.removeLayer(userMarker);
-				userMarker = L.marker(position, {
-					draggable: userDraggable
-				}).bindPopup(userPopup);
-
-				userMarker.on("dragend", function() {
-					defaultUserPosition = [userMarker.getLatLng().lat, userMarker.getLatLng().lng];
-				});
+				userMarker = L.marker(defaultUserPosition, {
+						draggable: userDraggable
+					})
+					.on("dragend", function(e) {
+						var newPosition = e.target._latlng;
+						gisController.setUserPosition([gisController.getUserPosition().lat, gisController.getUserPosition().lng]);
+					})
+					.bindPopup(userPopup);
 
 				userMarker.setIcon(getIcon(userType));
-				resolve(position);
+				resolve();
 			}.bind(this)
 		);
 	}
 
+	function createTimerPosition() {
+		if (timerUpdatePosition)
+			clearInterval(timerUpdatePosition);
+		timerUpdatePosition = setInterval(function() {
+			if (kuzzleController)
+				kuzzleController.publishPositions([gisController.getUserPosition().lat, gisController.getUserPosition().lng]);
+		}.bind(this), 5000);
+	}
+
+	/**
+	 * From lodash
+	 *
+	 */
+
+	function debounce(func, wait, immediate) {
+		var timeout;
+		return function() {
+			var context = this,
+				args = arguments;
+			var later = function() {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+			var callNow = immediate && !timeout;
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+			if (callNow) func.apply(context, args);
+		};
+	};
+
 	/**
 	 * createMap
 	 *
-	 * @param position LatLng type from http://leafletjs.com/
 	 */
-	function createMap(position) {
+	function createMap() {
 		return new Promise(
 			function(resolve, reject) {
 
 				var tileURL = 'http://a.basemaps.cartocdn.com/light_all//{z}/{x}/{y}.png';
 
+				//updateSubscription position when change window size of zoom, until no other 
+				//updatepositions is already fired less then 1000 millisendonc ago
+				var updateDebounced = debounce(kuzzleController.subscribeToPositions, 1000);
+
 				map = L.map('map-canvas', {
-					layers: [candidatesLayer],
-					zoomControl: false
-				});
+						layers: [candidatesLayer],
+						zoomControl: false,
+						dragging :false
+					})
+					.on("resize", updateDebounced)
+					.on("zoomend", updateDebounced);
 
 				L.tileLayer(tileURL, {
 					maxZoom: 18,
@@ -148,21 +185,12 @@ window.gisController = (function() {
 				};
 				L.control.layers(baseMaps, overlayMaps).addTo(map);
 
-				if (!position) {
-					map.fitWorld();
-				} else {
-					map.setView([position[0], position[1]], 15);
-				}
-
-				userMarker.addTo(map);
-
 				createRideControl();
 				map.addControl(rideControl);
 				hideControl(rideControl);
 				createGeolocControl();
-				
 
-				resolve(position);
+				resolve();
 			}).bind(this);
 	}
 
@@ -181,9 +209,15 @@ window.gisController = (function() {
 					.addListener(controlDiv, 'click', L.DomEvent.preventDefault)
 					.addListener(controlDiv, 'click', function() {
 						userDraggable = !userDraggable;
-						createUserMarker(userMarker.getLatLng());
+						if (userDraggable) {
+							userMarker.dragging.enable();
+							userMarker.setZIndexOffset(1000);
+						} else {
+							userMarker.dragging.disable();
+							userMarker.setZIndexOffset(0);
+						}
+
 						controlUI.innerHTML = userDraggable ? pinUserPosition : unpinUserPosition;
-						userMarker.addTo(map);
 					});
 
 				var text = unpinUserPosition;
@@ -476,31 +510,41 @@ window.gisController = (function() {
 				var userCoord = userMarker.getLatLng();
 				var farthestCoord = farthestMark.getLatLng();
 				positions.push([farthestCoord.lat, farthestCoord.lng]);
-				positions.push([userCoord.lat + -1 * (farthestCoord.lat - userCoord.lat),userCoord.lng + -1 * (farthestCoord.lng - userCoord.lng)]);
-				map.fitBounds(positions, {padding: L.point(200, 200)});
+				positions.push([userCoord.lat + -1 * (farthestCoord.lat - userCoord.lat), userCoord.lng + -1 * (farthestCoord.lng - userCoord.lng)]);
+				map.fitBounds(positions, {
+					padding: L.point(200, 200)
+				});
+			} else {
+
+				map.setView(this.getUserPosition(), 16);
 			}
 		},
+		/*
 		isTooFarAway: function(position) {
 			return false;
 			if (!position)
 				return false;
 			return userMarker.getLatLng().distanceTo(L.latLng(position[0], position[1])) > maxDistanceOfinterest;
 		},
+		*/
 		getGeoLoc: function() {
 			return new Promise(
 				function(resolve, reject) {
-					if (userDraggable)
-						resolve([gisController.getUserPosition().lat, gisController.getUserPosition().lng]);
-					if (navigator.geolocation) {
-						browserSupportFlag = true;
-						navigator.geolocation.getCurrentPosition(function(position) {
-							resolve([position.coords.latitude, position.coords.longitude]);
-						}, function() {
-							resolve(defaultUserPosition);
-						});
+					if (!userDraggable) {
+						map.locate({
+								watch: true
+							})
+							.on("locationfound", function(e) {
+								//bug on Firefox, event locate are send periodically.
+								if (!userDraggable)
+									this.setUserPosition([e.latlng.lat, e.latlng.lng]);
+							}.bind(this))
+							.on("locationerror", function(e) {
+								this.setUserPosition(defaultUserPosition);
+							}.bind(this));
 					}
-				}
-			);
+					resolve();
+				}.bind(this));
 		},
 		removeCandidate: function(id) {
 			var marker = assocIdToOtherItemsMark[id];
@@ -519,10 +563,19 @@ window.gisController = (function() {
 		setUserPosition: function(position) {
 			return new Promise(
 				function(resolve, reject) {
-					if (position)
+					if (!position) {
+						resolve();
+					}
+					var changed = !currentPosition || !(currentPosition[0] === position[0] && currentPosition[1] === position[1]);
+					if (changed) {
 						userMarker.setLatLng(L.latLng(position[0], position[1]));
+						kuzzleController.publishPositions([this.getUserPosition().lat, this.getUserPosition().lng]);
+						createTimerPosition();
+						currentPosition = position;
+					}
+					this.centererToBoundingCandidates();
 					resolve();
-				});
+				}.bind(this));
 		},
 		getUserPosition: function() {
 			return userMarker.getLatLng();
@@ -553,22 +606,25 @@ window.gisController = (function() {
 			};
 		},
 		init: function() {
-			return this.getGeoLoc().
-			then(createUserMarker).
+
+			return createUserMarker().
 			then(createMap).
+			then(this.getGeoLoc.bind(this)).
 			then(function() {
+				new Promise(
+					function(resolve, reject) {
+						if (!navigator.geolocation) {
+							alert("You can use Cabble without geoloc by dragging the user.\n For this purpose you must first click on the button use the manual geolocalisation")
+						}
+						userMarker.addTo(map);
+						map.setView(userMarker.getLatLng(), 15);
 
-				if (!navigator.geolocation) {
-					alert("You can use Cabble without geoloc by dragging the user.\n For this purpose you must first click on the button use the manual geolocalisation")
-				}
-
-				setInterval(function() {
-					gisController.centererToBoundingCandidates();
-				}, 3000);
-
-				if (!userController.getUserType())
-					userMarker.openPopup();
-			});
+						if (!userController.getUserType())
+							userMarker.openPopup();
+						resolve();
+					}.bind(this)
+				);
+			}.bind(this));
 		},
 		closePopupForUser: function() {
 			userMarker.closePopup();
