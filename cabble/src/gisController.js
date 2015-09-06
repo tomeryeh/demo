@@ -12,6 +12,8 @@ window.gisController = (function() {
 	var userPopup;
 
 	var defaultUserPosition = [48.8566140, 2.352222];
+	var currentPosition = null; //keep 
+	var timerUpdatePosition = null
 	var userDraggable = false;
 
 	var otherItemsMark = []; //depending on the nature of user this is a cab list or customer list
@@ -106,7 +108,7 @@ window.gisController = (function() {
 				})
 				.on("dragend",function(e){
 					var newPosition = e.target._latlng;
-					gisController.setUserPosition([newPosition.lat,newPosition.lng]);
+					gisController.setUserPosition([gisController.getUserPosition().lat,gisController.getUserPosition().lng]);
 				})
 				.bindPopup(userPopup);
 
@@ -114,6 +116,16 @@ window.gisController = (function() {
 				resolve();
 			}.bind(this)
 		);
+	}
+
+
+	function createTimerPosition(){
+		if(timerUpdatePosition)
+			clearInterval(timerUpdatePosition);
+		timerUpdatePosition = setInterval(function(){
+			if(kuzzleController)
+				kuzzleController.publishPositions([gisController.getUserPosition().lat,gisController.getUserPosition().lng]);
+		}.bind(this),5000);
 	}
 
 	/**
@@ -490,22 +502,18 @@ window.gisController = (function() {
 			return new Promise(
 				function(resolve, reject) {
 					if(!userDraggable){
-						browserSupportFlag = true;
 						map.locate({
 							watch : true
 						})
 						.on("locationfound", function(e){
-							this.setUserPosition([e.latlng.lat,e.latlng.lng]);
+							//bug on Firefox, event locate are send periodically.
+							if(!userDraggable)
+								this.setUserPosition([e.latlng.lat,e.latlng.lng]);
 							}.bind(this))
 						.on("locationerror",function (e){
 							this.setUserPosition(defaultUserPosition);
 						}.bind(this));
 					}
-
-					setInterval(function(){
-						if(kuzzleController)
-						kuzzleController.publishPositions([this.getUserPosition().lat,this.getUserPosition().lng]);
-					}.bind(this),5000);
 				resolve();
 			}.bind(this));
 		},
@@ -529,10 +537,12 @@ window.gisController = (function() {
 					if (!position){
 						resolve();
 					}
-					var changed = !(this.getUserPosition().lat === position[0] && this.getUserPosition().lng === position[1]);
+					var changed = !currentPosition || !(currentPosition[0] === position[0] && currentPosition[1] === position[1]);
 					if(changed){
 						userMarker.setLatLng(L.latLng(position[0], position[1]));
 						kuzzleController.publishPositions([this.getUserPosition().lat,this.getUserPosition().lng]);
+						createTimerPosition();
+						currentPosition = position;
 					}
 					this.centererToBoundingCandidates();
 					resolve();
