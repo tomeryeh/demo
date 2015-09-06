@@ -417,8 +417,11 @@ window.kuzzleController = (function() {
 				status: 'refused_by_' + userController.getUserType()
 			};
 
-			//if(assocRideProposalCandidateId[candidateId])
-			//	delete assocRideProposalCandidateId[candidateId];
+			if (assocRideProposalCandidateId[rideProposal._source.taxi])
+				delete assocRideProposalCandidateId[rideProposal._source.taxi];
+
+			if (assocRideProposalCandidateId[rideProposal._source.customer])
+				delete assocRideProposalCandidateId[rideProposal._source.customer];
 
 			kuzzle.update(CABBLE_COLLECTION_RIDES, declinedRide);
 			gisController.onRideRefused(rideProposal._source[userController.getCandidateType()]);

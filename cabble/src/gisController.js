@@ -519,12 +519,14 @@ window.gisController = (function() {
 				map.setView(this.getUserPosition(), 16);
 			}
 		},
+		/*
 		isTooFarAway: function(position) {
 			return false;
 			if (!position)
 				return false;
 			return userMarker.getLatLng().distanceTo(L.latLng(position[0], position[1])) > maxDistanceOfinterest;
 		},
+		*/
 		getGeoLoc: function() {
 			return new Promise(
 				function(resolve, reject) {

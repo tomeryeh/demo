@@ -193,7 +193,7 @@ Then he subscribe to this filtering :
  * change from state taxi to customer (if user is a customer, he is interesting for taxi and vice versa, marker on map must reflect that).
 
 The two first cases are done in `createMap` and the third in `createUserPopup` from gisController.
-In all the cases Cabble call  `kuzzleController.subscribeToPositions` to recreate a correct filtering.
+In all the cases, we listen to the corresponding event and when it is fired, we call `kuzzleController.subscribeToPositions` to recreate a correct filtering.
 
 When Cabble receive a position change for our current filter, we add the candidate or update his position on the map.
 
@@ -224,12 +224,12 @@ That it ! for the geolocalisation filtering process, we are done !
 
 ### Hey ! but what about this `assocRoomToUser` var ?
 
-Yes this pesky variable is present from both publish process and subscribe process, but has nothing to do with pub-sub position, and all with user management who come next.
+Yes this pesky variable is present from both publish process and subscribe process, but has NOTHING to do with pub-sub position, and all with user management who come next.
 
 
 ## Users management
 
-The User management refer to listen to user changing type or disconnection (i.e unscribe to the collection).
+The User management refer to listen to user changing type (from taxi to customer as an exemple) or disconnection (i.e unscribe to the collection).
 
 ### Publish an user change
 
@@ -263,8 +263,8 @@ change theirs filters accordingly to the new user type.
 ### <a name="user_subscription" ></a> Subscribe to users change
 
 
-A Cabble user want to be aware about the changing status from user, because a customer is not interseting 
-about information from an other customer.
+A Cabble user want to be aware about the changing status from an user, because a customer looking for a taxi is no more interseting 
+about it if it became an other customer.
 
 
 From a Kuzzle point of view, this is done by subscribing to the type changing from the user collection :
@@ -324,7 +324,7 @@ The rides management is closely related to the [overview sketching up](./overvie
 The proposition of a ride correspond to a ride creation.
  <b>proposed</b>, <b>declined</b> and <b>completed</b> are the three states for a ride.
 
- * the subscription process `publishRideProposal` will delegate all the states changing managemenet in `manageRideProposal`.
+ * the subscription process `publishRideProposal` will delegate all the states changing management in `manageRideProposal`.
  * the creation/proposition ride is done in method subsection "Propose a Ride".
  * we have three update process, each corresponding to a state changing.
 
@@ -371,7 +371,7 @@ As an exemple here is the `finishRide` publication :
 
 ### Subscribing to the Rides messages
 
-User from Cabble want to be aware about the status (prpose, accept, refused) of all the rides that belong to him.
+User from Cabble want to be aware about the status (proposed, accepted, refused) of all the rides that belong to him.
 
 From a Kuzzle point of view, this is done by listening to all documents from ride collection :
 
@@ -415,7 +415,7 @@ From a Kuzzle point of view, this is done by listening to all documents from rid
 
 Nothing too complicated here, the `filter` ride is about  :
 
- * filtering on every users not of our type (i.e filter on taxi if i am a customer and vice versa ) (done by the snippet with status "proposed\_by\_..., refused\_by\_... and accepted\_by\_...) 
+ * filter every users not from our type (i.e filter on taxi if user is a customer and vice versa) see `statusFilter`
  * related to me (via the snippet  :
 
 		rideFilter.term[userType] = userController.getUserId();)
