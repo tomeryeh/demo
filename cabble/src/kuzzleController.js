@@ -56,7 +56,6 @@ window.kuzzleController = (function() {
 		initPubSub: function() {
 
 			//Positions collection
-			kuzzleController.publishPositions();
 			kuzzleController.subscribeToPositions();
 
 			//Users collection
@@ -68,35 +67,28 @@ window.kuzzleController = (function() {
 
 		///////////////////////////////////////// POSITIONS PUBSUB //////////////////////////////////////
 
-		publishPositions: function() {
-			//we send position for user every 3000 millisecond
-			setInterval(
-				function() {
-					gisController.getGeoLoc().
-					then(gisController.setUserPosition).
-					then(function() {
-						var userPosition = gisController.getUserPosition();
-						var userId = userController.getUserId();
-						var userType = userController.getUserType();
+		publishPositions: function(position) {
+			var userPosition = gisController.getUserPosition();
+			var userId = userController.getUserId();
+			var userType = userController.getUserType();
 
-						if (!userPosition) {
-							return;
-						}
-						if (!userType)
-							return;
+			if (!userPosition) {
+				return;
+			}
+			if (!userType)
+				return;
 
-						//we send a non persistant document : our current position
-						kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
-							userId: userId,
-							type: userType,
-							position: {
-								lat: userPosition.lat,
-								lon: userPosition.lng
-							},
-							userSubRoomName: userSubRoomName
-						}, false);
-					});
-				}, 3000);
+			//we send a non persistant document : our current position
+			kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
+				userId: userId,
+				type: userType,
+				position: {
+					lat: userPosition.lat,
+					lon: userPosition.lng
+					},
+				userSubRoomName: userSubRoomName
+			}, false);
+
 		},
 		subscribeToPositions: function() {
 			var userType = userController.getUserType();
