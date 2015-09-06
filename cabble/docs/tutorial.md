@@ -69,7 +69,6 @@ Cabble ask for Kuzzle for an id if no user is already found in sessionstorage (s
 	initPubSub: function() {
 
 		//positions collection
-		kuzzleController.publishPositions();
 		kuzzleController.subscribeToPositions();
 
 		//users collection
@@ -102,39 +101,37 @@ From a Kuzzle point of view, this is done by the creation of a non persisted doc
 <a name="pub_room_name" ></a>
 ```javascript
 	publishPositions: function() {
-		setInterval(
-			function() {
-				gisController.getGeoLoc().
-				then(gisController.setUserPosition).
-				then(function() {
-					var userPosition = gisController.getUserPosition();
-					var userId = userController.getUserId();
-					var userType = userController.getUserType();
+		var userPosition = gisController.getUserPosition();
+		var userId = userController.getUserId();
+		var userType = userController.getUserType();
 
-					if (!userPosition) {
-						console.log("no position for user");
-						return;
-					}
-					if (!userType)
-						return;
+		if (!userPosition) {
+			console.log("no position for user");
+			return;
+		}
+		if (!userType)
+			return;
 
-					//Cabble send a non persistant document : our current position
-					kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
-						type: userType,
-						position: {
-							lat: userPosition.lat,
-							lon: userPosition.lng
-						},
-						userId: userId,
-						userSubRoomName: userSubRoomName
-					}, false);
-				});
-			}, 3000);
+		//Cabble send a non persistant document : our current position
+		kuzzle.create(CABBLE_COLLECTION_POSITIONS, {
+			type: userType,
+			position: {
+				lat: userPosition.lat,
+				lon: userPosition.lng
+			},
+			userId: userId,
+			userSubRoomName: userSubRoomName
+		}, false);
 	}
 ```
 
-<b>Note</b> : For real time purpose we can use the [watchPosition](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition) from Webapi with Leaflet.js, but to keep it simple Cabble send position every 3000 milliseconds. 
 
+The user position can change if :
+
+  * the geocalisation from web Api detect a change,
+  * the user update his position by dragging icon to update user position.
+
+For both case we use `setUserPosition` in `gisController`, that will call `kuzzleController.publishPositions`.
 
 
 Now that we have a document into Cabble that correspond to the user position, let see how the candidites listen to it.
@@ -177,32 +174,26 @@ From a Kuzzle point of view, this is done by a subscription on documents where p
 Then he subscribe to this filtering :
 
 ```javascript
-	// we remove deprecated timer if any first
-	if (refreshFilterTimerSubPosition)
-		clearInterval(refreshFilterTimerSubPosition);
 
-	refreshFilterTimerSubPosition = setInterval(function() {
-		//subscribe for candidates in bounding box for the current user type here.
-		
-		...
-		//remove last deprecated subscribe :
-		if (positionsSubscribeRoom) {
-			kuzzle.unsubscribe(positionsSubscribeRoom);
-		}
-		//adding a new subscribe :
-		positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter,
-		....
-	}, 10000);
+	//remove last deprecated subscribe :
+	if (positionsSubscribeRoom) {
+		kuzzle.unsubscribe(positionsSubscribeRoom);
+	}
+	//adding a new subscribe :
+	positionsSubscribeRoom = kuzzle.subscribe(CABBLE_COLLECTION_POSITIONS, filter,
+	....
+	
 ```
 
 
-<b>Note</b> : There are plenty of cases where we have to change the bounding box of interest :
+<b>Note</b> : There are three cases where we have to change the bounding box of interest :
 
  * zoom or pan into the map,
  * change the viewport size (by changing browser size, by changing the phone orientation, ...)
  * change from state taxi to customer (if user is a customer, he is interesting for taxi and vice versa, marker on map must reflect that).
 
-To keep it simple, we have NOT listen to all these events but instead blindly force the filtering to be change every 10000 milliseconds, see previous snippet.
+The two first cases are done in `createMap` and the third in `createUserPopup` from gisController.
+In all the cases Cabble call  `kuzzleController.subscribeToPositions` to recreate a correct filtering.
 
 When Cabble receive a position change for our current filter, we add the candidate or update his position on the map.
 
@@ -357,7 +348,7 @@ From a Kuzzle point of view a ride proposal correspond to the creation of a docu
 
 ### Accept, Decline or Finish  a Ride
 
-In Cabble the user can change the status from a ride proposal anytime, i.e he can accept, decline or gie an and to the ride 
+In Cabble the user can change the status from a ride proposal anytime, i.e he can accept, decline or finish a ride.
 
 From a Kuzzle point of view, changing the state of a ride correspond to updating the 'status' attribute from the 'ride' document :
 As an exemple here is the `finishRide` publication :
