@@ -15,8 +15,8 @@ KuzzleGame.KuzzleManager = {
 
 
   initServer: function() {
-    if (!this.kuzzle) {
-      this.kuzzle = Kuzzle.init(this.server);
+    if (!this.kuzzle) { // if it has not be done yet...
+      this.kuzzle = Kuzzle.init(this.server); // init the Kuzzle server
     }
   },
 
@@ -24,19 +24,18 @@ KuzzleGame.KuzzleManager = {
 
     this.initServer();
 
-    if (!this.uniquid) {
+    if (!this.uniquid) { // generate an unique ID for the player if it has not be done yet
       this.uniquid = this.generateUid();
     }
 
     this.kuzzleGame = kuzzleGame;
-    this.findHost();
+    this.findHost(); // go to find host
 
   },
 
-
   /**
    * Find host,
-   *if a host cannot be found , the current client became host.
+   * if a host cannot be found , the current client became host.
    */
   findHost: function() {
 
@@ -48,8 +47,6 @@ KuzzleGame.KuzzleManager = {
       }
     };
 
-
-
     KuzzleGame.KuzzleManager.kuzzle.search("kg_main_room", filters, function(error, response) {
 
       if (error) {
@@ -57,22 +54,17 @@ KuzzleGame.KuzzleManager = {
       }
 
       if (error || response.hits.total == 0) {
-
         KuzzleGame.KuzzleManager.log('no host found');
         KuzzleGame.KuzzleManager.registerAsHost();
 
       } else {
-
         KuzzleGame.KuzzleManager.log('host found');
         KuzzleGame.KuzzleManager.hostID = response.hits.hits[0]._source.hostID;
         KuzzleGame.KuzzleManager.log(response.hits.hits[0]);
         KuzzleGame.KuzzleManager.subscribeToHost();
         KuzzleGame.KuzzleManager.checkConnexion();
-
       }
-
     });
-
   },
 
   /**
@@ -116,10 +108,8 @@ KuzzleGame.KuzzleManager = {
    * Unregister host from main room , and delete his subchannel
    */
   hostUnregister: function(callbackFunc) {
-
     this.deleteHostSubChannel();
     this.hostUnregisterFromMainRoom(callbackFunc);
-
   },
 
 
@@ -148,7 +138,6 @@ KuzzleGame.KuzzleManager = {
       KuzzleGame.KuzzleManager.registeredOnMainRoom = false;
 
       if (callbackFunc != 'undefined' && callbackFunc != null) {
-
         if (this.debug) {
           console.log(callbackFunc);
         }
@@ -161,7 +150,6 @@ KuzzleGame.KuzzleManager = {
 
     });
 
-
   },
 
   /**
@@ -169,9 +157,6 @@ KuzzleGame.KuzzleManager = {
    */
   createHostSubChannel: function() {
     if (this.hostID) {
-
-
-
       this.kuzzle.create("kg_room_" + this.hostID, {
         hostID: this.hostID
       }, true, function(error, response) {
@@ -181,7 +166,6 @@ KuzzleGame.KuzzleManager = {
           KuzzleGame.KuzzleManager.subscribeToHost();
         }
       });
-
     }
   },
 
@@ -282,7 +266,7 @@ KuzzleGame.KuzzleManager = {
    */
   generateUid: function(separator) {
 
-    var delim = '';
+    var delim = separator || '';
 
     function S4() {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
