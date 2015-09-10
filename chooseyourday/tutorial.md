@@ -1,5 +1,5 @@
 # Kuzzle - ChooseYourDay Tutorial
-
+<!--Can you see it?-->
 This demo will show you how to create a simple doodle-like planning program, with real-time support, using AngularJS as front-end and Kuzzle as a back-end.
 
 This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
