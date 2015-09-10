@@ -2,6 +2,10 @@
 
 These demos show how to use [Kuzzle](https://github.com/kuzzleio/kuzzle) to manage complex real-time applications with persistence.  
 
+# Demos without tutorials
+Those demos are here juste to demonstrate what can be done with kuzzle
+* [Planning poker](planning-poker): a simple [panning poker](https://fr.wikipedia.org/wiki/Planning_poker) app using Kuzzle as real-time backend.
+
 # Tutorials
 
 ## Basic demos
@@ -13,6 +17,7 @@ These demos show how to use [Kuzzle](https://github.com/kuzzleio/kuzzle) to mana
 ## Advanced demos
 
 * [Kuzzle Tournament](tournament/tutorial.md): a multiplayer combat game
+* [Arrow Hero](arrow-hero/tutorial.md): a multilevel player vs player Guitar Hero like game made with [Phaser.io](http://phaser.io)
 
 # What is Kuzzle
 
