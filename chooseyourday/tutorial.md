@@ -1,5 +1,5 @@
 # Kuzzle - ChooseYourDay Tutorial
-<!--Can you see it?-->
+
 This demo will show you how to create a simple doodle-like planning program, with real-time support, using AngularJS as front-end and Kuzzle as a back-end.
 
 This tutorial uses [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
@@ -258,7 +258,7 @@ $scope.editEvent = function(id) {
 }
 ```
 
-1. display the form and tell Angular that it is not a new event:
+1. display the form and tell Angular that this is not a new event:
 ```javascript
 $scope.isNew = false;
 $scope.viewForm = true;
@@ -335,7 +335,7 @@ var filter = { "filter": { "and": [
     { "term": { "event": $scope.currentEvent._id } }
 ]}};
 ```
-2. call the ``search`` function of Kuzzle API to update the particips list and apply the scope:
+2. call the ``search`` function of Kuzzle API to update the participants list and apply the scope:
 ```javascript
 kuzzle.search(kuzzleChannel, filter, function (error, response) {
   (...)
@@ -364,7 +364,7 @@ var terms = { "and": [
 ]};
 ```
 <!--Please check that on line 362 I did not erase some tags-->
-2. call the ``subscribe`` function of Kuzzle API and update the participants list when we are notified for changes:
+2. call the ``subscribe`` function of Kuzzle API and update the participants list when we are notified of changes:
 ```javascript
 $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (error, response) {
     (...)
