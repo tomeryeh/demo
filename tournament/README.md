@@ -8,7 +8,7 @@ This demo uses [Kuzzle](http://kuzzle.io) to handle communications between a gam
 
 You can find the tutorial of this demo [here](./tutorial.md).
 
-Please note that this is an advanced demo, meant to show you specific parts of Kuzzle only.
+Please note that this is an advanced demo, only meant to show you specific parts of Kuzzle.
 
 Namely:
 
@@ -28,7 +28,7 @@ docker-compose up
 
 The default Kuzzle URL is ``http://localhost:7512``.
 
-To change the host name, simply edit the ``config.js`` file, located in this demo root directory.
+To change the host name, simply edit the ``config.js`` file, located in the root directory of this demo.
 
 You may want to change the default TCP port too. To do so, in addition to the ``config.js`` file, you also need to edit the ``docker-compose.yml`` file.
 
