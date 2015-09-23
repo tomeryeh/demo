@@ -46,6 +46,7 @@ In this tutorial, we assume that you already have some basis on AngularJS, and w
 
 Assuming you have a running Kuzzle instance installed (please follow the instructions from [doc/install.md](doc/install.md) to start it). Let's setup our client application to connect to it.
 <!--"running Kuzzle instance" est un terme consacré ?-->
+<!-- je veux parler d'une instance Kuzzle qui est en train de s'exécuter -->
 
 This is literally the first line of our ``js/app.js`` file:
 
