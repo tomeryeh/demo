@@ -120,20 +120,21 @@ $scope.getAllEvents = function () {
 We use the [search](https://github.com/kuzzleio/sdk-javascript#search) function of SDK to filter our collection (``kuzzleChannel`` variable) some data containing a field "type" with value "chooseyourday_event".
 
 In the callback:
-1. handle errors:
+
+* 1. handle errors:
 ```javascript
 if (error) {
     console.error(error);
     return false;
 }
 ```
-2. iterate through the response, and add each event to our list:
+* 2. iterate through the response, and add each event to our list:
 ```javascript
 response.hits.hits.forEach(function (event) {
     $scope.addToList(event._id, event._source);
 });
 ```
-3. apply the scope to view the results in the view:
+* 3. apply the scope to view the results in the view:
 ```javascript
 $scope.$apply();
 ```
@@ -195,20 +196,20 @@ $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { type: "chooseyourday
 ```
 
 In the callback:
-1. handle errors:
+* 1. handle errors:
 ```javascript
 if (error) {
     console.error(error);
     return false;
 }
 ```
-2. if we are notified about a new event: add it to the view
+* 2. if we are notified about a new event: add it to the view
 ```javascript
 if (response.action === "create") {
     $scope.addToList(response._id, response._source);
 }
 ```
-3. if we are notified about a deleted event: remove it from the view
+* 3. if we are notified about a deleted event: remove it from the view
 ```javascript
 if (response.action === "delete") {
     $scope.events.some(function (event, index) {
@@ -219,7 +220,7 @@ if (response.action === "delete") {
     });
 }
 ```
-4. if we are notified about an event that is updated: change it within the view
+* 4. if we are notified about an event that is updated: change it within the view
 ```javascript
 if (response.action === "update") {
     $scope.events.some(function (event, index) {
@@ -231,7 +232,7 @@ if (response.action === "update") {
     });
 }
 ```
-5. apply changes:
+* 5. apply changes:
 ```javascript
 $scope.$apply();
 ```
@@ -259,18 +260,18 @@ $scope.editEvent = function(id) {
 }
 ```
 
-1. display the form and tell Angular that this is not a new event:
+* 1. display the form and tell Angular that this is not a new event:
 ```javascript
 $scope.isNew = false;
 $scope.viewForm = true;
 ```
-2. get the event from Kuzzle, using the [get](https://github.com/kuzzleio/sdk-javascript#get) function of SDK:
+* 2. get the event from Kuzzle, using the [get](https://github.com/kuzzleio/sdk-javascript#get) function of SDK:
 ```javascript
 kuzzle.get(kuzzleChannel, id, function (error, response) {
   (...)
 });
 ```
-3. within the callback function, handle errors, update and apply the scope:
+* 3. within the callback function, handle errors, update and apply the scope:
 ```javascript
 if (error) {
     console.error(error);
@@ -329,14 +330,14 @@ $scope.getAllParticipants = function () {
 }
 ```
 
-1. set up the filters:
+* 1. set up the filters:
 ```javascript
 var filter = { "filter": { "and": [
     { "term": { "type": "chooseyourday_p" } },
     { "term": { "event": $scope.currentEvent._id } }
 ]}};
 ```
-2. call the ``search`` function of Kuzzle API to update the participants list and apply the scope:
+* 2. call the ``search`` function of Kuzzle API to update the participants list and apply the scope:
 ```javascript
 kuzzle.search(kuzzleChannel, filter, function (error, response) {
   (...)
@@ -357,15 +358,14 @@ $scope.subscribeParticipants = function () {
 }
 ```
 
-1. setup the filters:
+* 1. setup the filters:
 ```javascript
 var terms = { "and": [
-    { "term": { "type": "chooseyourday_p" } }, 
+    { "term": { "type": "chooseyourday_p" } },
     { "term": { "event": $scope.currentEvent._id } }
 ]};
 ```
-<!--Please check that on line 362 I did not erase some tags-->
-2. call the ``subscribe`` function of Kuzzle API and update the participants list when we are notified of changes:
+* 2. call the ``subscribe`` function of Kuzzle API and update the participants list when we are notified of changes:
 ```javascript
 $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (error, response) {
     (...)
