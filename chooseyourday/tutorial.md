@@ -45,7 +45,6 @@ In this tutorial, we assume that you already have some basis on AngularJS, and w
 ### Connection to Kuzzle
 
 Assuming you have a running Kuzzle instance installed (please follow the instructions from [doc/install.md](doc/install.md) to start it). Let's setup our client application to connect to it.
-<!--"running Kuzzle instance" est un terme consacré ?-->
 
 This is literally the first line of our ``js/app.js`` file:
 
@@ -359,11 +358,10 @@ $scope.subscribeParticipants = function () {
 1. setup the filters:
 ```javascript
 var terms = { "and": [
-    { "term": { "type": "chooseyourday_p" } }, 
+    { "term": { "type": "chooseyourday_p" } },
     { "term": { "event": $scope.currentEvent._id } }
 ]};
 ```
-<!--Please check that on line 362 I did not erase some tags-->
 2. call the ``subscribe`` function of Kuzzle API and update the participants list when we are notified of changes:
 ```javascript
 $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (error, response) {
