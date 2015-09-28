@@ -2,16 +2,16 @@
 
 This demo will show you how to create a simple chat program with multi-room support using Kuzzle as a back-end.
 
-This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
+This tutorial uses [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
 
-**Table of content:**
+**Table of contents:**
 * [Tutorial structure](#tutorial-structure)
 * [Connecting to Kuzzle](#connecting-to-kuzzle)
 * [Listening to incoming messages](#listening-to-incoming-messages)
 * [Sending messages to Kuzzle](#sending-messages-to-kuzzle)
 * [Counting the number of users in our room](#counting-the-number-of-users-in-our-room)
 * [Multiple rooms support](#multiple-rooms-support)
-	* [Getting all documents of a data collection](#getting-all-documents-of-a-data-collection <!--"getting all the documents"-->
+	* [Getting all documents of a data collection](#getting-all-documents-of-a-data-collection 
 	* [Creating a new persisted document](#creating-a-new-persisted-document)
 	* [Deleting a persisted document](#deleting-a-persisted-document)
 
@@ -26,7 +26,7 @@ To make a basic chat application work, you need:
 Because this tutorial would be very short and dull with these features alone, we added these ones:
 
 * multi-room support, allowing users to create, switch and delete rooms
-* display the number of users connected to the same room as us <!--La structure comparative se construit ainsi "the same ...as"-->
+* display the number of users connected to the same room as us 
 
 All these features are implemented in the ``js/app.js`` file.
 
@@ -78,9 +78,6 @@ The next function of this tutorial starts at line 49, and is used to send chat m
 
 Since we have configured our chat application to listen to messages sent to the ``CHAT_MSG_COLLECTION`` data collection, and since we filter messages depending on their ``chatRoom`` member, we have to send messages following these rules.
 
-Oh, and we really should include our user name too, so that each client receiving a message can display it.  
-And because we generate a random user color when the chat application starts,  we'll propagate this information too.
-
 This gives us this piece of code:  
 ```js
 var
@@ -114,7 +111,6 @@ Now that we covered subscriptions and publish/subscribe messages, it's time to s
 
 To do that, we'll allow our little chat application to handle multiple rooms. The room list will be stored in Kuzzle, using a (very small) document per room, in a data collection stored in the ``CHAT_ROOM_COLLECTION`` global variable.
 The next 3 sections will show you how to search, count, store, and delete persisted documents.
-<!--"room list" "room" est au singulier car il a la fonction d'adjectif. Un adjectif est invariable en anglais-->
 
 ### Getting all documents of a data collection
 
@@ -158,7 +154,7 @@ If the returned document count is greater than 0, then a room already exists wit
 **Note:** the ``count`` and ``search`` functions behave exactly the same way, the only change is that ``count`` returns a document count, while ``search`` returns all found documents, thus making it slower than ``count``.
 
 
-Now, all we have to do is to create our new room in Kuzzle. We already covered that part when we explained how to send a publish/subscribe message.  
+Now, all we have to do is to create our new room in Kuzzle. We have already covered that part when we explained how to send a publish/subscribe message.  
 
 Well... almost:
 
