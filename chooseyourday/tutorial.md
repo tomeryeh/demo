@@ -4,7 +4,7 @@ This demo will show you how to create a simple doodle-like planning program, wit
 
 This tutorial uses [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
 
-**Table of content:**
+**Table of contents:**
 * [Requirements and  structure](#requirements-and-client-side-structure)
 * [Installation and initialization](#installation-and-initialization)
 * [Manage the event list](#manage-the-event-list)
@@ -25,7 +25,7 @@ This tutorial uses [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javas
 This tutorial uses the following technologies:
 * [AngularJS](https://angularjs.org/) for front-end controllers
 * a [Datetime Picker for Angular](https://github.com/dalelotts/angular-bootstrap-datetimepicker) (need also bootstrap CSS to work)
-* and, of course, Kuzzle for the back-end, and Kuzzle SDK to speak with it.
+* and, of course, Kuzzle for the back-end, and Kuzzle SDK to talk with it.
 
 The ``index.html`` file contains the loading of required CSS and JS libraries, as well as the main HTML template, with a &lt;div&gt; which will contain Angular views:
 
@@ -37,14 +37,14 @@ The code of the tutorial is implemented in the ``js/app.js`` file for the script
 
 ### Disclaimer
 
-In this tutorial, we assume that you already have some basis on AngularJS, and we will essentially focus on Kuzzle's specific code.
+In this tutorial, we assume that you already have some basics of AngularJS, and we will essentially focus on Kuzzle's specific code.
 
 
 ## Installation and initialization
 
 ### Connection to Kuzzle
 
-Assuming you have a running Kuzzle instance installed (please follow the instructions from [doc/install.md](doc/install.md) to start it). Let's setup our client application to connect to it.
+Assuming you have a Kuzzle instance running installed (please follow the instructions from [doc/install.md](doc/install.md) to start it). Let's setup our client application to connect to it.
 
 This is literally the first line of our ``js/app.js`` file:
 
@@ -83,7 +83,7 @@ chooseYourDay.config(["$routeProvider",
 
 ## Manage the event list
 
-OK, now, we have a running Kuzzle instance, and we have an AngularJS application ready to use it.
+OK, now, we have a Kuzzle instance running, and we have an AngularJS application ready to use it.
 It's time to start!
 
 First, we will manage the events list with the ``ListEventController``.
@@ -102,7 +102,7 @@ it means:
 
 ### List the available events
 
-At controller's initialization, ``viewForm`` equals ``false``, so we show the template ``templates/event_table.html`` to list the available events.
+On controller initialization, ``viewForm`` equals ``false``, so we show the template ``templates/event_table.html`` to list available events.
 
 But how do we get these events?
 This is done by the ``getAllEvents()`` function (lines 71-84) :
