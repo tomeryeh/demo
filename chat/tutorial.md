@@ -63,22 +63,22 @@ if (subcriptionId) {
 }
 ```
 
-* We subscribe to our chat messages data collection, named ``CHAT_MSG_COLLECTION``, and only to messages addressed to our current chat room.  
-We also provide a callback function, which will be called each time a new message is received, and a subscription ID will be returned to us:  
+* We subscribe to our data collection of chat messages named ``CHAT_MSG_COLLECTION``, and only to messages sent to our current chat room.  
+We also provide a callback function each time a new message is received and a subscription ID will be sent back to us:  
 ```js
 subcriptionId = kuzzle.subscribe(CHAT_MSG_COLLECTION, {term: {chatRoom: chatRoom}},
 	function (error, newMessage) {
 ```
 
-The rest of this function displays incoming messages.
+What follows enable to explain incoming messages.
 
 ## Sending messages to Kuzzle
 
-The next function of this tutorial starts at line 49, and is used to send chat messages to Kuzzle.
+The next function of this tutorial starts line 49, and is used to send chat messages to Kuzzle.
 
 Since we have configured our chat application to listen to messages sent to the ``CHAT_MSG_COLLECTION`` data collection, and since we filter messages depending on their ``chatRoom`` member, we have to send messages following these rules.
 
-This gives us this piece of code:  
+This gives us the following piece of code:  
 ```js
 var
 	message = {
@@ -103,7 +103,7 @@ kuzzle.countSubscription(subcriptionId, function (error, response) {
 ```
 
 The subscription ID is the unique identifier of our subscription.  
-The callback function is used to display the obtained Kuzzle response.
+The callback function is used to display Kuzzle's answer we got.
 
 ## Multiple rooms support
 
@@ -151,7 +151,7 @@ kuzzle.count(CHAT_ROOM_COLLECTION, query, function (error, response) {
 
 If the returned document count is greater than 0, then a room already exists with the same name and we'll stop our document creation there.
 
-**Note:** the ``count`` and ``search`` functions behave exactly the same way, the only change is that ``count`` returns a document count, while ``search`` returns all found documents, thus making it slower than ``count``.
+**Note:** the ``count`` and ``search`` functions behave exactly the same, the only change is that ``count`` returns a document count, while ``search`` returns all found documents, thus making it slower than ``count``.
 
 
 Now, all we have to do is to create our new room in Kuzzle. We have already covered that part when we explained how to send a publish/subscribe message.  
