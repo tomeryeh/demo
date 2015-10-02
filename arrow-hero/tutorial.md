@@ -6,9 +6,9 @@ This tutorial is not *that* difficult, except maybe the part about how to integr
 
 ## Prerequisites
 
-Before to dive into this tutorial, you **should** have a look at the other tutorials first, you know, to know how to initialize a connexion to Kuzzle, or all the things you need to do to make Kuzzle alive.
+Before diving into this tutorial, you **should** have a look at the other tutorials first, you know, to know how to initialize a connexion to Kuzzle, or all the things you need to do to make Kuzzle alive.
 
-To play with this demo can help to understand things.
+Playing with this demo helps you understand several things.
 
 ## What you will learn here
 
@@ -20,16 +20,16 @@ This tutorial will focus on three aspects:
 
 ## Listen to document changes
 
-When you create a document into the datastore, it can be useful to listen to changes on it. For example, when someone has updated a blog article content, you may want to perform some cache clean on your front-end, or when a new player is joining a persistant room, you may want to start the battle, as in this demo.
+When you create a document into the datastore, it can be useful to listen to changes on it. For example, when someone has updated a blog content like an article, you may want to perform some cache clean on your front-end, or when a new player is joining a persistent room, you may want to start the battle, as in this demo.
 
-With Kuzzle, when you want to subscribe to document changes, you will do it via a search filter applied to a collection via the SDK. As you can use filters, you can easily subscribe to one particular document, or a bunch of documents at the same time.
+With Kuzzle, when you want to subscribe to document changes, you will do it via a search filter applied to a collection via SDK. You can use filters so you can easily subscribe to one particular document, or a bunch of documents at the same time.
 
 Here is a snippet: 
 
 ```javascript
 var subscriptionID; // the subscriptionID, given by Kuzzle, will go here
 
-// here is our filter: we want to subscribe to blog posts events
+// here is our filter: we want to subscribe to blog post events
 var filters = {
     term: {
         type: "Blog Post"
@@ -43,10 +43,10 @@ subscriptionID = kuzzle.subscribe(		// we now can subscribe...
 	    if(error) {
 	        console.error(error);
 	    }
-	    console.log(response);			// each time a document is created, updated or deleted, response will contain the event representation.
+	    console.log(response);			// each time a document is created, updated or deleted, the response will contain the event representation.
 	    /*
 	    
-	   		When a document is created, response could be as follow
+	   		When a document is created, its response could be as follow
 			{
 				requestId: 	"3EF35934-CCA2-4766-8684-701660E4BD57",
 				controller: "write",
@@ -65,20 +65,20 @@ subscriptionID = kuzzle.subscribe(		// we now can subscribe...
 	}
 );
 ```
-As you can see, the controller that will handle documents events is the `subscribe` callback function, and `response` will contain all the useful informations you need, such as:
+As you can see, the controller that will handle documents about events is the `subscribe` callback function, and `response` will contain all useful information you need, such as:
 * the action performed (`create`, `update` or `delete`)
 * the full document source, in `_source`
 
 ## Player vs Player rooms
 
 In this demo game, like in many others, you will need to create rooms to host player vs player games. 
-A room can be seen as a chat room where the game clients are talking about what the players are doing and about their current state. Wen you do so, the first player to join a room is called a "host".
+A room can be seen as a chat room where game clients are talking about what the players are doing and about their current state. When you do so, the first player to join a room is called a "host".
 
-In this demo game, the choice has been made to use the persistent datastorage to store both host list and rooms.
+In this demo game, the choice has been made to use persistent datastorage to store both the host list and rooms.
 
-We won't explain how to create persistent documents here, other tutorials based on demos are doing it well, we will focuse on the "how to create game room quickly"
+We won't explain how to create persistent documents here, other tutorials based on demos are doing it well, we will focus on "how to create game room quickly"
 
-The login behind this can me expressed in pseudo-code as following: 
+The login behind this can be expressed in pseudo-code as follows: 
 ```
 	When a player choose a dificulty level
 		look for an available host
@@ -98,26 +98,26 @@ You can see this login into the [kuzzle-manager.js](./js/classes/kuzzle-manager.
 
 This demo is based on the excellent [Phaser.io](http://phaser.io) HTML game framework. Mix Phaser with Kuzzle is not *that* simple, but neither *that* hard.
 
-To create a Phaser game, you will need a main object, containing at least 4 methods : 
-* preload: wich aims to perform all... preload things
-* create: wich will be create the game itself
-* update: wich will call every time the game needs to update
-* render: wich will be called every time the game itself will need to be rendered
+To create a Phaser game, you will need a main object, containing at least 4 methods: 
+* preload: which aims to perform all... preloaded things
+* create: which will create the game itself
+* update: which will call every time the game needs to be updated
+* render: which will be called every time the game itself will need to be rendered
 
-In this demo, here is the code that do this thing, and can be found in [index.html](index.html)
+In this demo, here is the code that does it, and can be found in [index.html](index.html)
 
 ```javascript
- var game; // greate a global variable for the game
+ var game; // create a global variable for the game
   var arrowHero = function (w, h) { 
       var height = h || $(window).height();		// determine the height and width for the game
       var width = w || $(window).width();
       
-      // instantiate the game with the 'kuzzle-game' object
+      // instantiate the game with 'kuzzle-game' object
       game = new Phaser.Game(width, height, Phaser.AUTO, 'kuzzle-game');
 
-      // add some "states" wich may be considered as
+      // add some "states" which may be considered as
       // some kind of steps. The goal is to cut the code 
-      // in functionnal parts, and make things smooth
+      // in functional parts, and make things smooth
       game.state.add('boot', boot);
       game.state.add('preload', preload);
       game.state.add('gametitle', GameTitle);
@@ -125,11 +125,11 @@ In this demo, here is the code that do this thing, and can be found in [index.ht
       game.state.add('kuzzlegame', KuzzleGame);
       game.state.add('gameover', GameOver);
 
-			// call the first state that will call the others when it finish
+			// call the first state that will call the others when it is finished
       game.state.start('boot');
   };
 
-  // start the whole things
+  // start the whole thing
   arrowHero();
 ```
 
@@ -138,9 +138,9 @@ Each stages are taken by Phaser from the js folder.
 ### Events and dispatch
 
 Each time something happens in this demo, like when someone is throwing a malus to the other player, or (dis)connexions, we must have a way to tell it to other players.
-That is really easy with Kuzzle, like in this demo where each events are stored into Kuzzle via persistent documents and are propagated thanks to the subscription to those documents.
+It is really easy with Kuzzle, like in this demo where each events are stored into Kuzzle via persistent documents and are propagated thanks to the subscription to those documents.
 
-To throw an event to the room, you can do like in the demo : 
+To throw an event to the room, you can do like in the demo: 
 
 ```javascript 
   /**
@@ -162,7 +162,7 @@ To throw an event to the room, you can do like in the demo :
   },
 ```
 
-To catch the events, you just have to subscribe to the events documents, then parse them to know what to do with them like this : 
+To catch the events, you just have to subscribe to the event documents, then parse them to know what to do with them like this: 
 
 ```javascript
   /**
