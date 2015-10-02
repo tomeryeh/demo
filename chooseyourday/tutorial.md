@@ -86,7 +86,7 @@ chooseYourDay.config(["$routeProvider",
 OK, now, we have a Kuzzle instance running, and we have an AngularJS application ready to use it.
 It's time to start!
 
-First, we will manage the events list with the ``ListEventController``.
+First, we manage the events list with the ``ListEventController``.
 As shown above, this controller is rendered by the template ``templates/event_list.html``, which contains the following lines:
 
 ```html
