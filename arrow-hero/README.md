@@ -2,7 +2,7 @@
 
 **Original authors:** [bostalowski](https://github.com/bostalowski) & [lpoiret](https://github.com/lpoiret)
 
-A *Guitar Hero* like game, using your keyboard arrows showing how to implement a basic but addictive real time game with levels, rooms, and two ways interactions.
+A *Guitar Hero* like game, using your keyboard arrows showing how to implement a basic but addictive real time game with levels, rooms, and two-way interactions.
 
 # Running the demo
 
