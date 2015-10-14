@@ -2,7 +2,7 @@
 
 **Kuzzle Tournament** is a multiplayer combat game running in web browsers.
 
-This is an advanced tutorial, meant to only explain these specific Kuzzle features:
+This is an advanced tutorial, meant to only explain two specific Kuzzle features:
 
 * How to setup an application server working in pair with Kuzzle
 * How to handle client disconnections
@@ -18,47 +18,47 @@ This tutorial uses the [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-j
 
 # Why another back-end server?
 
-One of Kuzzle purposes is to handle communications between the different components of an application. Other tutorials show how to synchronize application clients, but here we wanted to show how Kuzzle can also handle communications between different components of an application.
+One of Kuzzle's purposes is to handle communications between the different components of an application. Other tutorials show how to synchronize application clients, but here we wanted to show how Kuzzle can also handle communications between different components of an application.
 
 **Kuzzle Tournament** is a good example of a multi-components application:
 
 * the game client handles the graphical interface
-* the game server manages rooms and game rules, and also starts and ends games
+* the game server manages rooms and game rules, also starts and ends games
 * Kuzzle handles the communications between these components
 
 # How does it work?
 
-There are several ways to add an application server to Kuzzle. The most natural way to do it for a simple client-server application is to interface a server between clients and Kuzzle, hiding Kuzzle from the application's clients.
+There are several ways to add an application server to Kuzzle. The most natural way to do it for a simple client-server application is to interface a server between clients and Kuzzle, hiding Kuzzle from clients of the application.
 
 In this demo, we adopted a different approach, by putting Kuzzle at the center of the communication flow between our game clients and the game server.  
-We did this mainly because we wanted to show how Kuzzle can serve as a central point of communication between independent and different components of an application.
+We did this mainly because we wanted to show how Kuzzle can act as a central point of communication between independent and different components of an application.
 
 Here is how it looks like:
 
 ![Base Architecture](tutorial/Kuzzle Tournament - Base Architecture.png)
 
 
-What happens when a new player starts a game is this:
+What happens when a new player starts a game?
 
-1. The client subscribes to the server room, and sends a message with its informations
-* The server gets the client message, search for an adequate game room or create one if needed, assigns the player to it and replies with the ID of the game room
-* The client can then subscribe to the assigned game room, and start receiving and sending game updates
+1. The client subscribes to the server room, and sends a message with his information
+* The server gets the client message, searches for an adequate game room or creates one if needed, assigns the player to it and replies with the ID of the game room
+* The client can then subscribe to the assigned game room. He starts receiving and sending game updates
 
 
-When the game server creates a new game room, it also subscribes to it in order to listens to the game updates, and to orchestrate how the game goes.
+When the game server creates a new game room, it also subscribes to it in order to listen to the game updates, and to orchestrate how the game goes. <!--Le "it" dans la phrase ci-dessus se réfère au "game server" ?-->
 
 The game server is implemented in the following file: [server/tournament_server.js](server/tournament_server.js)
 
 # Handling disconnections
 
-Other tutorials cover Kuzzle notifications on documents, but there are two special kind of notifications, unrelated to documents:
+Other tutorials cover some Kuzzle notifications on documents, but there are two special kinds of notifications, unrelated to documents:
 
 * *New connection* notification
 * *Disconnection* notification
 
-These events are fired whenever someone enter or leave a room you're listening to. Be aware that a *room* is in fact a set of filters, so to receive one of these notifications, you need to use the same filters than the application entering or leaving the room.
+These events are fired whenever someone enters or leaves a room you're listening to. Be aware that a *room* is in fact a set of filters, so to receive one of these notifications, you need to use the same filters than the application entering or leaving the room.
 
-In Kuzzle Tournament, the game server listens to the *Disconnection* notification in order to inform other players that someone left the game, and to make sure that enough player remain for the game to continue.  
+In Kuzzle Tournament, the game server listens to the *Disconnection* notification in order to inform other players that someone left the game, and to make sure that enough players remain so that the game can continue.  
 
 Here is the code snippet managing a player disconnection. It is located line 36, in the callback function launched each time a message is received on the server room:
 
@@ -92,4 +92,4 @@ Here is how an ``on`` or ``off`` notification looks like:
 The game server has to use the ``roomName`` field to identify who exactly left the game. This ID is unique and serves as a subscription ID.  
 Since this ID is generated when subscribing to a room, the game client sends it to the game server when asking for a game room. That's how the game server can know which player exactly left the game.
 
-This is a bit of a hassle, so in future versions of Kuzzle, we plan to add subscriptions metadata, to help application designers to better handle this kind of problem by letting them add custom data along with these events.
+This is a bit of a hassle, so in future versions of Kuzzle, we plan to add subscriptions metadata to help application designers to better handle this kind of problem by letting them add custom data along with these events.

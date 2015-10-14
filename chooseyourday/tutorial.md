@@ -2,9 +2,9 @@
 
 This demo will show you how to create a simple doodle-like planning program, with real-time support, using AngularJS as front-end and Kuzzle as a back-end.
 
-This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
+This tutorial uses [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javascript)
 
-**Table of content:**
+**Table of contents:**
 * [Requirements and  structure](#requirements-and-client-side-structure)
 * [Installation and initialization](#installation-and-initialization)
 * [Manage the event list](#manage-the-event-list)
@@ -20,31 +20,31 @@ This tutorial uses the  [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-
   * [Update a vote](#update-a-vote)
   * [Remove a participant](#remove-a-participant)
 
-## Requirements and  structure
+## Requirements and structure
 
-This tutorial uses following technologies :
+This tutorial uses the following technologies:
 * [AngularJS](https://angularjs.org/) for front-end controllers
 * a [Datetime Picker for Angular](https://github.com/dalelotts/angular-bootstrap-datetimepicker) (need also bootstrap CSS to work)
-* and, of course, Kuzzle for the back-end, and the Kuzzle SDK to speak with it.
+* and, of course, Kuzzle for the back-end, and Kuzzle SDK to talk with it.
 
-The ``index.html`` file contains the loading of required CSS and JS libraries, as well as the main HTML template, with a &lt;div&gt; that will contain the Angular's view :
+The ``index.html`` file contains the loading of required CSS and JS libraries, as well as the main HTML template, with a &lt;div&gt; which will contain Angular views:
 
 ```html
 <div ng-view></div>
 ```
 
-The code of the tutorial is implemented in the ``js/app.js`` file for the script behaviours, ans in the ``templates/`` folder for the views.
+The code of the tutorial is implemented in the ``js/app.js`` file for the script behaviours, and in the ``templates/`` folder for the views.
 
 ### Disclaimer
 
-In this tutorial, we assume that you already have some basis on AngularJS, and we will essentially focus on the Kuzzle specific code.
+In this tutorial, we assume that you already have some basics of AngularJS, and we will essentially focus on Kuzzle's specific code.
 
 
 ## Installation and initialization
 
 ### Connection to Kuzzle
 
-Assuming you have a running Kuzzle instance installed (please follow the instructions from [doc/install.md](doc/install.md) to start it), let's setup our client application to connect to it.
+Assuming you have a Kuzzle instance running installed (please follow the instructions from [doc/install.md](doc/install.md) to start it). Let's setup our client application to connect to it.
 
 This is literally the first line of our ``js/app.js`` file:
 
@@ -52,17 +52,17 @@ This is literally the first line of our ``js/app.js`` file:
 var kuzzle = Kuzzle.init(config.kuzzleUrl);
 ```
 
-Just set here the address of your Kuzzle instance... and that's it !
+Just set here the address of your Kuzzle instance... and that's it!
 
 
 ### Angular configuration
 
-In this tutorial, we will implement 2 main features :
+In this tutorial, we will implement 2 main features:
 * Listing and creating events
-* For each event, vote for the perfered dates
+* For each event, vote for the preferred dates
 
 Each feature will be implemented by its own controller, accessible via a specific route.
-The following lines initialize the ``ngRoute`` configuration for our project :
+The following lines initialize the ``ngRoute`` configuration for our project:
 
 ```javascript
 chooseYourDay.config(["$routeProvider",
@@ -83,11 +83,11 @@ chooseYourDay.config(["$routeProvider",
 
 ## Manage the event list
 
-OK, now, we have a running Kuzzle instance, and we have an AngularJS application ready to use it.
-It's time to start !
+OK, now, we have a Kuzzle instance running, and we have an AngularJS application ready to use it.
+It's time to start!
 
-First, we will manager the events list, with the ``ListEventController``.
-As shown above, this controller is rendered by the template ``templates/event_list.html``, which contains following lines :
+First, we manage the events list with the ``ListEventController``.
+As shown above, this controller is rendered by the template ``templates/event_list.html``, which contains the following lines:
 
 ```html
 <div ng-init="init()">
@@ -96,16 +96,16 @@ As shown above, this controller is rendered by the template ``templates/event_li
 </div>
 ```
 
-that means :
-* if the varialbe ``viewForm`` is ``true`` => show the template ``event_edit.html``
+it means:
+* if the variable ``viewForm`` is ``true`` => show the template ``event_edit.html``
 * if not => show the template ``event_table.html``
 
 ### List the available events
 
-At controller's initialization, ``viewForm`` equals ``false``, so we show the template ``templates/event_table.html`` to list the available events.
+On controller initialization, ``viewForm`` equals ``false``, so we show the template ``templates/event_table.html`` to list available events.
 
-But how do we get these events ?
-That is done by the ``getAllEvents()`` function (lines 71-84) :
+But how do we get these events?
+This is done by the ``getAllEvents()`` function (lines 71-84) :
 
 ```javascript
 $scope.getAllEvents = function () {
@@ -115,35 +115,36 @@ $scope.getAllEvents = function () {
 };
 ```
 
-We use the [search](https://github.com/kuzzleio/sdk-javascript#search) function of the SDK to filter in our collection (``kuzzleChannel`` variable) the data containing a field "type" with value "chooseyourday_event".
+We use the [search](https://github.com/kuzzleio/sdk-javascript#search) function of SDK to filter our collection (``kuzzleChannel`` variable) some data containing a field "type" with value "chooseyourday_event".
 
-In the callback :
-1. handle errors :
+In the callback:
+
+* 1. handle errors:
 ```javascript
 if (error) {
     console.error(error);
     return false;
 }
 ```
-2. iterate through the response, and add each event to our list :
+* 2. iterate through the response, and add each event to our list:
 ```javascript
 response.hits.hits.forEach(function (event) {
     $scope.addToList(event._id, event._source);
 });
 ```
-3. apply the scope to view the result in the view :
+* 3. apply the scope to view the results in the view:
 ```javascript
 $scope.$apply();
 ```
 
 ### Add an event
 
-OK, we have a nice function to list contents from Kuzzle, but for now, the list is empty !!
+OK, we have a nice function to list contents from Kuzzle, but for now, the list is empty!!
 
-To test this first function, we can send data manually with REST requests, but it will be soon painful and boring.
+To test this first function, we can send data manually with REST requests, but it will soon be painful and boring.
 Instead, let's now implement the function to add an event.
 
-For that, first load the "new event" form, with the ``newEvent()`` function (lines 100-108) :
+For that, first load the "new event" form with the ``newEvent()`` function (lines 100-108):
 
 ```javascript
 $scope.newEvent = function() {
@@ -160,7 +161,7 @@ $scope.newEvent = function() {
 This will show the form (``$scope.viewForm = true``), and initialize a new empty event.
 
 The form is rendered by the template ``templates/event_edit.html``.
-We will not explain this template in details (it contains a lot a internal features to pick-up a date, add/remove porposed dates, validate input, etc). Just focus on the sumbit button :
+We will not explain this template in great detail (it contains a lot a internal features to pick-up a date, add/remove proposed dates, validate input, etc). Just focus on the sumbit button:
 
 ```html
 <button type="submit" ng-disabled="!eventForm.$valid" class="btn btn-success" ng-click="addEvent()">
@@ -168,7 +169,7 @@ We will not explain this template in details (it contains a lot a internal featu
 </button>
 ```
 
-In brief, the form submition triggers the ``addEvent()`` function (lines 149-172), which calls the [create](https://github.com/kuzzleio/sdk-javascript#create) function of the SDK to send the data to Kuzzle:
+In brief, the submission form triggers the ``addEvent()`` function (lines 149-172), which calls the [create](https://github.com/kuzzleio/sdk-javascript#create) function of SDK to send the data to Kuzzle:
 
 ```
 kuzzle.create(kuzzleChannel, {
@@ -181,10 +182,10 @@ kuzzle.create(kuzzleChannel, {
 ### Subscribe to new events
 
 So now, we can add events, and refresh the ``/ListEvent`` page to view our list.
-It's cool, but it could be better if we did not need to refresh the page every time to check if there are new events:
+It's cool, but it could be better if we did not need to refresh the page every time to check if there are any new events:
 
 So let's use Kuzzle to be notified when changes are made on the data collection.
-This is done within the controller initialization, using the [subscribe](https://github.com/kuzzleio/sdk-javascript#subscribe) function of the SDK:
+This is done within the controller initialization, using the [subscribe](https://github.com/kuzzleio/sdk-javascript#subscribe) function of SDK:
 
 ``` javascript
 $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { type: "chooseyourday_event" } }, function (error, response) {
@@ -193,20 +194,20 @@ $scope.roomId = kuzzle.subscribe(kuzzleChannel, { "term": { type: "chooseyourday
 ```
 
 In the callback:
-1. handle errors:
+* 1. handle errors:
 ```javascript
 if (error) {
     console.error(error);
     return false;
 }
 ```
-2. if we are notified about a new event: add it to the view
+* 2. if we are notified about a new event: add it to the view
 ```javascript
 if (response.action === "create") {
     $scope.addToList(response._id, response._source);
 }
 ```
-3. if we are notified about a event that is deleted: remove it from the view
+* 3. if we are notified about a deleted event: remove it from the view
 ```javascript
 if (response.action === "delete") {
     $scope.events.some(function (event, index) {
@@ -217,7 +218,7 @@ if (response.action === "delete") {
     });
 }
 ```
-4. if we are notified about an event that is updated: change it within the view
+* 4. if we are notified about an event that is updated: change it within the view
 ```javascript
 if (response.action === "update") {
     $scope.events.some(function (event, index) {
@@ -229,12 +230,12 @@ if (response.action === "update") {
     });
 }
 ```
-5. apply the changes:
+* 5. apply changes:
 ```javascript
 $scope.$apply();
 ```
 
-This function returns an identifier (variable ``roomId``), that enables us to clean up the subscription when we leave the page:
+This function enables to return an identifier (variable ``roomId``) to clean up the subscription when we leave the page:
 
 ```javascript
 $scope.$on("$destroy", function() {
@@ -242,11 +243,11 @@ $scope.$on("$destroy", function() {
 });
 ```
 
-Now, we can test the application simultaneously with 2 clients, and enjoy viewing events added in real-time between both clients.
+Now, we can test the application simultaneously with 2 clients, and enjoy viewing events added in real-time between two clients.
 
 ### Update an event
 
-Now, we want to be able to update an event (adding some proposed dates, or change the title for example).
+Now, we want to be able to update an event (add some proposed dates, or change the title for example).
 For that, we will reuse the ``event_edit.html`` form, but we have to populate the form data with the existing event.
 
 It is implemented by the ``editEvent()`` function (lines 114-131):
@@ -257,18 +258,18 @@ $scope.editEvent = function(id) {
 }
 ```
 
-1. display the form and tell Angular that it is not a new event :
+* 1. display the form and tell Angular that this is not a new event:
 ```javascript
 $scope.isNew = false;
 $scope.viewForm = true;
 ```
-2. get the event from Kuzzle, using the [get](https://github.com/kuzzleio/sdk-javascript#get) function of the SDK:
+* 2. get the event from Kuzzle, using the [get](https://github.com/kuzzleio/sdk-javascript#get) function of SDK:
 ```javascript
 kuzzle.get(kuzzleChannel, id, function (error, response) {
   (...)
 });
 ```
-3. within the callback function, handle errors, and update and apply the scope:
+* 3. within the callback function, handle errors, update and apply the scope:
 ```javascript
 if (error) {
     console.error(error);
@@ -282,7 +283,7 @@ $scope._event = {
 $scope.$apply();
 ```
 
-Finally, we modify the ``addEvent()`` function to handle the update behaviour, using the [update](https://github.com/kuzzleio/sdk-javascript#update) function of the SDK:
+Finally, we modify the ``addEvent()`` function to handle the update behaviour, using the [update](https://github.com/kuzzleio/sdk-javascript#update) function of SDK:
 
 ```javascript
 $scope.addEvent = function () {
@@ -303,7 +304,7 @@ $scope.addEvent = function () {
 
 Finally for this controller, we want to be able to remove an event.
 
-Nothing easier: just call the [delete](https://github.com/kuzzleio/sdk-javascript#delete) function of the SDK (lines 96-98):
+Nothing is easier: just call the [delete](https://github.com/kuzzleio/sdk-javascript#delete) function of SDK (lines 96-98):
 
 ```javascript
 $scope.delete = function (index) {
@@ -313,9 +314,9 @@ $scope.delete = function (index) {
 
 ## Manage an event
 
-So now, we've done with the EventListController. We need now to add the voting feature to let members choose the best date for each event.
+So now, we're done with the EventListController. We now need to add the voting feature to let members choose the best date for each event.
 
-We use the same SDK functions for this feature, and the technical logic is quite similar, so we will go faster for this part and just sum up the functions
+We use the same SDK functions for this feature, and the technical logic is quite similar, so we will go faster for this part and just sum up the functions.
 
 ### List participants
 
@@ -327,14 +328,14 @@ $scope.getAllParticipants = function () {
 }
 ```
 
-1. set up the filters:
+* 1. set up the filters:
 ```javascript
 var filter = { "filter": { "and": [
     { "term": { "type": "chooseyourday_p" } },
     { "term": { "event": $scope.currentEvent._id } }
 ]}};
 ```
-2. call the ``search`` function of the Kuzzle API to update the participant's list and apply the scope:
+* 2. call the ``search`` function of Kuzzle API to update the participants list and apply the scope:
 ```javascript
 kuzzle.search(kuzzleChannel, filter, function (error, response) {
   (...)
@@ -355,14 +356,14 @@ $scope.subscribeParticipants = function () {
 }
 ```
 
-1. setup the filters:
+* 1. setup the filters:
 ```javascript
 var terms = { "and": [
     { "term": { "type": "chooseyourday_p" } },
     { "term": { "event": $scope.currentEvent._id } }
 ]};
 ```
-2. call the ``subscribe`` function of the Kuzzle API and update the participant's list when we are notified for changes:
+* 2. call the ``subscribe`` function of Kuzzle API and update the participants list when we are notified of changes:
 ```javascript
 $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (error, response) {
     (...)
@@ -393,7 +394,7 @@ $scope.roomId = kuzzle.subscribe(kuzzleChannel, terms, function (error, response
 
 ### Vote for a date
 
-A new vote is handle by the ``createParticipant()`` function (lines 204-212), which uses the ``create`` function of the Kuzzle SDK:
+A new vote is handled by the ``createParticipant()`` function (lines 204-212), which uses the ``create`` function of Kuzzle SDK:
 
 ```javascript
 $scope.createParticipant = function () {
@@ -409,7 +410,7 @@ $scope.createParticipant = function () {
 
 ### Update a vote
 
-We can also modify an existing vote with the ``updateParticipant()`` function (lines 236-244), which uses the ``update`` function of the Kuzzle SDK:
+We can also modify an existing vote with the ``updateParticipant()`` function (lines 236-244), which uses the ``update`` function of Kuzzle SDK:
 
 ```javascript
 kuzzle.update(kuzzleChannel, {
@@ -421,7 +422,7 @@ kuzzle.update(kuzzleChannel, {
 
 ### Remove a participant
 
-And finally, to remove a participant to an event, it's that easy:
+And finally, to remove a participant from an event, it's easy:
 
 ```javascript
 $scope.removeParticipant = function (index) {
