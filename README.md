@@ -1,6 +1,10 @@
 # Kuzzle Demos
 
+:warning: *These demos use the alpha version of our Javascript SDK. A complete rework of this SDK is underway and we will soon update our demos to this new version.  
+You may check our new SDK documentation here: http://kuzzleio.github.io/sdk-documentation*
+
 These demos show how to use [Kuzzle](https://github.com/kuzzleio/kuzzle) to manage complex real-time applications with persistence.  
+
 
 # Demos without tutorials
 Those demos are here juste to demonstrate what can be done with kuzzle
