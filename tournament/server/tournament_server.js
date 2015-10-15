@@ -1,56 +1,56 @@
-require('socket.io-client');
-
 var
 	_ = require('lodash'),
 	CaptainsLog = require('captains-log'),
 	logger = CaptainsLog(),
 	uuid = require('node-uuid'),
 	fs = require('fs'),
-	Kuzzle = require('../lib/kuzzle.min.js'),
+	Kuzzle = require('kuzzle-sdk'),
 	Players = {},
 	Rooms = {},
-  	Configuration = require('../config.js'),
+	Configuration = require('../config.js'),
 	kuzzle;
 
-kuzzle = Kuzzle.init(Configuration.server.kuzzleUrl);
+kuzzle = new Kuzzle(Configuration.server.kuzzleUrl);
 startServer();
 
 function startServer() {
 	logger.info('Listening to client requests...');
 
 	// Listening to connected/disconnected players
-	kuzzle.subscribe(Configuration.server.room, {exists: { field: 'id' }}, function (error, data) {
-		var
-			roomId,
-			players = [];
+	kuzzle
+		.dataCollectionFactory(Configuration.server.room)
+		.subscribe({}, function (error, data) {
+			var
+				roomId,
+				players = [];
 
-		if (error) {
-			logger.error('Catched an error: ', error);
-			return false;
-		}
+      if (error) {
+				logger.error('Catched an error: ', error);
+				return false;
+			}
 
-		if (data._source && data._source.room && data._source.room.id) {
-			return false;
-		}
+			if (data._source && data._source.room && data._source.room.id) {
+				return false;
+			}
 
-		if (data.action === 'off') {
-			removePlayer(data.roomName);
-		}
+			if (data.action === 'off') {
+				removePlayer(data.roomName);
+			}
 
-		if (data.action === 'create') {
-			roomId = addPlayer(data._source);
+			if (data.action === 'create') {
+				roomId = addPlayer(data._source);
 
-			Object.keys(Rooms[roomId].players).forEach(function (p) {
-				players.push(Rooms[roomId].players[p]);
-			});
+				Object.keys(Rooms[roomId].players).forEach(function (p) {
+					players.push(Rooms[roomId].players[p]);
+				});
 
-			notify(Configuration.server.room, { id: data._source.id, room: Rooms[roomId], players: players });
-		}
-	});
+				notify(Configuration.server.room, { id: data._source.id, room: Rooms[roomId], players: players });
+			}
+		}, {listeningToDisconnections: true});
 }
 
 function notify(room, message) {
-	kuzzle.create(room, message, false);
+	kuzzle.dataCollectionFactory(room).create(message);
 }
 
 function addPlayer(playerData) {
@@ -99,12 +99,13 @@ function createRoom () {
 		state: 'created',
 		players: []
 	},
-	roomId = room.id;
+	roomId = room.id,
+	subscription;
 
 	logger.info('Creating new room: ', room.id);
 	Rooms[room.id] = room;
 
-	kuzzle.subscribe(room.id, { exists: { field: 'event' } }, function (error, data) {
+	subscription = kuzzle.dataCollectionFactory(room.id).subscribe({ exists: { field: 'event' } }, function (error, data) {
 		var
 			alivePlayer = [];
 
@@ -129,7 +130,7 @@ function createRoom () {
 				if (room.state === 'game_launched') {
 					if (Object.keys(room.players).length < Configuration.server.minPlayersPerRoom) {
 						notify(room.id, { event: Configuration.events.NOT_ENOUGH_PLAYERS });
-						kuzzle.unsubscribe(room.id);
+						subscription.unsubscribe();
 
 						Object.keys(room.players).forEach(function (id) {
 							delete Players[id];

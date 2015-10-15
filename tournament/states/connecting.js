@@ -109,7 +109,7 @@ ConnectingState.prototype = {
   },
 
   connectToKuzzle: function () {
-    kuzzle = Kuzzle.init(this.game.kuzzleUrl);
+    kuzzle = new Kuzzle(this.game.kuzzleUrl);
 
     connectText = this.game.add.text(320, 180, "Connecting to server...\n");
     connectText.font = 'Arial';
@@ -152,7 +152,7 @@ ConnectingState.prototype = {
       }
     });
 
-    Room.subscribeId = kuzzle.subscribe(Room.id, userEvents, function (error, data) {
+    Room.kuzzleRoom = kuzzle.dataCollectionFactory(Room.id).subscribe(userEvents, function (error, data) {
       if (!data._source || !data._source.event) {
         return false;
       }
@@ -237,8 +237,8 @@ ConnectingState.prototype = {
           break;
 
         case Configuration.events.NOT_ENOUGH_PLAYERS:
-          kuzzle.unsubscribe(Room.subscribeId);
-          kuzzle.unsubscribe(game.player.id);
+          Room.kuzzleRoom.unsubscribe();
+          ServerRoom.unsubscribe();
           game.stateTransition.to('not-enough-players');
           break;
 
@@ -265,7 +265,7 @@ ConnectingState.prototype = {
     });
 
     connectTextTweenOut.start();
-    kuzzle.create(Room.id, {event: Configuration.events.PLAYER_JOINED, player: game.player});
+    kuzzle.dataCollectionFactory(Room.id).create({event: Configuration.events.PLAYER_JOINED, player: game.player});
     if (Room.state === 'game_launched') {
       var interval = setInterval(function () {
         if (game.state.states.lobby.startGame) {
@@ -282,27 +282,29 @@ ConnectingState.prototype = {
       randColor = Phaser.Color.getRandomColor(30, 220),
       looks = ["pierre", "gilles"],
       look = looks[Math.floor(Math.random() * looks.length)],
-      myId;
+      collection = kuzzle.dataCollectionFactory(Configuration.server.room);
+    var
+      handleServerResponse = function (error, data) {
+        if (data._source && data._source.id === ServerRoom.subscriptionId && data._source.room) {
+          Room = data._source.room;
+          Players = {};
 
-    myId = kuzzle.subscribe(Configuration.server.room, { exists: { field: 'id' } }, function (error, data) {
-      if (data._source && data._source.id === myId && data._source.room) {
-        Room = data._source.room;
-        Players = {};
+          data._source.players.forEach(function (p) {
+            Players[p.id] = p;
 
-        data._source.players.forEach(function (p) {
-          Players[p.id] = p;
+            if (p.id === game.player.id) {
+              game.player = p;
+            }
+          });
 
-          if (p.id === game.player.id) {
-            game.player = p;
-          }
-        });
+          self.subscribeAndGo();
+        }
+      };
 
-        self.subscribeAndGo();
-      }
+    ServerRoom = collection.subscribe({}, handleServerResponse, {}, function () {
+      game.player = {id: ServerRoom.subscriptionId, username: kuzzleGame.name, color: randColor, look: look};
+      collection.create(game.player);
     });
-
-    game.player = {id: myId, username: kuzzleGame.name, color: randColor, look: look};
-    kuzzle.create(Configuration.server.room, game.player, false);
   },
 
   enterName: function() {

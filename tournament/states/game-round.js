@@ -384,8 +384,6 @@ GameRoundState.prototype = {
   },
 
   quitGame: function() {
-    //lobbyGame.kuzzle.unsubscribe(game.gameData.player.roomId);
-    //lobbyGame.kuzzle.delete('kf-user', lobbyGame.gameData.player.id, function(response) {
     musicGameRound.stop();
     lobbyGame.stateTransition.to('main-menu');
     //});

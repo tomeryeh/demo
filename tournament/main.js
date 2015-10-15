@@ -4,3 +4,4 @@ game.start();
 
 Players = {};
 Room = {};
+ServerRoom = {};

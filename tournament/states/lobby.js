@@ -51,14 +51,6 @@ LobbyState.prototype = {
     });
 
     this.game.stateTransition.to('game-init', true, false);
-/*
-    if (gameStarted) {
-      this.game.stateTransition.to('game-init', true, false);
-    }
-    else {
-      self.countDown();
-    }
-*/
   },
 
   drawLobby: function () {
@@ -117,46 +109,6 @@ LobbyState.prototype = {
       delay += 100;
     });
   },
-/*
-  cd: function () {
-    countdown.text = String.fromCharCode(199) + ' ' + countingDown + '!!';
-    game.add.tween(countdown.scale).from({x: 3.0, y: 3.0}, 800, Phaser.Easing.Bounce.Out).start();
-    game.add.tween(countdown).to({angle: 350}, 500, 'Elastic').start();
-    game.add.tween(countdown).to({alpha: 1.0}, 200, Phaser.Easing.Exponential.Out).start();
-    game.add.tween(countdown).to({alpha: 0.0}, 200, Phaser.Easing.Exponential.Out).delay(800).start();
-    countingDown--;
-
-    if (countingDown > 0) {
-      setTimeout(function () {
-        self.cd();
-      }, 1000);
-    }
-  },
-
-  countDown: function () {
-      if (this.game.hasMusic) {
-        musicLobby.fadeOut();
-      }
-
-      game.add.tween(countdown).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start();
-      var readyScale = game.add.tween(countdown.scale).to({x: 2.0, y: 2.0}, 1000, Phaser.Easing.Exponential.Out).start();
-      readyScale.onComplete.add(function () {
-        game.add.tween(countdown).to({alpha: 0.0}, 200, Phaser.Easing.Exponential.Out).start();
-      });
-
-      setTimeout(function () {
-        audioCountdown.play();
-        self.cd();
-
-        setTimeout(function () {
-          if (game.hasMusic) {
-            musicLobby.stop();
-          }
-          game.stateTransition.to('game-init', true, false);
-        }, 10000);
-      }, 2000);
-  },
-*/
   tweenTint: function (obj, startColor, endColor, time) {
     // create an object to tween with our step value at 0
     var colorBlend = {step: 0};
@@ -178,8 +130,8 @@ LobbyState.prototype = {
   },
 
   quitGame: function () {
-    kuzzle.unsubscribe(Room.subscribeId);
-    kuzzle.unsubscribe(game.player.id);
+    Room.kuzzleRoom.unsubscribe();
+    ServerRoom.unsubscribe();
 
     if (game.hasMusic) {
       musicLobby.stop();
