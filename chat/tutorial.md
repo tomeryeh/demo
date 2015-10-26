@@ -103,11 +103,11 @@ kuzzle.countSubscription(subcriptionId, function (error, response) {
 ```
 
 The subscription ID is the unique identifier of our subscription.  
-The callback function is used to display Kuzzle's answer we got.
+The callback function is used to display a Kuzzle answer we got.
 
 ## Multiple rooms support
 
-Now that we covered subscriptions and publish/subscribe messages, it's time to show you how to deal with persisted documents.
+Now that we have covered subscriptions and publish/subscribe messages, it's time to show you how to deal with persisted documents.
 
 To do that, we'll allow our little chat application to handle multiple rooms. The room list will be stored in Kuzzle, using a (very small) document per room, in a data collection stored in the ``CHAT_ROOM_COLLECTION`` global variable.
 The next 3 sections will show you how to search, count, store, and delete persisted documents.
