@@ -11,7 +11,7 @@ This tutorial uses [Kuzzle Javascript SDK](https://github.com/kuzzleio/sdk-javas
 * [Sending messages to Kuzzle](#sending-messages-to-kuzzle)
 * [Counting the number of users in our room](#counting-the-number-of-users-in-our-room)
 * [Multiple rooms support](#multiple-rooms-support)
-	* [Getting all documents of a data collection](#getting-all-documents-of-a-data-collection 
+	* [Getting all documents of a data collection](#getting-all-documents-of-a-data-collection) 
 	* [Creating a new persisted document](#creating-a-new-persisted-document)
 	* [Deleting a persisted document](#deleting-a-persisted-document)
 
