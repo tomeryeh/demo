@@ -8,6 +8,7 @@ These demos show how to use [Kuzzle](https://github.com/kuzzleio/kuzzle) to mana
 
 # Demos without tutorials
 Those demos are here juste to demonstrate what can be done with kuzzle
+* [Paint](paint): Adaptation of [Hynda Paint](https://github.com/hydna/hydna-paint) using [Kuzzle](https://github.com/kuzzleio/kuzzle) instead of [Hydna platform](https://www.hydna.com/)
 * [Planning poker](planning-poker): a simple [panning poker](https://fr.wikipedia.org/wiki/Planning_poker) app using Kuzzle as real-time backend.
 
 # Tutorials

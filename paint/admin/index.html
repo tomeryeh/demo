@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hydna Paint</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="./style/master.css" type="text/css" media="screen">
+  <link rel="apple-touch-icon-precomposed" sizes="76x76" href="images/icon-76x76.png">
+  <link rel="apple-touch-icon-precomposed" sizes="120x120" href="images/icon-114x114.png">
+  <link rel="apple-touch-icon-precomposed" sizes="120x120" href="images/icon-120x120.png">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="images/icon-144x144.png">
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="images/icon-152x152.png">
+  <link rel="apple-touch-icon-precomposed" href="images/icon-57x57.png">
+  <script>
+
+  </script>
+  <!--[if lt IE 9 ]>
+    <script src="./script/deps/excanvas.js"></script>
+    <style>
+      .offline #board {
+          display: none;
+      }
+      .online #board {
+          display: block;
+          opacity: 1;
+      }
+
+    </style>
+  <![endif]-->
+</head>
+<body class="online">
+  <div id="container">
+    <div id="board">
+      <canvas id="canvas" width="1440" height="900"></canvas>
+    </div>
+    <div id="menu">
+      <a id="menu-expander" href="#">Menu</a>
+      <button id="clear">CLEAR</button>
+      <form id="controls" autocomplete="off">
+        <ul class="colors">
+          <li>
+            <input id="color-1" name="color" type="radio" checked="checked" value="#FF6C4F">
+            <label for="color-1"></label>
+          </li>
+          <li>
+            <input id="color-2" name="color" type="radio" value="#ACC791">
+            <label for="color-2"></label>
+          </li>
+          <li>
+            <input id="color-3" name="color" type="radio" value="#78A8CC">
+            <label for="color-3"></label>
+          </li>
+          <li>
+            <input id="color-4" name="color" type="radio" value="#87BDC4">
+            <label for="color-4"></label>
+          </li>
+          <li>
+            <input id="color-5" name="color" type="radio" value="#B37FD4">
+            <label for="color-5"></label>
+          </li>
+          <li>
+            <input id="color-6" name="color" type="radio" value="#E8A474">
+            <label for="color-6"></label>
+          </li>
+          <li>
+            <input id="color-7" name="color" type="radio" value="#C94C32">
+            <label for="color-7"></label>
+          </li>
+          <li>
+            <input id="color-8" name="color" type="radio" value="#FFFFFF">
+            <label for="color-8"></label>
+          </li>
+        </ul>
+      </form>
+    </div>
+  </div>
+  <script src="https://cdn.socket.io/socket.io-1.3.5.js"></script>
+  <script type="text/javascript" src="./script/config.js"></script>
+  <script src="./script/kuzzle.min.js"></script>
+  <script src="./script/app.js"></script>
+  <!--[if lt IE 9 ]>
+    <script src="./script/deps/excanvas.js"></script>
+  <![endif]-->
+</body>
