@@ -90,8 +90,4 @@ angular.module('KuzzleChatDemo', [])
       }
     };
 
-  }])
-
-
-;
-
+  }]);

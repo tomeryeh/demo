@@ -111,8 +111,4 @@ angular.module('KuzzleChatDemo', [])
       }
     };
 
-  }])
-
-
-;
-
+  }]);

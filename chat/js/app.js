@@ -272,11 +272,5 @@ angular.module('KuzzleChatDemo', [])
     $scope.unactiveRoom = function (id) {
       chat.rooms.unactiveRoom(id);
     };
-
-
-
-  }])
-
-
-;
+  }]);
 
