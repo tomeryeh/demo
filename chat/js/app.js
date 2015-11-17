@@ -1,254 +1,281 @@
-var
-  kuzzle = Kuzzle.init(config.kuzzleUrl),
-  whoami = {},
-  subcriptionId,
-  CHAT_MSG_COLLECTION = 'demo-chat-messages',
-  CHAT_ROOM_COLLECTION = 'demo-chat-chatrooms',
-  GLOBAL_CHAT_ROOMID = undefined,
-  GLOBAL_CHAT_ROOM = 'main room';
+angular.module('KuzzleChatDemo', [])
+  .factory('kuzzle', function () {
+    return new Kuzzle(config.kuzzleUrl);
+  })
 
-/**
-* Listen to incoming chat messages and display them
-* Chat messages are publish/subscribe messages
-*
-* @param {string} chatRoom is the name of the chat room
-*/
-function listenMessages(chatRoom) {
-  if (subcriptionId) {
-    kuzzle.unsubscribe(subcriptionId);
-  }
+  .factory('kuzzleMessagesCollection', ['kuzzle', function (kuzzle) {
+    return kuzzle.dataCollectionFactory('KuzzleChatDemoMessages');
+  }])
 
-  subcriptionId = kuzzle.subscribe(CHAT_MSG_COLLECTION, {term: {chatRoom: chatRoom}}, function (error, newMessage) {
-    var $messageFlow = $('#messageFlow');
+  .factory('ChatRoom', ['$rootScope', 'kuzzleMessagesCollection', function ($rootScope, kuzzleMessagesCollection) {
+    function ChatRoom (options) {
+      var
+        opts = options || {},
+        self = this;
 
-    if (error) {
-      throw new Error(error);
+      this.id = opts.id || null;
+      this.messages = [];
+      this.userCount = 0;
+      this.subscribed = false;
+
+      this.kuzzleSubscription = null;
+
+      if (opts.subscribe) {
+        this.subscribe();
+      }
+
+      this.refreshUserCount();
+      setInterval(function () {
+        self.refreshUserCount();
+      }, 2000);
     }
 
-    // Autoscroll
-    if (($messageFlow[0].scrollHeight - $messageFlow.innerHeight()) === $messageFlow.scrollTop()) {
-      $messageFlow.animate({scrollTop: $messageFlow[0].scrollHeight}, 300);
-    }
-
-    // Appending the received message
-    $messageFlow.append(
-      '<div class="message"><strong style="color: ' +
-      newMessage._source.ownerColor +
-      ';">' +
-      newMessage._source.owner +
-      ' :</strong> ' +
-      newMessage._source.content +
-      '</div>'
-    );
-  });
-}
-
-/**
-* Send the given content to Kuzzle as a pub/sub message
-*/
-function sendMessage() {
-  var
-    $input = $('#inputChatMessage'),
-    content = $input.val(),
-    message = {
-        content: content,
-        owner: whoami.userName,
-        ownerColor: whoami.userColor,
-        chatRoom: whoami.chatRoom
+    ChatRoom.prototype.onMessageReceived = function (err, result) {
+      this.messages.push({
+        color: result._source.color,
+        nickName: result._source.nickName,
+        content: result._source.content
+      });
+      $rootScope.$apply();
     };
 
-  // Broadcast and reset the input
-  kuzzle.create(CHAT_MSG_COLLECTION, message);
-  $input.val("");
-}
+    ChatRoom.prototype.subscribe = function () {
+      var self = this;
 
-/**
-* Get the number of users listening to the current chat room, and update
-* the introductory message with it
-*/
-function updateUserCount() {
-  kuzzle.countSubscription(subcriptionId, function (error, response) {
-    if (error) {
-      throw new Error(error);
-    }
+      this.kuzzleSubscription = kuzzleMessagesCollection
+        .subscribe(
+          {term: {chatRoom: self.id}},
+          function (err, result) { self.onMessageReceived(err, result); },
+          {subscribeToSelf: true}
+        );
+      this.subscribed = true;
+    };
 
-    $('#userCount').text('There are ' + response + ' users connected to [' + whoami.chatRoom + ']');
-  });
-}
+    ChatRoom.prototype.unsubscribe = function () {
+      this.kuzzleSubscription.unsubscribe();
 
-/**
-* Retrieve and display existing rooms
-*/
-function refreshRooms() {
-  $('#roomList').empty();
+      this.kuzzleSubscription = null;
+      this.subscribed = false;
+    };
 
-  kuzzle.search(CHAT_ROOM_COLLECTION, {}, function (error, rooms) {
-    if (error) {
-      throw new Error(error);
-    }
-    else {
-      // create a default room if none exist
-      if (rooms.hits.total === 0) {
-        $('#switchRoom').text(GLOBAL_CHAT_ROOM);
-        kuzzle.create(CHAT_ROOM_COLLECTION, {name: GLOBAL_CHAT_ROOM}, true);
-      }
-      else {
-        rooms.hits.hits.forEach(function (room) {
-          if (room._source.name === whoami.chatRoom) {
-            $('#switchRoom').text(room._source.name);
-          }
-
-          if (room._source.name === GLOBAL_CHAT_ROOM) {
-            GLOBAL_CHAT_ROOMID = room._id;
-          }
-
-          addRoomSwitch(room._id, room._source.name);
+    ChatRoom.prototype.sendMessage = function (message, me) {
+      kuzzleMessagesCollection
+        .publish({
+          content: message,
+          color: me.color,
+          nickName: me.nickName,
+          chatRoom: this.id
         });
+    };
+
+    ChatRoom.prototype.refreshUserCount = function () {
+      var self = this;
+
+      if (!this.kuzzleSubscription) {
+        return;
       }
-    }
-  });
-}
-
-/**
-* Create a new room in Kuzzle
-*/
-function createRoom(newRoomName) {
-  var query = {
-  		query: {
-  			match: {
-  				name: newRoomName
-  			}
-  		}
-  	};
-
-  kuzzle.count(CHAT_ROOM_COLLECTION, query, function (error, response) {
-    if (response.count > 0) {
-      alert('The room ' + newRoomName + ' already exists');
-    }
-    else {
-      kuzzle.create(CHAT_ROOM_COLLECTION, {name: newRoomName}, true, function (error, room) {
-        switchRoom(room._id, newRoomName);
+      this.kuzzleSubscription.count(function (err, result) {
+        self.userCount = result.count;
+        $rootScope.$apply();
       });
-    }
-  });
-}
+    };
 
-/**
-* Delete the current room, if no other user is connected to it
-*/
-function deleteCurrentRoom() {
-  kuzzle.countSubscription(subcriptionId, function (error, response) {
-    var room = whoami.chatRoom;
-    if (response > 1) {
-      alert('You can\'t remove a non-empty room. Please ask people to leave first!');
-    } else {
-      kuzzle.delete(CHAT_ROOM_COLLECTION, whoami.chatRoomId, function (error, response) {
-        alert('Room ' + whoami.chatRoom + ' removed');
-        switchRoom(GLOBAL_CHAT_ROOMID, GLOBAL_CHAT_ROOM);
-      });
-    }
-  });
-}
+    return ChatRoom;
+  }])
 
-/**
-*   *********************************************************
-*   Starting from here, the code deals only with the chat GUI
-*   There is no further interaction with Kuzzle.
-*   *********************************************************
-*/
+  .factory('kuzzleChatRoomListCollection', ['kuzzle', function (kuzzle) {
+    return kuzzle.dataCollectionFactory('KuzzleChatDemoRoomList');
+  }])
 
-function startDemo() {
-  whoami = {
-    userName: 'Anonymous',
-    userColor: '#' + Math.floor(Math.random() * 16777215).toString(16),
-    chatRoom: GLOBAL_CHAT_ROOM
-  };
+  .factory('ChatRoomList', ['$rootScope', 'kuzzleChatRoomListCollection', 'ChatRoom', function ($rootScope, kuzzleChatRoomListCollection, ChatRoom) {
+    function ChatRoomList () {
+      this.all = {};
+      this.active = [];
+      this.current = null;
 
-  updateAliasButton();
-  listenMessages(GLOBAL_CHAT_ROOM);
-  refreshRooms();
-  setInterval(function() { refreshRooms(); }, 2000);
-  setInterval(function() { updateUserCount(); }, 500);
-
-  // Clicking the alias button asks the user for a new alias
-  $('#changeAlias').click(function (e) {
-    var newName;
-
-    e.preventDefault();
-    newName = prompt('Please enter your name', whoami.userName);
-
-    if (newName) {
-      whoami.userName = newName;
-      updateAliasButton();
-    }
-  });
-
-  // Clicking on the 'Send message' button sends the message
-  $('#sendChatMessage').click(function (e) {
-    e.preventDefault();
-    sendMessage();
-  });
-
-  // Pressing enter in the input area sends the message
-  $('#inputChatMessage').on('keydown', function (e) {
-    // (ENTER key)
-    if (e.which == 13) {
-      sendMessage();
-    }
-  });
-
-  // Add a new room
-  $('#createRoom').click(function (e) {
-    var newRoom;
-
-    e.preventDefault();
-    newRoom = prompt('New room name');
-
-    if (newRoom) {
-      createRoom(newRoom);
-    }
-  });
-
-  $('#deleteRoom').click(function (e) {
-    e.preventDefault();
-
-    if (whoami.chatRoom === GLOBAL_CHAT_ROOM) {
-      alert('You may only remove rooms other than the main one');
-      return;
+      this.getAll();
+      this.subscribe();
     }
 
-    deleteCurrentRoom();
-  });
-}
+    /**
+     * Real-time subscription to the room list collection.
+     * Allows to be informed when a new room is created by another user.
+     */
+    ChatRoomList.prototype.subscribe = function () {
+      var self = this;
 
-function updateAliasButton() {
-  $('#alias').text(whoami.userName);
-}
+      kuzzleChatRoomListCollection
+        .subscribe(
+          {},
+          function (err, result) {
+            if (result.action === 'delete') {
+              self.del(result._id);
+              return;
+            }
 
-// Add a room to the room list, with its switch trigger
-function addRoomSwitch(roomId, roomName) {
-  $('#roomList').append('<li><a id="' + roomId + '" href="#">' + roomName + '</a></li>');
+            var chatRoom = new ChatRoom({
+              id: result._id,
+              name: result._source.name,
+              subscribe: false
+            });
+            self.add(chatRoom);
+          },
+          {subscribeToSelf: true}
+        )
+    };
 
-  // Clicking the room button triggers a room Switch
-  $('#' + roomId).click(function(e) {
-    e.preventDefault();
-    switchRoom(roomId, roomName);
-  });
-}
+    /**
+     * Filters the list of rooms to get only the active ones.
+     * A chat room is considered active when the user has subscribed to it.
+     */
+    ChatRoomList.prototype.refreshActive = function () {
+      this.active = [];
 
-/**
-* Switch to a new room
-*/
-function switchRoom(newRoomId, newRoomName) {
-  if (newRoomName === whoami.chatRoom) {
-    return false;
-  }
+      for (k in this.all) {
+        if (this.all.hasOwnProperty(k) && this.all[k].subscribed) {
+          this.active.push(this.all[k]);
+        }
+      }
+      if (this.current === null) {
+        this.current = this.active[0];
+      }
+    };
 
-  $('#switchRoom').text(newRoomName);
-  whoami.chatRoom = newRoomName;
-  whoami.chatRoomId = newRoomId;
-  listenMessages(newRoomName);
-  refreshRooms();
+    /**
+     * Gets the list of rooms persisted in Kuzzle database.
+     * Called during init to populate the initial list.
+     */
+    ChatRoomList.prototype.getAll = function () {
+      var self = this;
 
-  $('#messageFlow').append('<div class="message"><small>Entering room [' + newRoomName + ']</small></div>');
-}
+      if (!self.all['Main room']) {
+        self.all['Main room'] = new ChatRoom({
+          id: 'Main room',
+          subscribe: true
+        });
+        self.refreshActive();
+      }
+
+      kuzzleChatRoomListCollection
+        .fetchAllDocuments(function (err, result) {
+          $.each(result.documents, function (k, doc) {
+            if (!self.all[doc.id]) {
+              self.all[doc.id] = new ChatRoom({
+                id: doc.id,
+                subscribe: false
+              })
+            }
+          });
+
+          self.refreshActive();
+
+          $rootScope.$apply();
+        });
+    };
+
+    ChatRoomList.prototype.add = function (chatRoom) {
+      if (!this.all[chatRoom.id]) {
+        this.all[chatRoom.id] = chatRoom;
+      }
+      this.refreshActive();
+    };
+
+    ChatRoomList.prototype.del = function (roomId) {
+      this.unactiveRoom(roomId);
+      delete this.all[roomId];
+    };
+
+    ChatRoomList.prototype.addNewRoom = function (name) {
+      var self = this;
+
+      kuzzleChatRoomListCollection
+        .documentFactory({_id: name})
+        .save({}, function (err, result) {
+          var chatRoom = new ChatRoom({
+            id: result.id,
+            subscribe: true
+          });
+
+          self.add(chatRoom);
+          self.activeRoom(chatRoom.id);
+        });
+    };
+
+    ChatRoomList.prototype.activeRoom = function (roomId) {
+      if (!this.all[roomId].subscribed) {
+        this.all[roomId].subscribe();
+      }
+
+      this.current = this.all[roomId];
+      this.current.refreshUserCount();
+
+      this.refreshActive();
+    };
+
+    ChatRoomList.prototype.unactiveRoom = function (roomId) {
+      if (this.all[roomId].subscribed) {
+        this.all[roomId].unsubscribe();
+      }
+      if (this.all[roomId].userCount <= 1) {
+        kuzzleChatRoomListCollection
+          .documentFactory(this.all[roomId].id)
+          .delete(function (err, result) {
+
+          });
+      }
+
+      this.current = null;
+
+      this.refreshActive();
+    };
+
+    return ChatRoomList;
+  }])
+
+  .controller('KuzzleChatController', ['$scope', 'ChatRoom', 'ChatRoomList', function ($scope, ChatRoom, ChatRoomList) {
+    var chat = this;
+
+    this.me = {
+      nickName: 'Anonymous',
+      color: '#' + Math.floor(Math.random() * 16777215).toString(16)
+    };
+
+    this.rooms = new ChatRoomList();
+
+    this.sendMessage = function () {
+      chat.rooms.current.sendMessage(chat.messageText, chat.me);
+      chat.messageText = '';
+    };
+
+    $scope.updateNickName = function () {
+      var newNickName = prompt('Please enter your new nickname:');
+
+      if ($.trim(newNickName) !== '') {
+        chat.me.nickName = newNickName;
+      }
+    };
+
+    $scope.addNewChatRoom = function () {
+      var newChatRoom = prompt('Please a name for the new room:');
+
+      if ($.trim(newChatRoom) !== '') {
+        chat.rooms.addNewRoom(newChatRoom);
+      }
+    };
+
+    $scope.activeRoom = function (id) {
+      chat.rooms.activeRoom(id);
+      $('#inputChatMessage').focus();
+    };
+
+    $scope.unactiveRoom = function (id) {
+      chat.rooms.unactiveRoom(id);
+    };
+
+
+
+  }])
+
+
+;
+

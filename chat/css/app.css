@@ -1,10 +1,65 @@
-#messageFlow {
-    height: 250px;
+html, body  { height: 100%; margin: 0; padding: 0; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+    display: none !important;
+}
+
+.chatContent {
+    position: relative;
+    height: 500px;
+}
+
+.messages {
+    position: absolute;
+    bottom: 0;
+    min-height: 100%;
+    width: 100%;
     overflow-y: scroll;
-    border-right: 1px dashed black;
+    border-right: solid 1px #DDDDDD;
+    border-left: solid 1px #DDDDDD;
     padding: 15px
 }
 
 .message {
     word-wrap: break-word;
+    background: white;
 }
+
+.statusbar, .roomList {
+    padding: 0.2em 0.5em;
+    background: #e7e7e7;
+    border: solid 1px #DDDDDD;
+    font-size: 0.8em;
+    color: #666666;
+}
+
+.roomList {
+    border-right: none;
+    margin-bottom: 0;
+    padding: 0 0.5em;
+}
+.roomList > ul {
+    height: 100%;
+}
+
+.tabs {
+    border: solid 1px #DDDDDD;
+    border-bottom: none;
+    background: #e7e7e7;
+}
+.tabs .tab-title > a {
+    padding: 0.3em 0.5em;
+    font-size: 0.9em;
+    color: #666666;
+}
+.tabs .tab-title.active > a {
+    color: #666666;
+}
+
+
+

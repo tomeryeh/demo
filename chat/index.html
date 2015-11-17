@@ -1,62 +1,103 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-ng-app="KuzzleChatDemo">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kuzzle Chat Demo</title>
-  <link rel="stylesheet" href="css/foundation.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.3/css/foundation.min.css" />
   <link rel="stylesheet" href="css/app.css"/>
-  <script src="js/vendor/modernizr.js"></script>
-  <script src="js/vendor/socket.io.js"></script>
-  <script type="text/javascript" src="js/vendor/kuzzle.min.js"></script>
 </head>
-<body>
+<body data-ng-controller="KuzzleChatController as chat">
 
-<div class="row">
-  <div class="large-5 columns">
-    <ul class="button-group round">
-      <li><a id="deleteRoom" href="#" class="button alert small"><b>-</b></a></li>
-      <li><button id="switchRoom" href="#" data-dropdown="roomList" aria-controls="roomList" aria-expanded="false" class="button dropdown small secondary"></button><br/>
-        <ul id="roomList" data-dropdown-content class="f-dropdown" aria-hidden="true">
-        </ul>
-      </li>
-      <li><a id="createRoom" href="#" class="button success small"><b>+</b></a></li>
-    </ul>
+  <div class="row collapse">
+    <div class="small-2 columns"></div>
+    <div class="small-10 columns">
+      <ul class="tabs" data-tab data-ng-cloak>
+        <li
+          ng-repeat="chatRoom in chat.rooms.active"
+          class="tab-title"
+          data-ng-class="{active: chat.rooms.current.id==chatRoom.id}"
+
+        >
+          <a href="#chatRoom_{{ chatRoom.id }}" data-ng-click="activeRoom(chatRoom.id)">
+            {{ chatRoom.id }}
+            <span data-ng-click="unactiveRoom(chatRoom.id)" data-ng-show="chatRoom.id!='Main'">[x]</span>
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
-</div>
-<div class="row">
-  <small id='userCount'></small>
-  <div class="content" id="panelChat">
-    <div id="messageFlow">
-      <div class="message">
+
+  <div class="row collapse" data-equalizer>
+      <ul class="roomList small-2 columns pricing-table" data-equalizer-watch>
+        <li class="title">All rooms</li>
+        <li class="bullet-item" ng-repeat="chatRoom in chat.rooms.all" data-ng-click="activeRoom(chatRoom.id)">{{ chatRoom.id }}</li>
+        <li class="cta-button"><a class="button" href="#" data-ng-click="addNewChatRoom()">add</a></li>
+      </ul>
+    <div class="chatContent small-10 columns">
+      <div class="tabs-content">
+        <div
+          id="chatRoom_{{ chatRoom.id }}"
+          ng-repeat="chatRoom in chat.rooms.active"
+          class="content messages"
+          ng-class="{active: chat.rooms.current.id==chatRoom.id}"
+          data-equalizer-watch>
+          <div class="message ng-cloak" ng-repeat="message in chatRoom.messages">
+            <strong style="color: {{ message.color }}">{{ message.nickName }}</strong>
+            {{ message.content }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<div class="row medium-uncollapse large-collapse">
-  <div class="large-9 columns">
-    <div class="row collapse postfix-round">
-      <div class="small-4 columns">
-        <a id="changeAlias" href="#" class="button secondary prefix"><img src="./document_edit.png" border="0" alt="change alias" width="20" height="20"/><span id="alias">foo</span></a>
-      </div>
-      <div class="small-4 columns">
-        <input id="inputChatMessage" type="text" placeholder="Write a message here">
-      </div>
-      <div class="small-1 columns end">
-        <a id="sendChatMessage" href="#" class="button postfix">Send</a>
-      </div>
+
+  <div class="row collapse statusbar">{{ chat.rooms.current.id }}:
+    <ng-pluralize count="chat.rooms.current.userCount"
+                  when="{'0': 'No user',
+                      '1': '1 user',
+                      'other': '{} users'}">
+    </ng-pluralize>
+  </div>
+
+  <div class="row collapse">
+    <div class="small-3 columns">
+      <a href="#" class="button secondary prefix" data-ng-click="updateNickName()">
+        <img src="./document_edit.png" border="0" alt="change alias" width="20" height="20" />
+        <strong ng-cloak>{{ chat.me.nickName }}</strong>
+      </a>
+    </div>
+    <div class="small-9 columns">
+      <form data-ng-submit="chat.sendMessage()" class="row collapse">
+        <div class="small-10 columns">
+          <input autocomplete="off" id="inputChatMessage" type="text" placeholder="Send a message" ng-model="chat.messageText">
+        </div>
+        <div class="small-2 columns">
+          <button class="button postfix">Send</button>
+        </div>
+      </form>
     </div>
   </div>
-</div>
-<script src="js/vendor/jquery.js"></script>
-<script src="js/vendor/foundation.min.js"></script>
-<script type="text/javascript" src="config.js"></script>
-<script src="js/app.js"></script>
-<script>
-  $(function () {
-    $(document).foundation();
-    startDemo();
-  });
-</script>
+
+
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.3/js/foundation.min.js"></script>
+  <script type="text/javascript" src="config.js"></script>
+  <script type="text/javascript" src="js/vendor/kuzzle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    $(document)
+      .ready(function () {
+        $('#inputChatMessage').focus();
+      })
+      .foundation({
+        tab: {
+          callback: function (tab) {
+            $('#inputChatMessage').focus();
+          }
+        }
+      });
+  </script>
 </body>
 </html>
