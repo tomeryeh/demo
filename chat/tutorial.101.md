@@ -9,6 +9,7 @@ Any user connected to the chat can send and receive the messages in real time.
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
+- [Sources](#sources)
 - [Include Kuzzle SDK's library](#include-kuzzle-sdks-library)
 - [Connecting to Kuzzle](#connecting-to-kuzzle)
 - [Preparing our Chat room and linking it to Kuzzle](#preparing-our-chat-room-and-linking-it-to-kuzzle)
@@ -19,6 +20,13 @@ Any user connected to the chat can send and receive the messages in real time.
 - [Handling the presentation logic](#handling-the-presentation-logic)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Sources
+
+The complete source files can be found in our [Github repository](https://github.com/kuzzleio/demo/tree/master/chat).
+
+* [html](https://github.com/kuzzleio/demo/tree/master/chat/101.html)
+* [javascript](https://github.com/kuzzleio/demo/tree/master/chat/js/app.101.js)
 
 ## Include Kuzzle SDK's library
 
@@ -150,7 +158,7 @@ ChatRoom.prototype.subscribe = function () {
 };
 ```
 
-The subscribe method just registers the application to Kuzzle to receive the incoming messages using the [KuzzleDataCollectiion subscribe method](http://kuzzleio.github.io/sdk-documentation/#subscribe).
+The subscribe method just registers the application to Kuzzle to receive the incoming messages using the [KuzzleDataCollection subscribe method](http://kuzzleio.github.io/sdk-documentation/#subscribe).
 
 The Kuzzle subscribe methods expects to receive three parameters:
 
@@ -217,12 +225,4 @@ Thanks to AngularJs [bidirectional binding](https://docs.angularjs.org/guide/dat
       chat.me.nickName = newNickName;
     }
   };
-  ```
-
-  ## Sources
-
-  The complete source files can be found in our [Github repository](https://github.com/kuzzleio/demo/tree/master/chat).
-
-  * [html](https://github.com/kuzzleio/demo/tree/master/chat/101.html)
-  * [javascript](https://github.com/kuzzleio/demo/tree/master/chat/js/app.101.js)
-  
+```
