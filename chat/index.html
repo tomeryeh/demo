@@ -16,12 +16,10 @@
         <li
           ng-repeat="chatRoom in chat.rooms.active"
           class="tab-title"
-          data-ng-class="{active: chat.rooms.current.id==chatRoom.id}"
-
-        >
+          data-ng-class="{active: chat.rooms.current.id==chatRoom.id}" >
           <a href="#chatRoom_{{ chatRoom.id }}" data-ng-click="activeRoom(chatRoom.id)">
             {{ chatRoom.id }}
-            <span data-ng-click="unactiveRoom(chatRoom.id)" data-ng-show="chatRoom.id!='Main'">[x]</span>
+            <span data-ng-click="unactiveRoom(chatRoom.id)" data-ng-show="chatRoom.id!='Main room'">[x]</span>
           </a>
         </li>
       </ul>
@@ -42,7 +40,7 @@
           class="content messages"
           ng-class="{active: chat.rooms.current.id==chatRoom.id}"
           data-equalizer-watch>
-          <div class="message ng-cloak" ng-repeat="message in chatRoom.messages">
+          <div class="message ng-cloak" ng-repeat="message in chatRoom.messages" >
             <strong style="color: {{ message.color }}">{{ message.nickName }}</strong>
             {{ message.content }}
           </div>

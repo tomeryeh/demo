@@ -1,12 +1,15 @@
 angular.module('KuzzleChatDemo', [])
+  // setup kuzzle as an Angular service
   .factory('kuzzle', function () {
     return new Kuzzle(config.kuzzleUrl);
   })
 
+  // KuzzleDataCollection on which the messages are submited
   .factory('kuzzleMessagesCollection', ['kuzzle', function (kuzzle) {
     return kuzzle.dataCollectionFactory('KuzzleChatDemoMessages');
   }])
 
+  // Our chatroom demo object
   .factory('ChatRoom', ['$rootScope', 'kuzzleMessagesCollection', function ($rootScope, kuzzleMessagesCollection) {
     function ChatRoom (options) {
       var
@@ -30,22 +33,20 @@ angular.module('KuzzleChatDemo', [])
       }, 2000);
     }
 
-    ChatRoom.prototype.onMessageReceived = function (err, result) {
-      this.messages.push({
-        color: result._source.color,
-        nickName: result._source.nickName,
-        content: result._source.content
-      });
-      $rootScope.$apply();
-    };
-
     ChatRoom.prototype.subscribe = function () {
       var self = this;
 
       this.kuzzleSubscription = kuzzleMessagesCollection
         .subscribe(
           {term: {chatRoom: self.id}},
-          function (err, result) { self.onMessageReceived(err, result); },
+          function (err, result) {
+            self.messages.push({
+              color: result._source.color,
+              nickName: result._source.nickName,
+              content: result._source.content
+            });
+            $rootScope.$apply();
+          },
           {subscribeToSelf: true}
         );
       this.subscribed = true;

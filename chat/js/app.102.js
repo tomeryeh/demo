@@ -1,11 +1,19 @@
 angular.module('KuzzleChatDemo', [])
+  // setup kuzzle as an Angular service
   .factory('kuzzle', function () {
     return new Kuzzle(config.kuzzleUrl);
   })
+  // KuzzleDataCollection on which the messages are submited
   .factory('kuzzleMessagesCollection', ['kuzzle', function (kuzzle) {
     return kuzzle.dataCollectionFactory('KuzzleChatDemoMessages');
   }])
+  // Our chatroom demo object
   .factory('ChatRoom', ['$rootScope', 'kuzzleMessagesCollection', function ($rootScope, kuzzleMessagesCollection) {
+    /**
+     * Constructor. Will be returned as an Angular service
+     * @param {Object} options
+     * @constructor
+     */
     function ChatRoom (options) {
       var
         opts = options || {},
@@ -26,27 +34,33 @@ angular.module('KuzzleChatDemo', [])
       }, 2000);
     }
 
-    ChatRoom.prototype.onMessageReceived = function (err, result) {
-      this.messages.push({
-        color: result._source.color,
-        nickName: result._source.nickName,
-        content: result._source.content
-      });
-      $rootScope.$apply();
-    };
-
+    /**
+     * Subscribe to the Kuzzle Room.
+     */
     ChatRoom.prototype.subscribe = function () {
       var self = this;
 
       this.kuzzleSubscription = kuzzleMessagesCollection
         .subscribe(
           {term: {chatRoom: self.id}},
-          function (err, result) { self.onMessageReceived(err, result); },
+          function (err, result) {
+            self.messages.push({
+              color: result._source.color,
+              nickName: result._source.nickName,
+              content: result._source.content
+            });
+            $rootScope.$apply();
+          },
           {subscribeToSelf: true}
         );
       this.subscribed = true;
     };
 
+    /**
+     * Sends a new message to Kuzzle
+     * @param {String} message The message to send
+     * @param {Object} me. An object representing the current user.
+     */
     ChatRoom.prototype.sendMessage = function (message, me) {
       kuzzleMessagesCollection
         .publish({
@@ -57,6 +71,9 @@ angular.module('KuzzleChatDemo', [])
         });
     };
 
+    /**
+     * Get the number of simultaneous users connected to the room
+     */
     ChatRoom.prototype.refreshUserCount = function () {
       var self = this;
 
