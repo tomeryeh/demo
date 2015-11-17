@@ -10,16 +10,15 @@ body {
 }
 
 .chatContent {
-    position: relative;
-    height: 500px;
+    height: 400px;
 }
 
 .messages {
-    position: absolute;
     bottom: 0;
     min-height: 100%;
+    height: 400px;
     width: 100%;
-    overflow-y: scroll;
+    overflow: auto;
     border-right: solid 1px #DDDDDD;
     border-left: solid 1px #DDDDDD;
     padding: 15px
@@ -59,6 +58,10 @@ body {
 }
 .tabs .tab-title.active > a {
     color: #666666;
+}
+
+.tabs-content > .content.active {
+    padding: 15px;
 }
 
 

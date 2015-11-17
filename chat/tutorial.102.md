@@ -1,6 +1,6 @@
 # Kuzzle chat demo 102 - Adding the user count
 
-In this second part of or chat demo tutorial, we will add a small new functionality being displaying the number of users currently connected to the room.
+In this second part of our chat demo tutorial, we will add a small new functionality being displaying the number of users currently connected to the room.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->

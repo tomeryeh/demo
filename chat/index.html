@@ -33,14 +33,16 @@
         <li class="cta-button"><a class="button" href="#" data-ng-click="addNewChatRoom()">add</a></li>
       </ul>
     <div class="chatContent small-10 columns">
-      <div class="tabs-content">
+      <div class="tabs-content" data-equalizer-watch="">
         <div
           id="chatRoom_{{ chatRoom.id }}"
           ng-repeat="chatRoom in chat.rooms.active"
           class="content messages"
           ng-class="{active: chat.rooms.current.id==chatRoom.id}"
-          data-equalizer-watch>
-          <div class="message ng-cloak" ng-repeat="message in chatRoom.messages" >
+          data-equalizer-watch
+          scroll-glue
+        >
+          <div class="message ng-cloak" ng-repeat="message in chatRoom.messages">
             <strong style="color: {{ message.color }}">{{ message.nickName }}</strong>
             {{ message.content }}
           </div>
@@ -79,6 +81,7 @@
 
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular.min.js"></script>
+  <script type="text/javascript" src="js/vendor/scrollglue.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.3/js/foundation.min.js"></script>
   <script type="text/javascript" src="config.js"></script>

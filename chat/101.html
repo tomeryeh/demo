@@ -10,12 +10,10 @@
 <body data-ng-controller="KuzzleChatController as chat">
 
   <div class="row">
-    <div class="chatContent" id="panelChat">
-      <div class="messages">
-        <div class="message ng-cloak" ng-repeat="message in chat.chatRoom.messages">
-          <strong style="color: {{ message.color }}">{{ message.nickName }}</strong>
-          {{ message.content }}
-        </div>
+    <div class="messages" scroll-glue>
+      <div class="message ng-cloak" ng-repeat="message in chat.chatRoom.messages">
+        <strong style="color: {{ message.color }}">{{ message.nickName }}</strong>
+        {{ message.content }}
       </div>
     </div>
   </div>
@@ -42,6 +40,7 @@
 
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.7/angular.min.js"></script>
+  <script type="text/javascript" src="js/vendor/scrollglue.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/foundation/5.5.3/js/foundation.min.js"></script>
   <script type="text/javascript" src="config.js"></script>

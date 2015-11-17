@@ -1,4 +1,4 @@
-angular.module('KuzzleChatDemo', [])
+angular.module('KuzzleChatDemo', ['luegg.directives'])
   // setup kuzzle as an Angular service
   .factory('kuzzle', function () {
     return new Kuzzle(config.kuzzleUrl);
