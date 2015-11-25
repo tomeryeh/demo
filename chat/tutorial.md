@@ -1,6 +1,6 @@
 # Kuzzle - Chat Tutorial
 
-This tutorial builds a Real-time messagingeb chat application based on Kuzzle's
+This tutorial builds a Real-time messaging web chat application based on Kuzzle's
 [Javascript SDK](https://github.com/kuzzleio/sdk-javascript).
 
 You will start implementing a simple single chat room based on Kuzzle
