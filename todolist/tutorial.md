@@ -20,13 +20,35 @@ In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-
 <a name="angular-init" />
 ## Angular initialization
 
-In Angular, for execute a function on initialization, we can add the `ng-init` attribute
+In Angular, to execute a function on initialization, we can add the `ng-init` attribute. This is where we kickstart everything.
 
 ```html
-<div class="container" ng-controller="todoCtrl" ng-init="init()">
+<div class="container" ng-controller="KuzzleTodoController" ng-init="init()">
 ```
 
-In `script.js`, line 13, we define a function `init`
+Now,let's take a look at our Controller script `app.js`.
+First, need an array to store all our TODOs: we create an empty array `$scope.todos` on line 15.
+
+```js
+$scope.todos = [];
+```
+
+Our TODOs will be managed by the `KuzzleTodoDemoMessages` collection in Kuzzle: to easily access it we have created an Angular factory that injects it into our controller.
+
+```js
+// setup kuzzle as an Angular service
+.factory('kuzzle', function () {
+  return new Kuzzle(config.kuzzleUrl);
+})
+// KuzzleDataCollection on which the messages are submitted
+.factory('kuzzleMessagesCollection', ['kuzzle', function (kuzzle) {
+  return kuzzle.dataCollectionFactory('KuzzleTodoDemoMessages');
+}])
+```
+
+One convenient thing to know here is that we don't have to explicitly create our collection to work with it: Kuzzle does it seamlessly for us.
+
+On line 17, we define the `init` function. The first thing we need to do when initializing our app, is to fetch all the existing TODOs:
 
 ```js
 $scope.init = function() {
@@ -34,23 +56,18 @@ $scope.init = function() {
 }
 ```
 
-We also need an array with all TODO: we create an empty array `$scope.todos` line 8.
-
-```js
-$scope.todos = [];
-```
-
 <a name="get-all-todo" />
-## Function getAllTodo 
+## Function getAllTodos
 
-In function `getAllTodo` we get all existing TODO.  
-For search, we can use the function `search` in the Javascript SDK. This function take three parameters:
-* the collection
-* a query
-* a callback to execute when we have the result
- 
+To do so, we ask Kuzzle to get us all the existing documents in the `KuzzleTodoDemoMessages` collection.
+The method that the Javascript SDK provides for this purpose is [`advancedSearch`](https://kuzzleio.github.io/sdk-documentation/#advancedsearch).
+It takes the following arguments:
+
+* a query filter (since we want all the documents, we leave it empty),
+* a callback to execute when the result is available.
+
 ```js
-kuzzle.search("todo", {}, function(error, response) {
+kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
 
 });
 ```
@@ -58,48 +75,48 @@ kuzzle.search("todo", {}, function(error, response) {
 In the callback we test if there is an error and display it in console.
 
 ```js
-kuzzle.search("todo", {}, function(error, response) {
-    if (error) {
-        console.error(error);
-        return false;
-    }
+kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
+  if (error) {
+      console.error(error);
+      return false;
+  }
 });
 ```
 
-We add the line `return false;` for stoping the callback execution and prevent error.
+We add the line `return false;` to stop the callback execution and prevent error.
 
-Now, we are sure if the execution continue it's because we have a result, we can loop on all TODOs and add them to the `$scope.todos` array.
+Now that we are sure to have a result, we can loop on all TODOs and add them to the `$scope.todos` array.
 
 ```js
-var getAllTodo = function() {
-  kuzzle.search("todo", {}, function(error, response) {
+var getAllTodos = function() {
+  kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
     if (error) {
       console.error(error);
       return false;
     }
 
     // The array with all responses is response.hits.hits
-    response.hits.hits.forEach(function(todo) {
+    response.documents.forEach(function(todo) {
       var newTodo = {
-        _id: todo._id,
-        label: todo._source.label,
-        done: todo._source.done
+        _id: todo.id,
+        label: todo.content.label,
+        done: todo.content.done
       };
 
       $scope.todos.push(newTodo);
     });
-    
+
     $scope.$apply();
   });
 };
 ```
 
-The line `$scope.$apply()` is added just for allow Angular to manually trigger life cycle. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
+The line `$scope.$apply()` is added to allow Angular to manually update the view. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
 
 <a name="display-in-view" />
 ## Display in view
 
-In Angular, when we change the model in javascript, the view is automatically updated. For display the TODO list we loop on all entries and display it with the attribute `ng-repeat`. For each we display a checkbox, the label, and an icon with a trash for delete it.
+To display the TODO list we loop on all entries and display it with the attribute `ng-repeat`. For each entry we display a checkbox, the label, and an trash icon to delete it.
 
 ```html
 <tr ng-repeat="todo in todos" ng-class="{success: todo.done}">
@@ -115,15 +132,14 @@ In Angular, when we change the model in javascript, the view is automatically up
 </tr>
 ```
 
-
 <a name="push" />
 # Push
 
 <a name="create" />
 ## Create
 
-When the user type a new label in form and press enter, we add the new TODO to Kuzzle.  
-In Angular we can bind an input with a model in javascript with attribute `ng-model` and we can bind a function when the user click on button or press enter with attribute `ng-click`.
+When the user types a new label in the form and press enter, we add the new TODO to our collection in Kuzzle.  
+In Angular we can bind an input with a model using the attribute `ng-model` and we can bind a function when the user clicks on a button or presses enter with attribute `ng-click`.
 
 ```html
 <form class="form-inline">
@@ -134,17 +150,19 @@ In Angular we can bind an input with a model in javascript with attribute `ng-mo
 </form>
 ```
 
-In Javascript we can now specify a function `addTodo` that using the function `create` in SDK. This function take four parameters:
-* the collection
-* the document
-* true if we want to persist the document, false if we don't want to persist (default to false)
-* an optionnal callback when the create is done
+In our Controller, we can now declare a function `addTodo` that using the `createDocument` method of the SDK. This function takes the following arguments:
+* a plain object describing the KuzzleDocument to create,
+* an options object,
+* an optional callback (we don't use it here).
 
-We get information from variable `$scope.newTodo` for send the label typed by user and after that we can reset this variable.
+We read `$scope.newTodo` to get the content of the TODO to be created, then we reset it.
 
 ```js
 $scope.addTodo = function() {
-  kuzzle.create("todo", {type: "todo", label: $scope.newTodo.label, done: false}, true);
+  kuzzleMessagesCollection.createDocument(
+    {type: "todo", label: $scope.newTodo.label, done: false},
+    {updateIfExist: true}
+  );
   $scope.newTodo = null;
 };
 ```
@@ -152,42 +170,44 @@ $scope.addTodo = function() {
 <a name="update" />
 ## Update
 
-When a TODO is in the list, the user can check it for mark as done. In the HTML, we add the action to execute:
+Users can mark TODOs as done. In the HTML, we add the action to execute:
 
 ```html
 <td><input type="checkbox" ng-checked="todo.done" ng-click="toggleDone($index)"/></td>
 ```
 
-And in the javascript, we can implement the function `toggleDone` that send the new TODO 'done' status to Kuzzle:
+And in our Controller, we can implement the function `toggleDone` that updates the TODO backend-side by calling `updateDocument` on the SDK. This method takes the following arguments:
+* the id of the document to update,
+* an object describing the properties to be updated on the object.
 
 ```js
 $scope.toggleDone = function(index) {
-  kuzzle.update("todo", {_id: $scope.todos[index]._id, done: !$scope.todos[index].done});
+  kuzzleMessagesCollection.updateDocument($scope.todos[index]._id, {done: !$scope.todos[index].done});
 };
 ```
 
 <a name="delete" />
 ## Delete
 
-When the user click on the trash, we send to Kuzzle that we want to delete the corresponding TODO.  
-First, we add an action on click with the attribute `ng-click`
+When the user clicks on the trash icon, we notify Kuzzle that we want to delete the corresponding TODO.  
+First, we add an action with the attribute `ng-click`
 
 ```html
 <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Delete" ng-click="delete($index)">
 ```
 
-In javascript we can use the method `delete` from SDK for delete a document by its ID
+In our Controller, we can call the `deleteDocument` method on SDK to delete a document by id.
 
 ```js
 $scope.delete = function(index) {
-  kuzzle.delete("todo", $scope.todos[index]._id);
+  kuzzleMessagesCollection.deleteDocument($scope.todos[index]._id);
 };
 ```
 
 <a name="real-time" />
 # Add real-time
 
-We can list all existing TODO, create, update and delete a TODO. Now we want to display the list dynamicly without reloading the page and share with other users in real time our actions. In Angular initialization, we call the function `subscribe` from the SDK that allow to execute a callback, each time a document matching a filter is create, updated or deleted.  
+We have just seen how we can list, create, update and delete TODOs. Now we want our TODO list to be dynamically bound with the server-side state, so that we can instantly see the effect of other users' actions without reloading the page. In our `$scope.init` method, we `subscribe` all the changes on our collection so that a callback is executed each time a document is created, updated or deleted.
 
 Above, in our document we had add a fake type 'todo' attribute for filter on it (because in Kuzzle version 0.2.0, we can't subscribe to a whole collection without apllying a filter). We can create a subscribe:
 
@@ -211,7 +231,7 @@ In the callback, the response parameter contain the document and also the action
         label: response._source.label,
         done: response._source.done
       };
-    
+
       addToList(newTodo);
     }
     ```
@@ -228,7 +248,7 @@ In the callback, the response parameter contain the document and also the action
       });
     }
     ```
-    
+
 * If the action is `update`, we search the corresponding TODO and we update it
 
     ```js
@@ -241,7 +261,7 @@ In the callback, the response parameter contain the document and also the action
       });
     }
     ```
-    
+
 In any case, because we have made an update in the Angular model in an asynchrone function, we have to manually trigger life cycle with `$scope.$apply();`. (You can have a look at the whole callback line 16-55)
 
 THAT'S ALL !
