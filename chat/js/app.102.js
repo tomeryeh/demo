@@ -80,8 +80,8 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       if (!this.kuzzleSubscription) {
         return;
       }
-      this.kuzzleSubscription.count(function (err, response) {
-        self.userCount = response.result;
+      this.kuzzleSubscription.count(function (err, result) {
+        self.userCount = result;
         $rootScope.$apply();
       });
     };
