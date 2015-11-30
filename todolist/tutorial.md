@@ -111,7 +111,7 @@ var getAllTodos = function() {
 };
 ```
 
-The line `$scope.$apply()` is added to allow Angular to manually update the view. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
+The line `$scope.$apply()` is added to make Angular to manually update the view. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
 
 <a name="display-in-view" />
 ## Display in view
@@ -196,7 +196,7 @@ First, we add an action with the attribute `ng-click`
 <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Delete" ng-click="delete($index)">
 ```
 
-In our Controller, we can call the `deleteDocument` method on SDK to delete a document by id.
+In our Controller, we can call the `deleteDocument` method on the SDK to delete a document by id.
 
 ```js
 $scope.delete = function(index) {
@@ -209,10 +209,8 @@ $scope.delete = function(index) {
 
 We have just seen how we can list, create, update and delete TODOs. Now we want our TODO list to be dynamically bound with the server-side state, so that we can instantly see the effect of other users' actions without reloading the page. In our `$scope.init` method, we `subscribe` all the changes on our collection so that a callback is executed each time a document is created, updated or deleted.
 
-Above, in our document we had add a fake type 'todo' attribute for filter on it (because in Kuzzle version 0.2.0, we can't subscribe to a whole collection without apllying a filter). We can create a subscribe:
-
 ```js
-kuzzle.subscribe("todo", {term: {type:"todo"}}, function(error, response) {
+kuzzleMessagesCollection.subscribe({}, function(error, response) {
     if (error) {
       console.error(error);
       return false;
@@ -220,7 +218,7 @@ kuzzle.subscribe("todo", {term: {type:"todo"}}, function(error, response) {
 });
 ```
 
-In the callback, the response parameter contain the document and also the action. When an another user create a TODO, the response will contain the document and 'create' in action. If another user delete a TODO, the action is equal to 'delete' and so on. In the callback we can test this variable and do the corresponding action:
+In the callback, the `response` argument contains the document data and the action that has been performed on it. When an another user creates a TODO, the action will be `create`. If another user deletes a TODO, the action will be `delete` and so on. In the callback we can test this variable and do the corresponding action:
 
 * If the action is `create`, we add the new TODO into the list
 
@@ -236,7 +234,7 @@ In the callback, the response parameter contain the document and also the action
     }
     ```
 
-* If the action is `delete`, we search the corresponding TODO in the list and we remove it
+* If the action is `delete`, we search the corresponding TODO in the list and remove it
 
     ```js
     if(response.action === "delete") {
@@ -249,7 +247,7 @@ In the callback, the response parameter contain the document and also the action
     }
     ```
 
-* If the action is `update`, we search the corresponding TODO and we update it
+* If the action is `update`, we search the corresponding TODO and update it
 
     ```js
     if(response.action === "update") {
@@ -262,8 +260,8 @@ In the callback, the response parameter contain the document and also the action
     }
     ```
 
-In any case, because we have made an update in the Angular model in an asynchrone function, we have to manually trigger life cycle with `$scope.$apply();`. (You can have a look at the whole callback line 16-55)
+Since we just made an update in the Angular model from an asynchronous function, we have to manually trigger the UI life cycle by calling `$scope.$apply();`.
 
-THAT'S ALL !
+THAT'S ALL!
 
-We can create, update or delete a TODO and because we have subscribed to the corresponding filter, we'll be notified for all modifications (and also our modifications).
+We can create, update or delete a TODO and, since we have subscribed to the corresponding filter, we'll be notified for all modifications (and also our modifications).
