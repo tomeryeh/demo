@@ -13,15 +13,15 @@ angular.module("KuzzleTodoDemo", [])
   .controller("KuzzleTodoController", ["$scope", 'kuzzleMessagesCollection', function($scope, kuzzleMessagesCollection) {
     $scope.newTodo = null;
     $scope.todos = [];
-    
+
     $scope.init = function () {
       getAllTodos();
 
       kuzzleMessagesCollection.subscribe({},
         function(error, response) {
           if (error) {
-            console.error(error);
-            return false;
+            console.error("[Kuzzle]:" + error.message);
+            return;
           }
 
           // In case the action is "create", we call the addToList action
@@ -63,8 +63,8 @@ angular.module("KuzzleTodoDemo", [])
     var getAllTodos = function() {
       kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
         if (error) {
-          console.log(error);
-          reject(error);
+          console.error("[Kuzzle]:" + error.message);
+          return;
         }
 
         response.documents.forEach(function(todo) {
