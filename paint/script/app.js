@@ -72,7 +72,7 @@ function PaintChannel (url) {
 
   this.send = function (data) {
     var content = {type: 'line', emitter: self.userId, line: JSON.stringify(data)};
-    paintCollection.publish(content);
+    paintCollection.publishMessage(content);
   };
 
   this.write = function (data) {
