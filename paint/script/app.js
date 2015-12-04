@@ -143,8 +143,8 @@ function PaintChannel (url) {
       }
     };
 
-    paintCollection.subscribe(filters, newLineNotif, {subscribeToSelf: false});
-    paintCollection.subscribe(clearFilters, clearNotif, {subscribeToSelf: false});
+    paintCollection.subscribe(filters, newLineNotif);
+    paintCollection.subscribe(clearFilters, clearNotif);
     self.loadLines(query, 0, 50);
 
   }());
