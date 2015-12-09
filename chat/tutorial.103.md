@@ -155,7 +155,7 @@ The constructor defines the available properties:
 
 The constructor then retrieves all the available rooms from Kuzzle by calling its getAll method and subscribes to the room list collection notifications.
 
-#### subscribe method
+#### subscription method
 
 ```javascript
 /**
@@ -186,7 +186,7 @@ ChatRoomList.prototype.subscribe = function () {
 };
 ```
 
-The subscribe method allows to receive the real-time notifications updates from the room list collection.
+The subscription method allows to receive the real-time notifications updates from the room list collection.
 
 :bulb: Note the empty object given as a filter. This is equivalent to "receive all" notifications.
 
@@ -273,17 +273,17 @@ ChatRoomList.prototype.addNewRoom = function (name) {
 
 Given a room name, this method will create a new [KuzzleDocument](http://kuzzleio.github.io/sdk-documentation/#kuzzledocument) and persist it in Kuzzle.
 
-Once the object is persisted, on the callback, it adds the a new matching ChatRoom object to the internal list.
+Once the object is persisted, on the callback, it adds a new matching ChatRoom object to the internal list.
 
 #### activeRoom and unactiveRoom methods
 
 These methods allow to toggle a given chat room active state to let the user join or quit it.
 
-When quiting a room, if the user was the last subscriber, the room is automatically deleted from Kuzzle.
+When quitting a room, if the user was the last subscriber, the room is automatically deleted from Kuzzle.
 
 ## Handling the presentation logic
 
-Instead of binding a single chat room to our template, we can now use our new ChatRoomList model object and add the few helpers that will trigger the new actions.
+Instead of binding a single chat room to our template, we can now use our new ChatRoomList model object and add few helpers that will trigger new actions.
 
 ```javascript
 .controller('KuzzleChatController', ['$scope', 'ChatRoom', 'ChatRoomList', function ($scope, ChatRoom, ChatRoomList) {
