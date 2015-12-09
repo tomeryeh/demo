@@ -20,14 +20,14 @@ In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-
 <a name="angular-init" />
 ## Angular initialization
 
-In Angular, to execute a function on initialization, we can add the `ng-init` attribute. This is where we kickstart everything.
+In Angular, to execute a function on initialization, we can add the `ng-init` attribute. This is where we kick-start everything.
 
 ```html
 <div class="container" ng-controller="KuzzleTodoController" ng-init="init()">
 ```
 
-Now,let's take a look at our Controller script `app.js`.
-First, need an array to store all our TODOs: we create an empty array `$scope.todos` on line 15.
+Now, let's take a look at our Controller script `app.js`.
+First, we need an array to store all our TODOs: we create an empty array `$scope.todos` on line 15.
 
 ```js
 $scope.todos = [];
@@ -83,9 +83,9 @@ kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
 });
 ```
 
-We add the line `return false;` to stop the callback execution and prevent error.
+We add the line `return false;` to stop the callback execution and prevent any error.
 
-Now that we are sure to have a result, we can loop on all TODOs and add them to the `$scope.todos` array.
+Now that we are sure to get a result, we can loop on all TODOs and add them to the `$scope.todos` array.
 
 ```js
 var getAllTodos = function() {
@@ -111,12 +111,12 @@ var getAllTodos = function() {
 };
 ```
 
-The line `$scope.$apply()` is added to make Angular to manually update the view. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
+The line `$scope.$apply()` is added to make Angular manually update the view. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
 
 <a name="display-in-view" />
 ## Display in view
 
-To display the TODO list we loop on all entries and display it with the attribute `ng-repeat`. For each entry we display a checkbox, the label, and an trash icon to delete it.
+To display the TODO list we loop on all entries and display it with the attribute `ng-repeat`. For each entry we display a checkbox, the label, and a trash icon to delete it.
 
 ```html
 <tr ng-repeat="todo in todos" ng-class="{success: todo.done}">
@@ -150,9 +150,9 @@ In Angular we can bind an input with a model using the attribute `ng-model` and 
 </form>
 ```
 
-In our Controller, we can now declare a function `addTodo` that using the `createDocument` method of the SDK. This function takes the following arguments:
-* a plain object describing the KuzzleDocument to create,
-* an options object,
+In our Controller, we can now declare a function `addTodo` that uses the `createDocument` method of the SDK. This function takes the following arguments:
+* a plain object describing the KuzzleDocument to be created,
+* an option object,
 * an optional callback (we don't use it here).
 
 We read `$scope.newTodo` to get the content of the TODO to be created, then we reset it.
@@ -170,7 +170,7 @@ $scope.addTodo = function() {
 <a name="update" />
 ## Update
 
-Users can mark TODOs as done. In the HTML, we add the action to execute:
+Users can mark TODOs as done. In the HTML, we add the action to be executed:
 
 ```html
 <td><input type="checkbox" ng-checked="todo.done" ng-click="toggleDone($index)"/></td>
@@ -196,7 +196,7 @@ First, we add an action with the attribute `ng-click`
 <p data-placement="top" data-toggle="tooltip" title="" data-original-title="Delete" ng-click="delete($index)">
 ```
 
-In our Controller, we can call the `deleteDocument` method on the SDK to delete a document by id.
+In our Controller, we can call the `deleteDocument` method on the SDK to delete a document by its id.
 
 ```js
 $scope.delete = function(index) {
@@ -218,7 +218,7 @@ kuzzleMessagesCollection.subscribe({}, function(error, response) {
 });
 ```
 
-In the callback, the `response` argument contains the document data and the action that has been performed on it. When an another user creates a TODO, the action will be `create`. If another user deletes a TODO, the action will be `delete` and so on. In the callback we can test this variable and do the corresponding action:
+In the callback, the `response` argument contains the document data and the action that has been performed on it. When another user creates a TODO, the action will be `create`. If another user deletes a TODO, the action will be `delete` and so on. In the callback we can test this variable and do the corresponding action:
 
 * If the action is `create`, we add the new TODO into the list
 
@@ -264,4 +264,4 @@ Since we just made an update in the Angular model from an asynchronous function,
 
 THAT'S ALL!
 
-We can create, update or delete a TODO and, since we have subscribed to the corresponding filter, we'll be notified for all modifications (and also our modifications).
+We can create, update or delete a TODO and -since we have subscribed to the corresponding filter- we'll be notified for all modifications (and also our own modifications).
