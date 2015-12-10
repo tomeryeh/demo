@@ -2,6 +2,8 @@ demo:
   image: nginx
   volumes:
     - ".:/usr/share/nginx/html"
+  links:
+    - kuzzle
   ports:
     - "80:80"
 
