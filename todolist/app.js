@@ -26,7 +26,7 @@ angular.module("KuzzleTodoDemo", [])
           }
 
           // In case the action is "create", we call the addToList action
-          if(response.action === "createOrUpdate") {
+          if(response.action === "create") {
             var newTodo = {
               _id: response._id,
               label: response._source.label,
