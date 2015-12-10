@@ -9,6 +9,8 @@ demo:
 
 kuzzle:
   image: kuzzleio/kuzzle:0.5.3
+  ports:
+    - "7512:712"
   links:
     - elasticsearch
     - redis
