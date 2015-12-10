@@ -118,7 +118,7 @@ function ChatRoom (options) {
 }
 ```
 
-The constructor takes an option object as parameter, in which the chat room id
+The constructor takes an `options` object as parameter, in which the chat room id
 can be defined.
 
 It also prepares the chat room properties. For that we will need:
@@ -158,9 +158,9 @@ ChatRoom.prototype.subscribe = function () {
 };
 ```
 
-The subscription method just registers the application to Kuzzle to receive the incoming messages using the [KuzzleDataCollection subscribe method](http://kuzzleio.github.io/sdk-documentation/#subscribe).
+The `subscribe` method just registers the application to Kuzzle to receive the incoming messages using the [KuzzleDataCollection subscribe method](http://kuzzleio.github.io/sdk-documentation/#subscribe).
 
-Kuzzle's subscription method expects to receive three parameters:
+Kuzzle's `subscribe` method expects to receive three parameters:
 
 1. filters to apply to incoming documents before noticing the user back.
 Only documents matching these filters will be received by our application.
