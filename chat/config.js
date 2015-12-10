@@ -1,3 +1,3 @@
 var config = {
-  kuzzleUrl: 'http://localhost:7512'
+  kuzzleUrl: 'http://kuzzle:7512'
 };
