@@ -18,6 +18,7 @@ angular.module("KuzzleTodoDemo", [])
       getAllTodos();
 
       kuzzleMessagesCollection.subscribe({},
+        {subscribeToSelf: true},
         function(error, response) {
           if (error) {
             console.error("[Kuzzle]:" + error.message);
@@ -55,8 +56,7 @@ angular.module("KuzzleTodoDemo", [])
             });
           }
           $scope.$apply();
-        },
-        {subscribeToSelf: true}
+        }
       );
     };
 
