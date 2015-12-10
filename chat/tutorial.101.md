@@ -49,7 +49,7 @@ In your html, you can then include it.
 
 ## Connecting to Kuzzle
 
-Connecting to Kuzzle is just a matter of instanting a [Kuzzle object](http://kuzzleio.github.io/sdk-documentation/#kuzzle).
+Connecting to Kuzzle is just a matter of instantiating a [Kuzzle object](http://kuzzleio.github.io/sdk-documentation/#kuzzle).
 
 We expose it as an [Angular service](https://docs.angularjs.org/guide/services).
 
