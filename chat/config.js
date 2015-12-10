@@ -1,3 +1,3 @@
 var config = {
-  kuzzleUrl: 'http://chat_kuzzle_1:7512'
+  kuzzleUrl: 'http://localhost:7512'
 };
