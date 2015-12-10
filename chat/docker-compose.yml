@@ -6,7 +6,7 @@ demo:
     - "80:80"
 
 kuzzle:
-  image: kuzzleio/kuzzle:alpha
+  image: kuzzleio/kuzzle:0.5.3
   ports:
     - "7512:7512"
   links:
