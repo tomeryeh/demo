@@ -89,6 +89,7 @@ ConnectingState.prototype = {
 
     kuzzleGame = this.game;
     kuzzleGame.name = "";
+    kuzzleGame.started = false;
 
     this.keyDown = this.game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
     this.keyDown.onDown.add(this.updateMenu, this);
@@ -278,7 +279,7 @@ ConnectingState.prototype = {
       randColor = Phaser.Color.getRandomColor(30, 220),
       looks = ["pierre", "gilles"],
       myId = uuid.v4(),
-      look = looks[Math.floor(Math.random() * looks.length)],
+      look = looks[Math.floor(Math.random() * looks.length)];
 
     game.player = {
       id: myId,
@@ -367,7 +368,8 @@ ConnectingState.prototype = {
   },
 
   selectName: function() {
-    if(kuzzleGame.name !== '') {
+    if(kuzzleGame.name !== '' && !kuzzleGame.started) {
+      kuzzleGame.started = true;
       nameTextTweenOut.start();
       self.connectToKuzzle();
     }

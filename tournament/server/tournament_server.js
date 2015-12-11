@@ -30,7 +30,7 @@ function startServer() {
         players = [];
 
         if (data.action === 'on') {
-          logger.info('New player: ', data.metadata.username);
+          logger.info('New player: ', data.metadata.username, ' - ', data.metadata.id);
           roomId = addPlayer(data.metadata);
 
           Object.keys(Rooms[roomId].players).forEach(p => players.push(Rooms[roomId].players[p]));
@@ -38,7 +38,7 @@ function startServer() {
             .dataCollectionFactory(Configuration.server.room)
             .publishMessage({id: data.metadata.id, room: Rooms[roomId], players: players });
         } else if (data.action === 'off') {
-          logger.info('Player left: ', data.metadata.username);
+          logger.info('Player left: ', data.metadata.username, ' - ' , data.metadata.id);
           removePlayer(data.metadata.id);
         }
       });
