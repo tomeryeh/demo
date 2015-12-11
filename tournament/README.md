@@ -33,9 +33,6 @@ Clone the demo project and install dependencies:
 
 ```sh
 $ git clone https://github.com/kuzzleio/demo.git
-$ cd demo/tournament
-$ npm install
-$ bower install
 ```
 
 ## Configuration
