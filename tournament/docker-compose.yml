@@ -7,7 +7,7 @@ front:
 
 server:
   image: node:4.1.1
-  command: sh -c "cd /var/app/server && npm install && bower install && npm start"
+  command: sh -c "cd /var/app/server && sh run.sh"
   volumes:
     - ".:/var/app/server"
 
