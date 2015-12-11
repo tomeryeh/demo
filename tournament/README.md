@@ -16,22 +16,50 @@ Namely:
 * How to handle client disconnections
 
 
-# Running the demo
+# Getting started
 
-Simply ``git clone`` the project, and in the ``tournament`` directory, execute the following command:
+## Prerequisites
+
+For this demo, you'll need:
+
+* [NodeJS](https://nodejs.org/en/) v4 or higher
+* [Bower](http://bower.io/#install-bower)
+* [Docker](http://docs.docker.com/linux/started/) v1.7 or higher
+* [docker-compose](https://docs.docker.com/compose/install/) v1.2 or higher
+
+## Setting up
+
+Clone the demo project and install dependencies:
 
 ```sh
-docker-compose up
+$ git clone https://github.com/kuzzleio/demo.git
+$ cd demo/tournament
+$ npm install
+$ bower install
 ```
 
-# Configuration
+## Configuration
 
 The default Kuzzle URL is ``http://localhost:7512``.
 
 To change the host name, simply edit the ``config.js`` file, located in the root directory of this demo.
 
-You may want to change the default TCP port too. To do so, in addition to the ``config.js`` file, you also need to edit the ``docker-compose.yml`` file.
 
+## Launching the demo
+
+```sh
+docker-compose up
+```
+
+If you're behind a proxy, Kuzzle won't be able to download the necessary plugins. You may use ``forgetproxy`` as a quick way to bypass proxy configuration:
+
+```sh
+$ docker pull klabs/forgetproxy
+$ docker run -ti --net=host --privileged -e http_proxy=$http_proxy \
+-e https_proxy=$https_proxy klabs/forgetproxy
+```
+
+Once done, you may access the demo directly in your browser, using the following URL: ``http://localhost``
 
 # License
 

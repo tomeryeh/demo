@@ -374,7 +374,7 @@ GameRoundNoMonsterState.prototype = {
     if(game.time.now > updateTimer && live) {
       updateTimer = game.time.now + updateRate;
 
-      kuzzle.create(Room.id, {
+      kuzzle.dataCollectionFactory(Room.id).publishMessage({
         event    : Configuration.events.PLAYER_UPDATE,
         id       : game.player.id,
         look     : game.player.look,
@@ -388,7 +388,7 @@ GameRoundNoMonsterState.prototype = {
         shoot    : shooted ? shootCoords : false,
         damaged  : hasDamaged,
         alive    : game.player.isAlive
-      }, false);
+      });
 
       hasDamaged = [];
       shooted = false;
@@ -880,8 +880,7 @@ GameRoundNoMonsterState.prototype = {
       game.add.tween(gameOverMessage).to({alpha: 1.0}, 1500, Phaser.Easing.Exponential.Out, true);
     });
 
-    kuzzle.create(Room.id, { event: Configuration.events.PLAYER_DIE, player: game.player }, false);
-    //game.camera.follow(enemy.sprite);
+    kuzzle.dataCollectionFactory(Room.id).publishMessage({ event: Configuration.events.PLAYER_DIE, player: game.player });
   },
 
   prepareToGameEnd: function (winner) {
@@ -918,8 +917,7 @@ GameRoundNoMonsterState.prototype = {
   },
 
   quitGame: function() {
-    kuzzle.unsubscribe(Room.subscribeId);
-    kuzzle.unsubscribe(game.player.id);
+    kuzzle.logout();
 
     if (this.game.hasMusic) {
       musicGameRound.stop();

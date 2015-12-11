@@ -6,13 +6,13 @@ front:
     - "80:80"
 
 server:
-  image: node:0.12.7
+  image: node:4.1.1
   command: sh -c "cd /var/app/server && npm start"
   volumes:
     - ".:/var/app/server"
 
 kuzzle:
-  image: kuzzleio/kuzzle:alpha
+  image: kuzzleio/kuzzle:0.6.0
   ports:
     - "7512:7512"
   links:
@@ -25,4 +25,3 @@ redis:
 elasticsearch:
   image: elasticsearch:1.5.2
   command: elasticsearch --cluster.name=tournament
-

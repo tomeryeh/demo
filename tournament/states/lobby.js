@@ -178,8 +178,7 @@ LobbyState.prototype = {
   },
 
   quitGame: function () {
-    kuzzle.unsubscribe(Room.subscribeId);
-    kuzzle.unsubscribe(game.player.id);
+    kuzzle.logout();
 
     if (game.hasMusic) {
       musicLobby.stop();
