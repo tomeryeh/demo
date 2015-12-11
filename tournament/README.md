@@ -22,8 +22,6 @@ Namely:
 
 For this demo, you'll need:
 
-* [NodeJS](https://nodejs.org/en/) v4 or higher
-* [Bower](http://bower.io/#install-bower)
 * [Docker](http://docs.docker.com/linux/started/) v1.7 or higher
 * [docker-compose](https://docs.docker.com/compose/install/) v1.2 or higher
 
