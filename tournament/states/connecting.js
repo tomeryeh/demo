@@ -254,6 +254,11 @@ ConnectingState.prototype = {
               self.updatePlayer(data._source);
             }
             break;
+
+          case Configuration.events.PLAYER_DIE:
+            if (data._source.player.id !== game.player.id && typeof self.playerDies === 'function') {
+              self.playerDies(Players[data._source.player.id], false);
+            }
         }
       });
 

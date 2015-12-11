@@ -50,7 +50,8 @@ LobbyState.prototype = {
       Players[id].hp = Configuration.player.hp;
     });
 
-    this.game.stateTransition.to('game-init', true, false);
+    kuzzleGame.stateTransition.to('game-init', true, false);
+
 /*
     if (gameStarted) {
       this.game.stateTransition.to('game-init', true, false);

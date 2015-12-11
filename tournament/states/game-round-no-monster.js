@@ -187,38 +187,35 @@ GameRoundNoMonsterState.prototype = {
   },
 
   initPlayer: function (pid) {
-//    Object.keys(Players).forEach(function (pid) {
-      if (!Players[pid] || pid === game.player.id) {
-        return false;
-      }
+    if (!Players[pid] || pid === game.player.id) {
+      return false;
+    }
 
-      Players[pid].isAlive = true;
-      Players[pid].shadow = self.addPlayerShadow(Players[pid].look);
-      Players[pid].sprite = self.addPlayer(pid, Players[pid].look);
-      Players[pid].emitter = self.addPlayerEmitter();
-      Players[pid].hpMeter = self.addPlayerHPMeter(Players[pid].hp);
-      Players[pid].tag = self.addPlayerTag(Players[pid].username);
-      Players[pid].blood = self.addPlayerBlood();
-      Players[pid].x = 0.0;
-      Players[pid].y = 0.0;
-      Players[pid].vx = 0.0;
-      Players[pid].vy = 0.0;
+    Players[pid].isAlive = true;
+    Players[pid].shadow = self.addPlayerShadow(Players[pid].look);
+    Players[pid].sprite = self.addPlayer(pid, Players[pid].look);
+    Players[pid].emitter = self.addPlayerEmitter();
+    Players[pid].hpMeter = self.addPlayerHPMeter(Players[pid].hp);
+    Players[pid].tag = self.addPlayerTag(Players[pid].username);
+    Players[pid].blood = self.addPlayerBlood();
+    Players[pid].x = 0.0;
+    Players[pid].y = 0.0;
+    Players[pid].vx = 0.0;
+    Players[pid].vy = 0.0;
 
-      if(Room.rules.mode.id === 'TM') {
-        Room.rules.teams.blue.forEach(function (i) {
-          if (i === pid)
-            Players[pid].team = 'blue';
-        });
+    if(Room.rules.mode.id === 'TM') {
+      Room.rules.teams.blue.forEach(function (i) {
+        if (i === pid)
+          Players[pid].team = 'blue';
+      });
 
-        Room.rules.teams.red.forEach(function (i) {
-          if (i === p.id)
-            Players[pid].team = 'red';
-        });
-      }
+      Room.rules.teams.red.forEach(function (i) {
+        if (i === p.id)
+          Players[pid].team = 'red';
+      });
+    }
 
-      Players[pid].updated = true;
-
-//    });
+    Players[pid].updated = true;
   },
 
   addPlayer: function (id, look) {
@@ -226,19 +223,15 @@ GameRoundNoMonsterState.prototype = {
     p.animations.add('idle', [0, 1], 2, true);
     p.animations.add('run', [2, 3], 3, true);
     game.physics.enable(p, Phaser.Physics.ARCADE);
-    //p.filters = [filterPixelate6];
-    //.blendMode = PIXI.blendModes.ADD;
     p.body.collideWorldBounds = true;
     p.body.bounce.setTo(0.4, 0.4);
     p.body.linearDamping = 1;
     p.anchor.setTo(0.5, 1.0);
     p.hp = Players[id].hp;
     p.height = 102;
-    //p.width = 64;
     p.width = 42;
     p.id = id;
     p.animations.play('idle');
-    //p.scale.set(1.5);
 
     return p;
   },
@@ -308,6 +301,10 @@ GameRoundNoMonsterState.prototype = {
       self.initPlayer(data.id);
     }
 
+    if (!p.isAlive) {
+      return false;
+    }
+
     p.sprite.x = data.x;
     p.sprite.y = data.y;
     p.sprite.body.velocity.x = data.vx;
@@ -319,7 +316,7 @@ GameRoundNoMonsterState.prototype = {
         if(d.id === game.player.id) {
           self.iTakeDamage(p, d.dmg);
         } else {
-          self.playerTakesDamage(p, d.dmg, false);
+          self.playerTakesDamage(Players[d.id], d.dmg, false);
         }
       });
     }
@@ -371,7 +368,7 @@ GameRoundNoMonsterState.prototype = {
       lastPlayerCoordsY = player.y;
     }
 
-    if(game.time.now > updateTimer && live) {
+    if(game.player.isAlive && game.time.now > updateTimer && live) {
       updateTimer = game.time.now + updateRate;
 
       kuzzle.dataCollectionFactory(Room.id).publishMessage({
@@ -434,7 +431,7 @@ GameRoundNoMonsterState.prototype = {
         px,
         py;
 
-      if (id === game.player.id || !p.updated) {
+      if (id === game.player.id || !p.updated || !p.isAlive) {
         return false;
       }
 
@@ -489,104 +486,105 @@ GameRoundNoMonsterState.prototype = {
       game.physics.arcade.collide(p.sprite, layer);
     });
 
-    if (cursors.left.isDown) {
-      player.body.velocity.x = -300;
-    }
+    if (game.player.isAlive) {
+      if (cursors.left.isDown) {
+        player.body.velocity.x = -300;
+      }
 
-    if(cursors.right.isDown) {
-      player.body.velocity.x = 300;
-    }
+      if(cursors.right.isDown) {
+        player.body.velocity.x = 300;
+      }
 
-    if (player.body.velocity.x < 10.0 && player.body.velocity.x > -10.0) {
-      player.body.velocity.x = 0.0;
-    }
+      if (player.body.velocity.x < 10.0 && player.body.velocity.x > -10.0) {
+        player.body.velocity.x = 0.0;
+      }
 
-    if (player.body.velocity.x > 0.0) {
-      player.play('run');
-      playerShadow.play('run');
-      direction = 'right';
-      player.body.velocity.x = player.body.velocity.x - 10.0;
-      game.add.tween(player.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
-      game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
-    }
-    else if (player.body.velocity.x < 0.0) {
-      player.play('run');
-      playerShadow.play('run');
-      direction = 'left';
-      player.body.velocity.x = player.body.velocity.x + 10.0;
-      game.add.tween(player.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
-      game.add.tween(playerShadow.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
-    }
-    else {
-      player.play('idle');
-      playerShadow.play('idle');
-    }
+      if (player.body.velocity.x > 0.0) {
+        player.play('run');
+        playerShadow.play('run');
+        direction = 'right';
+        player.body.velocity.x = player.body.velocity.x - 10.0;
+        game.add.tween(player.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+        game.add.tween(playerShadow.scale).to({x: 1.0}, 75, Phaser.Easing.Bounce.Out, true);
+      }
+      else if (player.body.velocity.x < 0.0) {
+        player.play('run');
+        playerShadow.play('run');
+        direction = 'left';
+        player.body.velocity.x = player.body.velocity.x + 10.0;
+        game.add.tween(player.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
+        game.add.tween(playerShadow.scale).to({x: -1.0}, 75, Phaser.Easing.Bounce.Out, true);
+      }
+      else {
+        player.play('idle');
+        playerShadow.play('idle');
+      }
 
-    if (player.body.onFloor()) {
-      player.body.gravity.y = 1000;
-    }
+      if (player.body.onFloor()) {
+        player.body.gravity.y = 1000;
+      }
 
-    if (jumpButton.isDown && (player.body.onFloor() || player.body.wasTouching.down || player.body.blocked.down || onMap) && game.time.now > jumpTimer) {
-      player.body.velocity.y = (player.body.wasTouching.down ? -1000 : -500);
-      jumpTimer = game.time.now + 750;
-      readyForDoubleJump = false;
-      doubleJumped = false;
-    }
-    if (!jumpButton.isDown && !player.body.onFloor() && !readyForDoubleJump && !doubleJumped) {
-      readyForDoubleJump = true;
-    }
+      if (jumpButton.isDown && (player.body.onFloor() || player.body.wasTouching.down || player.body.blocked.down || onMap) && game.time.now > jumpTimer) {
+        player.body.velocity.y = (player.body.wasTouching.down ? -1000 : -500);
+        jumpTimer = game.time.now + 750;
+        readyForDoubleJump = false;
+        doubleJumped = false;
+      }
+      if (!jumpButton.isDown && !player.body.onFloor() && !readyForDoubleJump && !doubleJumped) {
+        readyForDoubleJump = true;
+      }
 
-    if (jumpButton.isDown && !player.body.onFloor() && readyForDoubleJump) {
-      flying = true;
-      player.body.velocity.y = -750;
-      player.body.gravity.y = -500;
-      readyForDoubleJump = false;
-      doubleJumped = true;
-      emitter.start(false, 2000, 20);
-      emitterLifeSpan = 30;
-    }
+      if (jumpButton.isDown && !player.body.onFloor() && readyForDoubleJump) {
+        flying = true;
+        player.body.velocity.y = -750;
+        player.body.gravity.y = -500;
+        readyForDoubleJump = false;
+        doubleJumped = true;
+        emitter.start(false, 2000, 20);
+        emitterLifeSpan = 30;
+      }
 
-    if (emitterLifeSpan > 0) {
-      emitterLifeSpan = emitterLifeSpan - 1;
-    }
-    else {
-      player.body.gravity.y = 300;
-      emitter.on = false;
-    }
+      if (emitterLifeSpan > 0) {
+        emitterLifeSpan = emitterLifeSpan - 1;
+      }
+      else {
+        player.body.gravity.y = 300;
+        emitter.on = false;
+      }
 
-    if (flying && player.body.onFloor() && groundPounding) {
-      audioGroundpound.play();
-      flying = false;
-      game.juicy.shake(30, 100);
-      //game.juicy.jelly(player, 1.5, 100);
-      this.tweenTint(player, 0x333333, 0xFF11FF, 500);
-    }
+      if (flying && player.body.onFloor() && groundPounding) {
+        audioGroundpound.play();
+        flying = false;
+        game.juicy.shake(30, 100);
+        this.tweenTint(player, 0x333333, 0xFF11FF, 500);
+      }
 
-    if (cursors.down.isDown && !player.body.onFloor() && !player.body.wasTouching.down) {
-      player.body.gravity.y = 10000;
-      groundPounding = true;
-    }
-    else {
-      player.body.gravity.y = 100;
-      groundPounding = false;
-    }
+      if (cursors.down.isDown && !player.body.onFloor() && !player.body.wasTouching.down) {
+        player.body.gravity.y = 10000;
+        groundPounding = true;
+      }
+      else {
+        player.body.gravity.y = 100;
+        groundPounding = false;
+      }
 
-    if (fireButton.isDown && game.time.now > shootTimer && game.player.isAlive) {
-      shootTimer = game.time.now + shootRecover;
-      this.shootLaser();
-    }
+      if (fireButton.isDown && game.time.now > shootTimer && game.player.isAlive) {
+        shootTimer = game.time.now + shootRecover;
+        this.shootLaser();
+      }
 
-    if (nadeButton.isDown && nadeCount > 0 && game.time.now > nadeTimer && game.player.isAlive) {
-      nadeCount -= 1;
-      nadeTimer = game.time.now + nadeRecover;
-      this.throwNade();
+      if (nadeButton.isDown && nadeCount > 0 && game.time.now > nadeTimer && game.player.isAlive) {
+        nadeCount -= 1;
+        nadeTimer = game.time.now + nadeRecover;
+        this.throwNade();
+      }
     }
 
     lasers.forEach(function (l, i) {
       Object.keys(Players).forEach(function (id) {
         var p = Players[id];
 
-        if (id === game.player.id) {
+        if (id === game.player.id || !p.isAlive) {
           return false;
         }
 
@@ -605,7 +603,7 @@ GameRoundNoMonsterState.prototype = {
     });
 
     Object.keys(Players).forEach(function (id) {
-      if (id !== game.player.id) {
+      if (id !== game.player.id && Players[id].isAlive) {
         game.physics.arcade.collide(player, Players[id].sprite, self.handleCollisionBetweenPlayers, null, self);
       }
     });
@@ -616,7 +614,9 @@ GameRoundNoMonsterState.prototype = {
       game.physics.arcade.collide(n, layer);
 
       Object.keys(Players).forEach(function (p) {
-        game.physics.arcade.collide(n, Players[p]);
+        if (p.isAlive) {
+          game.physics.arcade.collide(n, Players[p]);
+        }
       });
 
       if (n.timer <= 0) {
@@ -627,7 +627,8 @@ GameRoundNoMonsterState.prototype = {
             var dmg = Math.floor(Math.sin(((250 - game.physics.arcade.distanceBetween(n, player)) / 250) * (Math.PI / 2)) * Configuration.player.hp);
             hasDamaged.push({
               id: game.player.id,
-              dmg: dmg
+              dmg: dmg,
+              type: 'grenade'
             });
             self.iTakeDamage(game.player, dmg);
           }
@@ -635,15 +636,16 @@ GameRoundNoMonsterState.prototype = {
           Object.keys(Players).forEach(function (id) {
             var p = Players[id];
 
-            if (p.id === game.player.id) {
+            if (p.id === game.player.id || !p.isAlive) {
               return false;
             }
 
-            if (game.physics.arcade.distanceBetween(n, p.sprite) < 250 && p.isAlive) {
+            if (game.physics.arcade.distanceBetween(n, p.sprite) < 250) {
               var dmg = Math.floor(Math.sin(((250 - game.physics.arcade.distanceBetween(n, p.sprite)) / 250) * (Math.PI / 2)) * Configuration.player.hp);
               hasDamaged.push({
                 id: p.id,
-                dmg: dmg
+                dmg: dmg,
+                type: 'grenade'
               });
               self.playerTakesDamage(p, dmg, true);
             }
@@ -665,8 +667,6 @@ GameRoundNoMonsterState.prototype = {
         explosion.setXSpeed(-1000, 1000);
         explosion.setYSpeed(-100, -2000);
         explosion.bounce.setTo(0.2, 0.2);
-        //explosion.angularDrag = 30;
-        //explosion.gravity = -100;
         explosion.start(false, 1000, 2);
         var nadeFadeOut = game.add.tween(n).to({alpha: 0.0}, 1000, 'Linear', true);
 
@@ -802,14 +802,14 @@ GameRoundNoMonsterState.prototype = {
       enemy = Players[e.id];
       game.juicy.shake(30, 60);
       flying = false;
-      hasDamaged.push({id: enemy.id, dmg: groundPoundDamage});
+      hasDamaged.push({id: enemy.id, dmg: groundPoundDamage, type: 'ground pound'});
       self.playerTakesDamage(enemy, groundPoundDamage, true);
     }
   },
 
   handleCollisionBetweenLasersAndEnemies: function (l, p) {
-    if(l.owner == game.player.id) {
-      hasDamaged.push({id: p.id, dmg: laserDamage});
+    if(l.owner === game.player.id) {
+      hasDamaged.push({id: p.id, dmg: laserDamage, type: 'laser'});
       self.playerTakesDamage(p, laserDamage, true);
     }
   },
@@ -835,7 +835,11 @@ GameRoundNoMonsterState.prototype = {
   },
 
   playerDies: function (p, iKilled) {
-    p.sprite.body.enable = false;
+    if (!p.isAlive) {
+      return false;
+    }
+
+    p.sprite.destroy();
     p.isAlive = false;
     p.blood.start(false, 1500, 2);
     p.blood.filters = [filterPixelate3];
@@ -862,7 +866,7 @@ GameRoundNoMonsterState.prototype = {
   },
 
   iDie: function (enemy) {
-    player.body.enable = false;
+    player.destroy();
     game.player.isAlive = false;
     blood.start(false, 1500, 2);
     blood.filters = [filterPixelate3];
