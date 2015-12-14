@@ -30,7 +30,7 @@ The complete source files can be found in our [Github repository](https://github
 
 ## Include Kuzzle SDK's library
 
-In order to use Kuzzle, you first need to include the Javascript SDK.
+In order to use Kuzzle, you first need to include Javascript SDK.
 
 Download the [kuzzle.min.js](https://github.com/kuzzleio/sdk-javascript/blob/browser/kuzzle.min.js) file from the [browser branch of Kuzzle Javascript SDK Github repository](https://github.com/kuzzleio/sdk-javascript/tree/browser).
 
@@ -49,7 +49,7 @@ In your html, you can then include it.
 
 ## Connecting to Kuzzle
 
-Connecting to Kuzzle is just a matter of instanting a [Kuzzle object](http://kuzzleio.github.io/sdk-documentation/#kuzzle).
+Connecting to Kuzzle is just a matter of instantiating a [Kuzzle object](http://kuzzleio.github.io/sdk-documentation/#kuzzle).
 
 We expose it as an [Angular service](https://docs.angularjs.org/guide/services).
 
@@ -68,11 +68,10 @@ http://localhost:7512.
 
 ## Preparing our Chat room and linking it to Kuzzle
 
-We create a ChatRoom model object that exposes the methods needed to our
+We create a ChatRoom model object that exposes methods needed to our
 current functionalities: subscribe to a room and send a message.
 
-Here again, we make use of Angular services and will expose the constructor
-function as a service.
+Once again, we use Angular services and we expose the constructor as a service".
 
 ```javascript
 js/app.101.js --
@@ -118,17 +117,17 @@ function ChatRoom (options) {
 }
 ```
 
-The constructor takes an options object as parameter, in which the chat room id
+The constructor takes an `options` object as parameter, in which the chat room id
 can be defined.
 
-It also prepare the chat room properties we will need:
+It also defines the chat room properties we will need.
 
 * _messages_: An array containing the messages we get on the chat.
 * _subscribed_: A boolean value that indicates if our chat room object has
 subscribed to Kuzzle.
-* _kuzzleSubscription_: Once it has subscribed to Kuzzle, stores the matching [KuzzleRoom](http://kuzzleio.github.io/sdk-documentation/#kuzzleroom) object.
+* _kuzzleSubscription_: Once the subscription to Kuzzle is established, this attribute is used to store the corresponding [KuzzleRoom](http://kuzzleio.github.io/sdk-documentation/#kuzzleroom) object.
 
-:warning: _The vocabulary can be a confusing between our application
+:warning: _The vocabulary can be confusing between our application
 chat room and Kuzzle internal rooms on which it relies.
 We will use the term **chat room** to designate our application room (with the
 term "chat")._
@@ -158,12 +157,12 @@ ChatRoom.prototype.subscribe = function () {
 };
 ```
 
-The subscribe method just registers the application to Kuzzle to receive the incoming messages using the [KuzzleDataCollection subscribe method](http://kuzzleio.github.io/sdk-documentation/#subscribe).
+The `subscribe` method just registers the application to Kuzzle to receive the incoming messages using the [KuzzleDataCollection subscribe method](http://kuzzleio.github.io/sdk-documentation/#subscribe).
 
-The Kuzzle subscribe methods expects to receive three parameters:
+Kuzzle's `subscribe` method expects to receive three parameters:
 
-1. the filters to apply to the incoming documents before noticing the user back.
-Only the documents that match these filters will be received by our application.
+1. filters to apply to incoming documents before noticing the user back.
+Only documents matching these filters will be received by our application.
 2. a callback function which will be triggered when a document matching the filter is published or modified.
 3. an optional option object.
 
@@ -171,7 +170,7 @@ In our case, we define as a filter all the documents whose chatRoom id property 
 
 The callback function appends a new simple message object to the ChatRoom messages array.
 
-Finally, we ask Kuzzle to be notified on the message the application sends by passing the option subscribeToSelf to true.
+Finally, we ask Kuzzle to be notified on messages the application sends by passing the option subscribeToSelf to true.
 
 #### sendMessage method
 
@@ -194,13 +193,13 @@ ChatRoom.prototype.sendMessage = function (message, me) {
 
 The sendMessage method is just a wrapper for the [KuzzleDataCollection publish](http://kuzzleio.github.io/sdk-documentation/#publish) method.
 
-:bulb: Note the chatRoom property in the submitted object that will match our subscribe filter.
+:bulb: Note the chatRoom property in the submitted object that will match our subscription filter.
 
 ## Handling the presentation logic
 
 Now that our ChatRoom object is ready to use, we just need to prepare an instance to be used and reflect its changes on the web application.
 
-Thanks to AngularJs [bidirectional binding](https://docs.angularjs.org/guide/databinding), we just need to build a ChatRoom model instance in our controller and add a couple of helper functions to let the user change his nick name and send messages.
+Thanks to AngularJs [bidirectional binding](https://docs.angularjs.org/guide/databinding), we just need to build a ChatRoom model instance in our controller and add a couple of helper functions to let the user change his nickname and messages sent.
 
 ```javascript
 .controller('KuzzleChatController', ['$scope', 'ChatRoom', function ($scope, ChatRoom) {

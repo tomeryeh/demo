@@ -74,7 +74,7 @@ function ChatRoom (options) {
 }
 ```
 
-We use a new _subscribe_ property to our option object. We subscribe to the room notifications on Kuzzle side only if it set to true.
+We use a new `subscribe` property to our `options` object. We subscribe to the room notifications on Kuzzle side only if it set to true.
 
 #### unsubscribe method
 
@@ -186,12 +186,12 @@ ChatRoomList.prototype.subscribe = function () {
 };
 ```
 
-The subscribe method allows to receive the real-time notifications updates from the room list collection.
+The `subscribe` method allows to receive the real-time notifications updates from the room list collection.
 
 :bulb: Note the empty object given as a filter. This is equivalent to "receive all" notifications.
 
 :bulb: Contrary to our previous ChatRoom object where no document could be deleted, we here need to perform a different action where a room is removed.
-This can be achieved checking on the _action_ property from the response object we get from Kuzzle.
+This can be achieved checking on the `action` property from the response object we get from Kuzzle.
 
 #### getAll method
 
@@ -231,17 +231,17 @@ ChatRoomList.prototype.getAll = function () {
 
 This method is called only once, by the constructor. It uses the [KuzzleDataCollection fetchAllDocuments](http://kuzzleio.github.io/sdk-documentation/#fetchalldocuments) method to retrieve the list of persisted documents for the collection.
 
-From the returned list, it fills the ChatRoomList _all_ property.
+From the returned list, it fills the ChatRoomList `all` property.
 
 We also add a default "Main room" that will always be available.
 
 #### refreshActive method
 
-This internal method just filters all the available rooms to put in the _active_ array only the ones that the user is listening to.
+This internal method just filters all the available rooms to put in the `active` array only the ones that the user is listening to.
 
 #### add method
 
-This internal method adds a new ChatRoom object to the _all_ collection and triggers the refreshActive filter.
+This internal method adds a new ChatRoom object to the `all` collection and triggers the refreshActive filter.
 
 This method applies to the ChatRoomList model object only and does not perform any action on Kuzzle.
 
@@ -273,17 +273,17 @@ ChatRoomList.prototype.addNewRoom = function (name) {
 
 Given a room name, this method will create a new [KuzzleDocument](http://kuzzleio.github.io/sdk-documentation/#kuzzledocument) and persist it in Kuzzle.
 
-Once the object is persisted, on the callback, it adds the a new matching ChatRoom object to the internal list.
+Once the object is persisted, on the callback, it adds a new matching ChatRoom object to the internal list.
 
 #### activeRoom and unactiveRoom methods
 
 These methods allow to toggle a given chat room active state to let the user join or quit it.
 
-When quiting a room, if the user was the last subscriber, the room is automatically deleted from Kuzzle.
+When quitting a room, if the user was the last subscriber, the room is automatically deleted from Kuzzle.
 
 ## Handling the presentation logic
 
-Instead of binding a single chat room to our template, we can now use our new ChatRoomList model object and add the few helpers that will trigger the new actions.
+Instead of binding a single chat room to our template, we can now use our new ChatRoomList model object and add few helpers that will trigger new actions.
 
 ```javascript
 .controller('KuzzleChatController', ['$scope', 'ChatRoom', 'ChatRoomList', function ($scope, ChatRoom, ChatRoomList) {
