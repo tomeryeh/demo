@@ -190,7 +190,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       var self = this;
 
       kuzzleChatRoomListCollection
-        .documentFactory({_id: name})
+        .documentFactory(name, {foo: 'bar'})
         .save({}, function (err, result) {
           var chatRoom = new ChatRoom({
             id: result.id,
