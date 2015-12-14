@@ -8,8 +8,7 @@ real-time messaging and progressively add some additional features such as
 counting the users in the room or adding a multi-room support thanks to
 Kuzzle's persistence layer.
 
-The tutorial uses [AngularJs](https://angularjs.org/), which handles every 
-logical presentation and let us focus on the business code. However, it should
+The tutorial uses [AngularJs](https://angularjs.org/), handling for us the entire display logic, which enables us to focus on business code. However, it should
 be pretty straight-forward to adapt to another framework if needed.
 
 ## Table of Content

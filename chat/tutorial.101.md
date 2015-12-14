@@ -71,8 +71,7 @@ http://localhost:7512.
 We create a ChatRoom model object that exposes methods needed to our
 current functionalities: subscribe to a room and send a message.
 
-Here again, we use Angular services and we will expose the constructor
-function as a service.
+Once again, we use Angular services and we expose the constructor as a service".
 
 ```javascript
 js/app.101.js --
@@ -121,12 +120,12 @@ function ChatRoom (options) {
 The constructor takes an `options` object as parameter, in which the chat room id
 can be defined.
 
-It also prepares the chat room properties. For that we will need:
+It also defines the chat room properties we will need.
 
 * _messages_: An array containing the messages we get on the chat.
 * _subscribed_: A boolean value that indicates if our chat room object has
 subscribed to Kuzzle.
-* _kuzzleSubscription_: Once it has subscribed to Kuzzle, stores the matching [KuzzleRoom](http://kuzzleio.github.io/sdk-documentation/#kuzzleroom) object.
+* _kuzzleSubscription_: Once the subscription to Kuzzle is established, this attribute is used to store the corresponding [KuzzleRoom](http://kuzzleio.github.io/sdk-documentation/#kuzzleroom) object.
 
 :warning: _The vocabulary can be confusing between our application
 chat room and Kuzzle internal rooms on which it relies.
