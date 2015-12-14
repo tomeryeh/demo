@@ -1,4 +1,4 @@
-front:
+demo:
   image: nginx
   volumes:
     - ".:/usr/share/nginx/html"
