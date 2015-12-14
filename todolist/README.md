@@ -14,24 +14,28 @@ Prerequisites:
 * [Docker](https://docs.docker.com/installation/#installation)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 
-In this directory you can use the default `docker-compose.yml` with all you need for running Kuzzle container and this demo:
+If your Docker Machine runs with a specific IP address (e.g. you're using Docker Toolkit on a Mac), you may want to specify it in the `config.js` file before launching the demo.
+
+Just type
 
 ```
 $ docker-compose up
 ```
 
-Now, you can try to use the todolist at http://localhost
+from the root of the demo. Docker Compose will launch using the default `docker-compose.yml` file (use `-f` to specify your own configuration file).
+
+If everything went right, you can play with the TodoList demo at http://localhost (or at the Docker Machine's IP address).
 
 ## How to run this demo without docker
 
 * You need to have a running [Kuzzle](https://github.com/kuzzleio/kuzzle).
-* Configure the `script.js` file for change the Kuzzle URL if you have changed the default Kuzzle installation
+* Configure the `config.js` file to change the Kuzzle URL if needed.
 * You can directly open the `index.html` file in your browser.
- 
+
 **Note:**
 
-In order to avoid problem with Cross-Origin by opening the file directly in your browser, you can also use nginx. With docker, you can use something like
+In order to avoid problems with Cross-Origin by opening the file directly in your browser, you can also use nginx. With docker, you can use something like
 
     $ docker run -d -p 80:80 -v $(pwd)/todolist/:/usr/share/nginx/html nginx
-    
-And access to the URL http://localhost
+
+And access to the URL http://localhost (or at the Docker Machine's IP address).
