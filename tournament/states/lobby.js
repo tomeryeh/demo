@@ -50,7 +50,8 @@ LobbyState.prototype = {
       Players[id].hp = Configuration.player.hp;
     });
 
-    this.game.stateTransition.to('game-init', true, false);
+    kuzzleGame.stateTransition.to('game-init', true, false);
+
 /*
     if (gameStarted) {
       this.game.stateTransition.to('game-init', true, false);
@@ -178,8 +179,7 @@ LobbyState.prototype = {
   },
 
   quitGame: function () {
-    kuzzle.unsubscribe(Room.subscribeId);
-    kuzzle.unsubscribe(game.player.id);
+    kuzzle.logout();
 
     if (game.hasMusic) {
       musicLobby.stop();
