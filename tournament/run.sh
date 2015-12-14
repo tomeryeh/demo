@@ -2,5 +2,5 @@
 
 npm install
 npm install -g bower
-bower install
+bower install --allow-root --config.interactive=false
 npm start
