@@ -7,7 +7,7 @@ demo:
 
 server:
   image: node:4.1.1
-  command: sh -c "cd /var/app/server && sh run.sh"
+  command: sh -c "cd /var/app/server && npm start"
   volumes:
     - ".:/var/app/server"
 

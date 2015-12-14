@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Kuzzle Tournament Server. Manages users and rooms for Kuzzle Tournament.",
   "scripts": {
-    "start": "node ./server/tournament_server.js"
+    "start": "npm install && node ./server/tournament_server.js"
   },
   "dependencies": {
     "captains-log": "^0.11.11",
