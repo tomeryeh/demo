@@ -132,19 +132,15 @@ function PaintChannel (url) {
     paintCollection = kuzzle.dataCollectionFactory('paint');
 
     var newLineNotif = function (error, result) {
-      if (result.controller == 'write' && result.action == 'create') {
-        self.ondata(JSON.parse(result._source.line));
-      }
+      self.ondata(JSON.parse(result._source.line));
     };
 
     var clearNotif = function (error, result) {
-      if (result.controller == 'write' && result.action == 'create') {
-        self.onclear();
-      }
+      self.onclear();
     };
 
-    paintCollection.subscribe(filters, newLineNotif);
-    paintCollection.subscribe(clearFilters, clearNotif);
+    paintCollection.subscribe(filters, {scope: 'none', users: 'none'}, newLineNotif);
+    paintCollection.subscribe(clearFilters, {scope: 'none', users: 'none'}, clearNotif);
     self.loadLines(query, 0, 50);
 
   }());
