@@ -11,6 +11,7 @@ Simple tutorial project used to demonstrate Kuzzle basic features.
 
 Prerequisites:
 
+* [Bower](http://bower.io/)
 * [Docker](https://docs.docker.com/installation/#installation)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 
@@ -19,6 +20,7 @@ If your Docker Machine runs with a specific IP address (e.g. you're using Docker
 Just type
 
 ```
+$ bower install
 $ docker-compose up
 ```
 

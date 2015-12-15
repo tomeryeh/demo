@@ -1,6 +1,6 @@
 # Kuzzle chat demo 102 - Adding the user count
 
-In this second part of our chat demo tutorial, we will add a small new functionality being displaying the number of users currently connected to the room.
+In this second part of our chat demo tutorial, we will add a small new functionality displaying the number of users currently connected to the room.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -72,9 +72,9 @@ We need to call it on a regular basis, here using a setInterval to periodically 
 
 ## Adding the front-end logic
 
-As we extend the business ChatRoom object that is bound to the front-end, no additional action is needed on the javascript side.
+As we extend the business ChatRoom object bound to the front-end, no additional action is needed on the javascript side.
 
-We can just use the newly defined property diretly in our html template:
+We can just use the newly defined property directly in our html template:
 
 ```html
 102.html --

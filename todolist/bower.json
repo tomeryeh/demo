@@ -1,0 +1,30 @@
+{
+  "name": "todolist",
+  "homepage": "https://github.com/kuzzleio/demo",
+  "authors": [
+    "Luca Marchesini <luca@kuzzle.io>"
+  ],
+  "description": "A Kuzzle TODOList demo",
+  "main": "",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "kuzzle",
+    "todo"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "kuzzle-sdk": "~1.0.7",
+    "bootstrap": "~3.3.6",
+    "angular": "angularjs#~1.4.8"
+  }
+}

@@ -89,6 +89,7 @@ ConnectingState.prototype = {
 
     kuzzleGame = this.game;
     kuzzleGame.name = "";
+    kuzzleGame.started = false;
 
     this.keyDown = this.game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
     this.keyDown.onDown.add(this.updateMenu, this);
@@ -109,7 +110,11 @@ ConnectingState.prototype = {
   },
 
   connectToKuzzle: function () {
-    kuzzle = Kuzzle.init(this.game.kuzzleUrl);
+    kuzzle = new Kuzzle(this.game.kuzzleUrl, {autoReconnect: false});
+
+    kuzzle.addListener('disconnected', function () {
+      game.stateTransition.to('main-menu');
+    });
 
     connectText = this.game.add.text(320, 180, "Connecting to server...\n");
     connectText.font = 'Arial';
@@ -139,133 +144,130 @@ ConnectingState.prototype = {
   },
 
   subscribeAndGo: function () {
-    var
-      userEvents = {
-          exists: { field: 'event' }
-      },
-      gameStarted = false;
+    var gameStarted = false;
 
     connectText.setText("Connecting to server...\nOK!");
-    window.addEventListener('beforeunload', function () {
-      if (typeof self.quitGame === 'function') {
-        self.quitGame();
-      }
-    });
 
-    Room.subscribeId = kuzzle.subscribe(Room.id, userEvents, function (error, data) {
-      if (!data._source || !data._source.event) {
-        return false;
-      }
+    kuzzle
+      .dataCollectionFactory(Room.id)
+      .subscribe({}, {scope: 'none', users: 'none', subscribeToSelf: false}, function (error, data) {
+        switch (data._source.event) {
+          case Configuration.events.PLAYER_JOINED:
+            if (data._source.player.id !== game.player.id) {
+              Players[data._source.player.id] = data._source.player;
+              Players[data._source.player.id].updated = false;
+              Players[data._source.player.id].hp = Configuration.player.hp;
 
-      switch (data._source.event) {
-        case Configuration.events.PLAYER_JOINED:
-          if (data._source.player.id !== game.player.id) {
-            Players[data._source.player.id] = data._source.player;
-            Players[data._source.player.id].updated = false;
-            Players[data._source.player.id].hp = Configuration.player.hp;
+              if (gameStarted) {
+                text = game.add.text(game.camera.width / 2, 32, "A new challenger appears: " + data._source.player.username);
+                text.fixedToCamera = true;
+                text.font = 'Arial';
+                text.fontWeight = 'bold';
+                text.fontSize = 24;
+                text.align = 'center';
+                var grd = text.context.createLinearGradient(0, 0, 0, text.height);
+                grd.addColorStop(0, '#8ED6FF');
+                grd.addColorStop(1, '#004CB3');
+                text.fill = grd;
+                text.anchor.set(0.5);
+                text.alpha = 0.0;
+                var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
+                game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
 
-            if (gameStarted) {
-              text = game.add.text(game.camera.width / 2, 32, "A new challenger appears: " + data._source.player.username);
-              text.fixedToCamera = true;
-              text.font = 'Arial';
-              text.fontWeight = 'bold';
-              text.fontSize = 24;
-              text.align = 'center';
-              var grd = text.context.createLinearGradient(0, 0, 0, text.height);
-              grd.addColorStop(0, '#8ED6FF');
-              grd.addColorStop(1, '#004CB3');
-              text.fill = grd;
-              text.anchor.set(0.5);
-              text.alpha = 0.0;
-              var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
-              game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
-
-              if (typeof self.drawLobby === 'function') {
+                if (typeof self.drawLobby === 'function') {
+                  self.drawLobby();
+                }
+              }
+              else if (typeof self.drawLobby === 'function') {
                 self.drawLobby();
               }
             }
-            else if (typeof self.drawLobby === 'function') {
-              self.drawLobby();
+            break;
+
+          case Configuration.events.PLAYER_LEFT:
+            text = game.add.text(game.camera.width / 2, 32, "Player " + Players[data._source.id].username + " left the game");
+            text.fixedToCamera = true;
+            text.font = 'Arial';
+            text.fontWeight = 'bold';
+            text.fontSize = 24;
+            text.align = 'center';
+            var grd = text.context.createLinearGradient(0, 0, 0, text.height);
+            grd.addColorStop(0, '#8ED6FF');
+            grd.addColorStop(1, '#004CB3');
+            text.fill = grd;
+            text.anchor.set(0.5);
+            text.alpha = 0.0;
+            var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
+            game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+
+            if (Players[data._source.id]) {
+              if (Players[data._source.id].sprite) {
+                Players[data._source.id].sprite.body.enable = false;
+                Players[data._source.id].sprite.kill();
+                Players[data._source.id].sprite.destroy();
+              }
+
+              if (Players[data._source.id].shadow) {
+                Players[data._source.id].shadow.kill();
+                Players[data._source.id].shadow.destroy();
+              }
+
+              if (Players[data._source.id].hpMeter) {
+                Players[data._source.id].hpMeter.kill();
+                Players[data._source.id].hpMeter.destroy();
+              }
+
+              if (Players[data._source.id].tag) {
+                Players[data._source.id].tag.kill();
+                Players[data._source.id].tag.destroy();
+              }
+
+              delete Players[data._source.id];
+
+              if (!gameStarted) {
+                self.drawLobby(true);
+              }
             }
-          }
-          break;
+            break;
 
-        case Configuration.events.PLAYER_LEFT:
-          text = game.add.text(game.camera.width / 2, 32, "Player " + Players[data._source.id].username + " left the game");
-          text.fixedToCamera = true;
-          text.font = 'Arial';
-          text.fontWeight = 'bold';
-          text.fontSize = 24;
-          text.align = 'center';
-          var grd = text.context.createLinearGradient(0, 0, 0, text.height);
-          grd.addColorStop(0, '#8ED6FF');
-          grd.addColorStop(1, '#004CB3');
-          text.fill = grd;
-          text.anchor.set(0.5);
-          text.alpha = 0.0;
-          var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
-          game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
+          case Configuration.events.NOT_ENOUGH_PLAYERS:
+            kuzzle.logout();
+            game.stateTransition.to('not-enough-players');
+            break;
 
-          if (Players[data._source.id]) {
-            if (Players[data._source.id].sprite) {
-              Players[data._source.id].sprite.body.enable = false;
-              Players[data._source.id].sprite.kill();
-              Players[data._source.id].sprite.destroy();
+          case Configuration.events.GAME_START:
+            Room.rules = data._source.rules;
+            Room.winner = undefined;
+
+            if (typeof game.state.states.lobby.startGame === 'function') {
+              game.state.states.lobby.startGame(gameStarted);
+              gameStarted = true;
             }
+            break;
+          case Configuration.events.GAME_END:
+            Room.winner = data._source.winner;
+            self.prepareToGameEnd();
+            break;
 
-            if (Players[data._source.id].shadow) {
-              Players[data._source.id].shadow.kill();
-              Players[data._source.id].shadow.destroy();
+          case Configuration.events.PLAYER_UPDATE:
+            if (data._source.id !== game.player.id && typeof self.updatePlayer === 'function') {
+              self.updatePlayer(data._source);
             }
+            break;
 
-            if (Players[data._source.id].hpMeter) {
-              Players[data._source.id].hpMeter.kill();
-              Players[data._source.id].hpMeter.destroy();
+          case Configuration.events.PLAYER_DIE:
+            if (data._source.player.id !== game.player.id && typeof self.playerDies === 'function') {
+              self.playerDies(Players[data._source.player.id], false);
             }
-
-            if (Players[data._source.id].tag) {
-              Players[data._source.id].tag.kill();
-              Players[data._source.id].tag.destroy();
-            }
-
-            delete Players[data._source.id];
-
-            if (!gameStarted) {
-              self.drawLobby(true);
-            }
-          }
-          break;
-
-        case Configuration.events.NOT_ENOUGH_PLAYERS:
-          kuzzle.unsubscribe(Room.subscribeId);
-          kuzzle.unsubscribe(game.player.id);
-          game.stateTransition.to('not-enough-players');
-          break;
-
-        case Configuration.events.GAME_START:
-          Room.rules = data._source.rules;
-          Room.winner = undefined;
-
-          if (typeof game.state.states.lobby.startGame === 'function') {
-            game.state.states.lobby.startGame(gameStarted);
-            gameStarted = true;
-          }
-          break;
-        case Configuration.events.GAME_END:
-          Room.winner = data._source.winner;
-          self.prepareToGameEnd();
-          break;
-
-        case Configuration.events.PLAYER_UPDATE:
-          if (data._source.id !== game.player.id && typeof self.updatePlayer === 'function') {
-            self.updatePlayer(data._source);
-          }
-          break;
-      }
-    });
+        }
+      });
 
     connectTextTweenOut.start();
-    kuzzle.create(Room.id, {event: Configuration.events.PLAYER_JOINED, player: game.player});
+
+    kuzzle
+      .dataCollectionFactory(Room.id)
+      .publishMessage({event: Configuration.events.PLAYER_JOINED, player: game.player});
+
     if (Room.state === 'game_launched') {
       var interval = setInterval(function () {
         if (game.state.states.lobby.startGame) {
@@ -281,28 +283,35 @@ ConnectingState.prototype = {
     var
       randColor = Phaser.Color.getRandomColor(30, 220),
       looks = ["pierre", "gilles"],
-      look = looks[Math.floor(Math.random() * looks.length)],
-      myId;
+      myId = uuid.v4(),
+      look = looks[Math.floor(Math.random() * looks.length)];
 
-    myId = kuzzle.subscribe(Configuration.server.room, { exists: { field: 'id' } }, function (error, data) {
-      if (data._source && data._source.id === myId && data._source.room) {
-        Room = data._source.room;
-        Players = {};
+    game.player = {
+      id: myId,
+      username: kuzzleGame.name,
+      color: randColor,
+      look: look
+    };
 
-        data._source.players.forEach(function (p) {
-          Players[p.id] = p;
+    kuzzle
+      .dataCollectionFactory(Configuration.server.room)
+      .subscribe({}, {metadata: game.player, subscribeToSelf: false}, function (error, data) {
+        if (data._source.id === myId) {
+          Room = data._source.room;
 
-          if (p.id === game.player.id) {
-            game.player = p;
-          }
-        });
+          Players = {};
 
-        self.subscribeAndGo();
-      }
-    });
+          data._source.players.forEach(function (p) {
+            Players[p.id] = p;
 
-    game.player = {id: myId, username: kuzzleGame.name, color: randColor, look: look};
-    kuzzle.create(Configuration.server.room, game.player, false);
+            if (p.id === game.player.id) {
+              game.player = p;
+            }
+          });
+
+          self.subscribeAndGo();
+        }
+      });
   },
 
   enterName: function() {
@@ -364,7 +373,8 @@ ConnectingState.prototype = {
   },
 
   selectName: function() {
-    if(kuzzleGame.name !== '') {
+    if(kuzzleGame.name !== '' && !kuzzleGame.started) {
+      kuzzleGame.started = true;
       nameTextTweenOut.start();
       self.connectToKuzzle();
     }
