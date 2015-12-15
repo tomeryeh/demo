@@ -36,6 +36,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       this.kuzzleSubscription = kuzzleMessagesCollection
         .subscribe(
           {term: {chatRoom: self.id}},
+          {subscribeToSelf: true},
           function (err, result) {
             self.messages.push({
               color: result._source.color,
@@ -43,8 +44,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
               content: result._source.content
             });
             $rootScope.$apply();
-          },
-          {subscribeToSelf: true}
+          }
         );
       this.subscribed = true;
     };
@@ -56,7 +56,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
      */
     ChatRoom.prototype.sendMessage = function (message, me) {
       kuzzleMessagesCollection
-        .publish({
+        .publishMessage({
           content: message,
           color: me.color,
           nickName: me.nickName,

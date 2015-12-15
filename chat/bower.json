@@ -1,0 +1,22 @@
+{
+  "name": "Kuzzle chat demo",
+  "homepage": "https://github.com/kuzzleio/demo",
+  "authors": [
+    "Kuzzle <hello@kuzzle.io>"
+  ],
+  "description": "",
+  "main": "index.html",
+  "moduleType": [],
+  "license": "Apache2",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-scroll-glue": "~2.0.6",
+    "kuzzle-sdk": "~1.0.9"
+  }
+}

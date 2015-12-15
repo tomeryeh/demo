@@ -39,6 +39,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       this.kuzzleSubscription = kuzzleMessagesCollection
         .subscribe(
           {term: {chatRoom: self.id}},
+          {subscribeToSelf: true, scope: 'all', state: 'all'},
           function (err, result) {
             self.messages.push({
               color: result._source.color,
@@ -46,8 +47,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
               content: result._source.content
             });
             $rootScope.$apply();
-          },
-          {subscribeToSelf: true}
+          }
         );
       this.subscribed = true;
     };
@@ -61,7 +61,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
 
     ChatRoom.prototype.sendMessage = function (message, me) {
       kuzzleMessagesCollection
-        .publish({
+        .publishMessage({
           content: message,
           color: me.color,
           nickName: me.nickName,
@@ -108,6 +108,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       kuzzleChatRoomListCollection
         .subscribe(
           {},
+          {subscribeToSelf: true},
           function (err, result) {
             if (result.action === 'delete') {
               self.del(result._id);
@@ -120,8 +121,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
               subscribe: false
             });
             self.add(chatRoom);
-          },
-          {subscribeToSelf: true}
+          }
         )
     };
 
@@ -219,7 +219,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       }
       if (this.all[roomId].userCount <= 1) {
         kuzzleChatRoomListCollection
-          .documentFactory(this.all[roomId].id)
+          .documentFactory(this.all[roomId].id, {})
           .delete(function (err, result) {
 
           });
