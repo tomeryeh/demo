@@ -1,0 +1,11 @@
+{
+  "name": "paint",
+  "homepage": "https://github.com/kuzzleio/demo",
+  "authors": [
+    "The Kuzzle Team <support@kuzzle.io>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "kuzzle-sdk": "1.0.9"
+  }
+}
