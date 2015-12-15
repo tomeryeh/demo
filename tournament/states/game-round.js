@@ -326,7 +326,6 @@ GameRoundState.prototype = {
   },
 
   destroyLaser: function (laser) {
-    console.log('DESTROY');
     laser.kill();
     laser.destroy();
   },
@@ -384,11 +383,8 @@ GameRoundState.prototype = {
   },
 
   quitGame: function() {
-    //lobbyGame.kuzzle.unsubscribe(game.gameData.player.roomId);
-    //lobbyGame.kuzzle.delete('kf-user', lobbyGame.gameData.player.id, function(response) {
     musicGameRound.stop();
     lobbyGame.stateTransition.to('main-menu');
-    //});
   },
   render: function() {
     game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
