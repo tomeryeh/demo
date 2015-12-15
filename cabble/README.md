@@ -1,36 +1,24 @@
 # Kuzzle - Cabble demo
 
-##Description
-Cabble is a life-changing web application (demo) for both taxis and their customers.
+## Description
 
-With Cabble, taxis can easily find customers, without paying booking companies fees. This money saving allow them to improve their level of service up to those of others private transportation companies.
+Cabble is an app wich allow people to find a cab, and cabs to find customers
 
-Cabble eases customers life as well: they can now hail a taxi with their fingertip.
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
 
-Stay tuned! Upcoming versions of Cabble will also include social functionalities like the possibility for customers to rate their taxis, to comment their ride, to share their trip to their favorite social network, and more!
+- [Running the demo](#running-the-demo)
+  - [Kuzzle + Demo package with Docker Compose](#kuzzle--demo-package-with-docker-compose)
+  - [Stand alone](#stand-alone)
+- [License](#license)
 
-<span>
-<div  >Cabble overview : A customer ask a taxi for a ride : </div>  
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-<a href="./docs/cabble-sketch.png" >
-  <img src="./docs/cabble-sketch.png"  width="100%" >
-  </a >
-  
-</span>
 
-## What will you learn with this demo ?
+## Running the demo
 
-Basically in Cabble, an user need to know all the others users in a boundbox around him.
-So that's it : you will learn to use <b>the geolocalisation filtering</b> into Kuzzle.
-This and all the publications and subscriptions used by Cabble will be described in the
- [step-by-step tutorial](./docs/tutorial.md#sub_to_pos). 
-
-## How the User Interface work ?
-A brief overview of Cabble can be found [here](./docs/overview.md).
-
-#How to install Cabble
-
-## Kuzzle + Demo package with Docker Compose
+### Kuzzle + Demo package with Docker Compose
 
 Prerequisites:
 
@@ -45,30 +33,21 @@ $ docker-compose up
 
 Now, you can try to use the todolist at http://localhost
 
-## How to run this demo without docker
+### Stand alone
 
-* You need to have a running [Kuzzle](https://github.com/kuzzleio/kuzzle).
-* Configure the `config.js` file for change the Kuzzle URL if you have changed the default Kuzzle installation
-* Your webserver must serve index.html (and allow assets,css and lib )
- 
-# The three Authors
+* A running [kuzzle](https://github.com/kuzzleio/kuzzle) instance
+* (Optional) Edit the first line of the ``js/config.js`` file to configure your Kuzzle instance URL, if you don't opt for a default installation
+* Use [Bower](http://bower.io) to download the dependencies by doing a ```bower install``` into the demo folder
+* You can directly open the `index.html` file in your browser.
 
- * [Émilie Esposito](https://twitter.com/emilieesposito)
- * [Sébastien Cottinet](https://github.com/scottinet)
- * [Éric Alvernhe](https://github.com/Ealv)
+**Note:**
 
-# The three Cabble Dependancies :
+In order to avoid problem with Cross-Origin by opening the file directly in your browser, you can also use nginx. With docker, you can use something like:
 
- * [Bluebird](https://github.com/petkaantonov/bluebird) (For Promise Styling)
- * [socketio](http://socket.io/) (For Kuzze communication)
- * [Leafletjs](http://leafletjs.com/) (awesome library for drawing map with OpenStreetMap Database)
+    $ docker run -d -p 80:80 -v $(pwd)/cabble/:/usr/share/nginx/html nginx
 
-# Licence
+And access to the URL http://localhost
 
-This demo is published under the [MIT](https://opensource.org/licenses/MIT) licence
+## License
 
-# The beautiful icons
-
-https://www.elegantthemes.com/blog/freebie-of-the-week/beautiful-flat-icons-for-free
-
-Under the [GPL](http://www.gnu.org/licenses/gpl-2.0.html) licence.
+This tutorial is published under [MIT License](LICENSE)

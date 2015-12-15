@@ -1,41 +1,158 @@
 <!DOCTYPE html>
 <html>
+	<head>
+        <meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" type="text/css" href="bower_components/pnotify/src/pnotify.core.min.css">
+        <link rel="stylesheet" type="text/css" href="bower_components/leaflet/dist/leaflet.css">
+		<link rel="stylesheet" type="text/css" href="./stylesheets/styles.css">
+		<title>Cabble a Kuzzle demo</title>
+	</head>
+	<body>
+    <div class="container" id="home">
+        <div class="row center">
+            <div class="col-md-12">
+                <h1>Welcome to Cabble</h1>
+                <p>Please, choose a role:</p>
+            </div>
+        </div>
+        <div class="row center">
+            <div class="col-md-6">
+                <button class="btn btn-warning btn-lg btn-block trigger-start" data-mode="cab">
+                    <img src="images/cab.idle.png" width="26" height="26"> I am a cab
+                </button> 
+            </div>
 
-<head>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
-	<link rel="stylesheet" type="text/css" href="./assets/css/style.css">
+            <div class="col-md-6">
+                <button class="btn btn-primary btn-lg btn-block trigger-start" data-mode="customer">
+                    <img src="images/customer.idle.png" width="26" height="26"> I need a cab
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="mapview" class="hidden">
+        <div id="user-indicator" class="well well-sm">
+            <p><span id="mode-indicator"></span> <a class="btn btn-sm btn-default" role="button" data-toggle="collapse" href="#options" aria-expanded="false" aria-controls="collapseExample"><span class="glyphicon glyphicon-cog"></span></a></p>
 
+            <div id="options" class="collapse">
+                <button id="change-behavior" class="btn btn-primary btn-block">Change your role</button>
+                <hr>
+                <button id="move-user" class="btn btn-block btn-default">Adjust your position</button>
+            </div>
+            <hr>
+            <button id="user-action" class="btn btn-block btn-info"><span class="label"></span></button>
+        </div>
+        <div id="map"></div>
+    </div>
 
-</head>
-<title>Welcome to Cabble</title>
+    <div id="loader">
+        <div class="backdrop">
+            <div class="cssload-dots">
+                <div class="cssload-dot"></div>
+                <div class="cssload-dot"></div>
+                <div class="cssload-dot"></div>
+                <div class="cssload-dot"></div>
+                <div class="cssload-dot"></div>
+            </div>
 
-<body>
+            <svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter id="goo">
+                        <feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="12" ></feGaussianBlur>
+                        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0    0 1 0 0 0   0 0 1 0 0   0 0 0 18 -7" result="goo" ></feColorMatrix>
+                    </filter>
+                </defs>
+            </svg>
+        </div>
+    </div>
+    <div id="riding" style="display:none;">
+        <div class="backdrop">
+            <img src="images/ride.gif" width="500" height="281" style="position:absolute;top:-999999999px;">
+            <div>
+                <button class="btn btn-lg btn-warning btn-block finish" data-sending-text="Finishing...">Finish the ride</button>
+            </div>
+        </div>
+    </div>
+    <script type="text/html" id="cab_idle_PopupTemplate">
+        <strong>Cab #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> Just connected
+    </script>
+    <script type="text/html" id="cab_riding_PopupTemplate">
+        <strong>Cab #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> riding
+    </script>
+    <script type="text/html" id="cab_toHire_PopupTemplate">
+        <strong>Cab #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> Looking for a customer
+        <br><br>
+        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}">Ask for a ride</button>
+        <br>
+        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel</button>
+    </script>
+    <script type="text/html" id="cab_proposal_PopupTemplate">
+        <strong>Cab #{{id}} is proposing you a ride!</strong>
+        <br><br>
+        <button class="btn btn-success btn-block accept" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Accept</button>
+        <br>
+        <button class="btn btn-danger btn-block decline" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Decline</button>
+    </script>
+    <script type="text/html" id="cab_mine_PopupTemplate">
+        <strong>Your cab</strong>
+        <br><br>
+        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel the ride</button>
+    </script>
 
-	<div id="map-canvas"></div>
+    <script type="text/html" id="customer_idle_PopupTemplate">
+        <strong>User #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> Just connected
+    </script>
+    <script type="text/html" id="customer_riding_PopupTemplate">
+        <strong>User #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> riding
+    </script>
+    <script type="text/html" id="customer_wantToHire_PopupTemplate">
+        <strong>User #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> Looking for a cab
+        <br><br>
+        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}">Propose a ride</button>
+        <br>
+        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel</button>
+    </script>
+    <script type="text/html" id="customer_proposal_PopupTemplate">
+        <strong>User #{{id}} is asking for a ride!</strong>
+        <br><br>
+        <button class="btn btn-success btn-block accept" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Accept</button>
+        <br>
+        <button class="btn btn-danger btn-block decline" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Decline</button>
+    </script>
+    <script type="text/html" id="customer_mine_PopupTemplate">
+        <strong>Your customer</strong>
+        <br><br>
+        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel the ride</button>
+    </script>
 
-	<!-- for Promise -->
-	<script src="./lib/vendors/bluebird.min.js"></script>
+    <script src="bower_components/jquery/dist//jquery.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="bower_components/leaflet/dist/leaflet.js"></script>
+    <script src="bower_components/lodash/lodash.min.js"></script>
+    <script src="bower_components/mustache.js/mustache.min.js"></script>
+    <script src="bower_components/pnotify/src/pnotify.core.min.js"></script>
+    <script src="bower_components/socket.io-client/socket.io.js"></script>
 
-	<!-- for Kuzzle -->
-	<script src="./lib/vendors/socket.io.js"></script>
-	<script type="text/javascript" src="./lib/kuzzle.min.js"></script>
+    <script src="bower_components/kuzzle-sdk/dist/kuzzle.min.js"></script>
 
-	<!-- GIS vendor solution : leaflet -->
-	<script src="./lib/vendors/leaflet.js"></script>
-
-	<!-- gis code for Cabble-->
-	<script src="./src/gisController.js"></script>
-
-	<!-- user info from locla storage-->
-	<script src="./src/userController.js"></script>
-
-	<!-- Kuzzle code-->
-	<script src="./src/config.js"></script>
-	<script src="./src/kuzzleController.js"></script>
-
-	<!-- entry point-->
-	<script src="./src/app.js"></script
-</body>
-
+    <script src="js/config.js"></script>
+    <script src="js/app.vars.js"></script>
+    <script src="js/app.functions.js"></script>
+    <script src="js/app.user.js"></script>
+    <script src="js/app.kuzzle.js"></script>
+	</body>
 </html>

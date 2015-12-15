@@ -1,0 +1,32 @@
+{
+  "name": "cabble",
+  "homepage": "https://github.com/kuzzleio/demo",
+  "authors": [
+    "Jean-François Vial <jeff@kuzzle.io>"
+  ],
+  "description": "A Kuzzle demo involving cabs and persons",
+  "main": "",
+  "moduleType": [],
+  "keywords": [
+    "kuzzle",
+    "cabble",
+    "demo"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "pnotify": "~2.1.0",
+    "leaflet": "~0.7.7",
+    "bootstrap": "~3.3.6",
+    "mustache.js": "mustache#~2.2.1",
+    "lodash": "~3.10.1",
+    "kuzzle-sdk": "~1.0.9"
+  }
+}
