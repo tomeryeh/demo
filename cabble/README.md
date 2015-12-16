@@ -28,7 +28,7 @@ Prerequisites:
 In this directory you can use the default `docker-compose.yml` with all you need for running Kuzzle container and this demo:
 
 ```
-$ docker-compose up
+$ bower install && docker-compose up
 ```
 
 Now, you can try to use the todolist at http://localhost
