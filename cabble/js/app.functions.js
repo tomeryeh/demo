@@ -44,11 +44,11 @@ var populateMap = function() {
     query;
 
   if (mode === 'cab') {
-    statuses = ['idle', 'wanttohire', 'tohire'];
+    statuses = ['idle', 'wanttohire', 'tohire', 'riding'];
     types = ['customer', 'cab'];
   } else {
     // people may want to see idle, toHire and hired cabs
-    statuses = ['idle', 'tohire', 'hired'];
+    statuses = ['idle', 'tohire', 'hired', 'riding'];
     types = ['cab'];
   }
 
@@ -234,6 +234,8 @@ var startMap = function() {
     setUserMarker();
     userLayer.addTo(map);
     peopleLayer.addTo(map);
+    userLayer.bringToFront();
+    peopleLayer.bringToBack();
     populateMap();
     // finally create the user into Kuzzle and subscribe to rooms
     user.subscribe();
@@ -247,6 +249,7 @@ var initializeUi = function () {
     return;
   }
   UIOk = true;
+
   // Let the user choose to be a cab or a customer
   $('.trigger-start').click(function() {
     // save the mode
