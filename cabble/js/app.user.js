@@ -7,18 +7,28 @@ user = {
     sibling: 'none',        // the id of the other user this user is dealing with into an accepted proposal
     currentRide: null       // stores the current ride, if any
   },
-  roomsToListen: [],
+  roomsToListen: {},
   proposals: {              // the current proposals
     mine: {},
     their: {}
   },
 
-  setPos: function(pos, persistant) {
+  setPos: function(pos, persistant, renew) {
     if (persistant === undefined) {
       persistant = true;
     }
+    if (renew === undefined) {
+      renew = true;
+    }
     this.meta.pos = pos;
     this.save(persistant);
+    if (user.roomsToListen.users !== undefined || renew) {
+      this.subscribeToUsers(true); // renew the subscription
+      _.forOwn(peopleMarkers, function(marker, id){
+        deletePeople(id);
+      });
+      populateMap();
+    }
   },
 
   setType: function(type) {
@@ -40,7 +50,6 @@ user = {
       console.log('User created into Kuzzle');
       console.log(res);
       user.id = res.id;
-      cb();
       $(window).on('beforeunload', function() {
         // delete the user and logout
         collections.users.deleteDocument(user.id, function(err, res){
@@ -48,6 +57,7 @@ user = {
           kuzzle.logout();
         });
       });
+      cb();
     });
   },
 
@@ -76,23 +86,8 @@ user = {
     }
   },
 
-  subscribe: function() {
-    // (un)subscribe automatically to some Kuzzle rooms
-    // if the user is a cab, for example, 
-    //      - if will automatically stop to listen to any rooms
-    //      - it will automatically listen to customer who wants to hire a cab within a radius of X meters
-
-    var 
-      status,
-      filter,
-      statuses,
-      types,
-      options,
-      usersRoom,
-      positionsRoom,
-      ridesRoom;
-
-    this.unsubscribe();
+  subscribeToUsers: function(renew) {
+    var filter, options, statuses, types;
 
     // subscribe to users
     if (mode === 'cab') {
@@ -129,35 +124,40 @@ user = {
       listenToConnections: true,
       listenToDisconnections: true
     };
+    if (renew === true) {
+      user.roomsToListen.users.renew(filter, function(err, res){
+        console.log('room notification');
+        console.log(err);
+        console.log(res);
+        if( res.scope !== 'out') {
+          setPeopleMarker({id: res._id, meta: res._source});
+        } else {
+          console.log('Someone got out of the scope');
+          deletePeople(res._id);
+        }
+      });
+      console.log('Re-ubscribed to '+statuses+' '+user.meta.pos.lat+', '+user.meta.pos.lon);
+      console.log(user.roomsToListen.users);
+    } else {
+      user.roomsToListen.users = collections.users.subscribe(filter, {subscribeToSelf: false}, function(err, res) {
+        console.log('room notification');
+        console.log(err);
+        console.log(res);
+        if( res.scope !== 'out') {
+          setPeopleMarker({id: res._id, meta: res._source});
+        } else {
+          console.log('Someone got out of the scope');
+          deletePeople(res._id);
+        }
+      });
 
-    usersRoom = collections.users.subscribe(filter, {subscribeToSelf: false}, function(err, res) {
-      console.log('room notification');
-      console.log(err);
-      console.log(res);
-      if( res.scope !== 'out') {
-        setPeopleMarker({id: res._id, meta: res._source});
-      } else {
-        console.log('Someone got out of the scope');
-        deletePeople(res._id);
-      }
-    });
+      console.log('Subscribed to '+statuses+' '+user.meta.pos.lat+', '+user.meta.pos.lon);
+      console.log(user.roomsToListen.users);
+    }
+  },
 
-    console.log('Subscribed to '+statuses);
-    console.log(usersRoom);
-    this.roomsToListen.push(usersRoom);
-    console.log(this.roomsToListen);
-
-    // subscribe to positions (same filter)
-    // positionsRoom = collections.positions.subscribe(filter, {subscribeToSelf: false}, function (err, res) {
-    //   console.log('Position recieved');
-    //   console.log(res);
-    //   if ()
-    //   setPeopleMarker({id: res._source.id, meta: res._source});
-    // });
-    // console.log('Subscribed to positions');
-    // console.log(positionsRoom);
-    // this.roomsToListen.push(positionsRoom);
-    // console.log(this.roomsToListen);
+  subscribeToRides: function(renew) {
+    var filter, options, statuses, types;
 
     // subscribe to rides proposals
     filter = {
@@ -175,7 +175,7 @@ user = {
       ]
     };
 
-    ridesRoom = collections.rides.subscribe(filter, {subscribeToSelf: false}, function (err, res) {
+    user.roomsToListen.rides = collections.rides.subscribe(filter, {subscribeToSelf: false}, function (err, res) {
       console.log('Ride recieved');
       console.log(res);
       if (res.action !== 'delete') {
@@ -190,16 +190,26 @@ user = {
     });
 
     console.log('Subscribed to rides');
-    console.log(ridesRoom);
-    this.roomsToListen.push(ridesRoom);
-    console.log(this.roomsToListen);
+    console.log(user.roomsToListen.rides);
+  },
+
+  subscribe: function() {
+    // (un)subscribe automatically to some Kuzzle rooms
+    // if the user is a cab, for example, 
+    //      - if will automatically stop to listen to any rooms
+    //      - it will automatically listen to customer who wants to hire a cab within a radius of X meters
+
+    this.unsubscribe();
+    this.subscribeToUsers();
+    this.subscribeToRides();
+
   },
 
   unsubscribe: function() {
-    for (var i in this.roomsToListen) {
-      this.roomsToListen[i].unsubscribe();
-      delete this.roomsToListen[i];
-    }        
+    _.forOwn(user.roomsToListen, function(room, name) {
+      room.unsubscribe();
+      delete user.roomsToListen[name];
+    });    
   },
 
   manageProposals: {

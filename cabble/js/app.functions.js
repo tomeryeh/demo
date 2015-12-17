@@ -96,14 +96,14 @@ var populateMap = function() {
 var setLoc = function() {
 	var getLoc = function(loc) {
     origLoc = {lat: loc.coords.latitude, lon: loc.coords.longitude};
-    user.setPos(origLoc);
+    user.setPos(origLoc, true, false);
     return origLoc;
   }
   if(navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(getLoc);
   } else {
     origLoc = defaultLoc;
-    user.setPos(origLoc);
+    user.setPos(origLoc, true, false);
   }
   return origLoc;
 };
@@ -137,8 +137,8 @@ var setUserMarker = function() {
   userMarker.on('drag', function() {
     var ll = userMarker.getLatLng();
     origLoc = {lat: ll.lat, lon: ll.lng};
-//    user.setPos(origLoc, false);
-    user.setPos(origLoc); // persistant
+//    user.setPos(origLoc, false, false);
+    user.setPos(origLoc, true, false); // persistant not renew the room
   });
   userMarker.on('dragend', function() {
     var ll = userMarker.getLatLng();
@@ -167,7 +167,9 @@ var setUserMarker = function() {
 // Set the user marker and configure the map to handle it correctly
 var setPeopleMarker = function(people) {
 
-
+  if (people.id === user.id) {
+    return;
+  }
   peopleBucket[people.id] = people;
 
   if (peopleMarkers[people.id] === undefined) {
