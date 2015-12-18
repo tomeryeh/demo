@@ -143,14 +143,16 @@ var setUserMarker = function() {
   userMarker.on('dragend', function() {
     var ll = userMarker.getLatLng();
     origLoc = {lat: ll.lat, lon: ll.lng};
-    user.setPos(origLoc);
+    user.setPos(origLoc, true, true);
     map.setView(ll);
     userLayer.bringToFront();
+    setUserSearchZone();
   });
 
   userLayer.addLayer(userMarker);
   userLayer.bringToFront();
   peopleLayer.bringToBack();
+  setUserSearchZone();
   map
     .on('dragstart', function() {
             // if a timer is set for center the map onto the user, kill it
@@ -216,6 +218,21 @@ var deletePeople = function(id) {
     peopleLayer.removeLayer(peopleMarkers[id]);
     delete peopleMarkers[id];
 };
+
+var setUserSearchZone = function() {
+  if (userSearchZone !== undefined) {
+    map.removeLayer(userSearchZone);
+  }
+  if (distanceFilter === undefined) {
+    distanceFilter = config.cabble.distanceFilter;
+  }
+  userSearchZone = L.circle(user.meta.pos, distanceFilter, {
+    color: '#88BDEC',
+    opacity: 0.3,
+    weight: 2,
+    fillColor: '#A8C1D6'
+  }).addTo(map);
+}
 
 // start the map
 var startMap = function() {

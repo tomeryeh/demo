@@ -25,6 +25,6 @@ var config = {
         defaultLoc: {lat: 48.8566140, lon: 2.352222}
     },
     cabble: {
-        distanceFilter: '10km'
+        distanceFilter: 5000
     }
 };

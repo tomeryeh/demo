@@ -22,7 +22,8 @@ user = {
     }
     this.meta.pos = pos;
     this.save(persistant);
-    if (user.roomsToListen.users !== undefined || renew) {
+    if (user.roomsToListen.users !== undefined && renew) {
+      console.log('setpos renew');
       this.subscribeToUsers(true); // renew the subscription
       _.forOwn(peopleMarkers, function(marker, id){
         deletePeople(id);

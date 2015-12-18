@@ -24,6 +24,7 @@ var defaultZoom = config.map.defaultZoom;
 var defaultLoc = config.map.defaultLoc;
 var distanceFilter = config.cabble.distanceFilter;
 var isKuzzleOffline = true, isKuzzleOnline = false;
+var userSearchZone, distanceFilter;
 
 // Icons
 var icons = {
