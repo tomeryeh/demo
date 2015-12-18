@@ -103,15 +103,15 @@ user = {
     filter = {
       and: [
         {
-          terms: { 
-            status: statuses,
-          }
-        },
-        {
           terms:{
             type: types
           }
         }, 
+        {
+          terms: { 
+            status: statuses,
+          }
+        },
         {
           geo_distance: {
             distance: distanceFilter,

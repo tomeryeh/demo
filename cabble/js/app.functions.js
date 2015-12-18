@@ -54,8 +54,8 @@ var populateMap = function() {
 
   query = {
     query: {
-      terms: { 
-        status: statuses,
+      terms: {
+        type: types
       }
     },
     filter: {
@@ -67,8 +67,8 @@ var populateMap = function() {
           }
         },
         {
-          terms: {
-            type: types
+          terms: { 
+            status: statuses,
           }
         }
       ]
