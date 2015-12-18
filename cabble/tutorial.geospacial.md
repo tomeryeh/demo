@@ -9,7 +9,7 @@ This tutorial will try to show you how to make some geospacial searchs and filte
 - [Before to start](#before-to-start)
 - [Advanced search](#advanced-search)
 - [Subscriptions](#subscriptions)
-- [Keep moving](#keep-moving)
+  - [Keep moving](#keep-moving)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -161,6 +161,6 @@ var room = collection.subscribe(
 
 **Note:** Of course, each time the current user is moving, you'll need to unsubscribe to the room and subscribe to another based on the new user coordinates. See the next chapter
 
-## Keep moving
+### Keep moving
 
-If the user moves, we need to refresh the search zone. This means that we have to unsubscribe to the current room, then to resubscribe to a new one. Sounds heavy, but it is not: we can use the [renew](http://kuzzleio.github.io/sdk-documentation/#renew) method with a new filter.
+If the user moves, we need to refresh the search zone. This means that we have to unsubscribe to the current room, then to resubscribe to a new one. Sounds heavy, but it is not: we can use the [renew](http://kuzzleio.github.io/sdk-documentation/#renew) method on the room with a new filter to automagically do all the process.

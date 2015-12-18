@@ -24,6 +24,7 @@ Prerequisites:
 
 * [Docker](https://docs.docker.com/installation/#installation)
 * [Docker Compose](https://docs.docker.com/compose/install/)
+* [Bower](http://bower.io/#install-bower)
 
 In this directory you can use the default `docker-compose.yml` with all you need for running Kuzzle container and this demo:
 
