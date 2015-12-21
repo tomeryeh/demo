@@ -1,7 +1,7 @@
 Kuzzle - TODO List tutorial
 ===
 
-In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-javascript).
+In this example, we'll use the Kuzzle [Javascript SDK](https://github.com/kuzzleio/sdk-javascript) to let our application communicate with the backend.
 
 **Table of contents**
 
