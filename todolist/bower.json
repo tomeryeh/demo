@@ -23,7 +23,7 @@
     "tests"
   ],
   "dependencies": {
-    "kuzzle-sdk": "~1.0.9",
+    "kuzzle-sdk": "~1.1.0",
     "bootstrap": "~3.3.6",
     "angular": "angularjs#~1.4.8"
   }
