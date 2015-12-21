@@ -1,6 +1,12 @@
 # Kuzzle - TODO list demo
 
-A simple real-time collaborative TODO list with [Kuzzle](https://github.com/kuzzleio/kuzzle).
+A simple real-time collaborative TODO list based on Kuzzle.io. This tools allows a set of users to share a common TODO list across multiple devices. TODOs are synchronized in real time across all the usesrs: create, update or delete a TODO and other users will instantly see the effect.
+In this demo you'll learn to use Kuzzle.io to
+* search documents within a collection,
+* subscribe to a collection and be notified of all the changes that occur on it,
+* add a new document to a collection,
+* delete a document from a collection.
+The demo front-end layer is based on AngularJS, a very simple way to dive straight into Kuzzle.io!
 
 The step-by-step tutorial can be found [here](./tutorial.md).
 Simple tutorial project used to demonstrate Kuzzle basic features.
