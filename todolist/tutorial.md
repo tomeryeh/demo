@@ -1,8 +1,9 @@
 Kuzzle - TODO List tutorial
 ===
 
-The main purpose of this file is to learn how to use Kuzzle by creating a clone of this TODO list.  
 In this example, we'll use the [Javascript SDK](https://github.com/kuzzleio/sdk-javascript).
+
+**Table of contents**
 
 * [Application initialization](#app-init)
     * [Angular initialization](#angular-init)
@@ -48,7 +49,7 @@ Our TODOs will be managed by the `KuzzleTodoDemoMessages` collection in Kuzzle: 
 
 One convenient thing to know here is that we don't have to explicitly create our collection to work with it: Kuzzle does it seamlessly for us.
 
-On line 17, we define the `init` function. The first thing we need to do when initializing our app, is to fetch all the existing TODOs:
+On line 17, we define the `init` function (called by the `ng-init` directive above). The first thing we need to do when initializing our app, is to fetch all the existing TODOs:
 
 ```js
 $scope.init = function() {
