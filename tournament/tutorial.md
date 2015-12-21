@@ -1,6 +1,6 @@
 # Kuzzle Tournament - Tutorial
 
-**Kuzzle Tournament** is a multiplayer combat game running in web browsers.
+Kuzzle Tournament is a multiplayer combat game running in web browsers.
 
 This is an advanced tutorial, meant to only explain two specific Kuzzle features:
 
@@ -23,7 +23,7 @@ The complete SDK documentation is available [here](http://kuzzleio.github.io/sdk
 
 One of Kuzzle's purposes is to handle communications between the different components of an application. Other tutorials show how to synchronize application clients, but here we wanted to show how Kuzzle can also handle communications between different components of an application.
 
-**Kuzzle Tournament** is a good example of a multi-components application:
+Kuzzle Tournament is a good example of a multi-components application:
 
 * the game client handles the graphical interface
 * the game server manages rooms and game rules. It also starts and ends games
@@ -93,7 +93,7 @@ kuzzle
 
 This snippet starts line 25 of the ``server/tournament_server.js`` file.
 
-**Subscription explanation:**
+##Subscription explanation:
 
 * We create a new object representing the data collection ``Configuration.server.room``
 * We subscribe to the filter ``{}``, meaning that we'll be notified for any change detected on this data collection
@@ -101,7 +101,7 @@ This snippet starts line 25 of the ``server/tournament_server.js`` file.
 * We pass the option ``users: 'all'``, meaning that we want to receive all notifications related to users activity
 * Every time a notification is received, the callback is executed
 
-**Callback details:**
+##Callback details:
 
 The ``data.action`` variable tells the server if the received notification is about a new subscription occurring on the room (``data.action === 'on'``), or if a connected user left it (``data.action === 'off'``).  
 Depending of this information, the game server takes the appropriate action by adding the player to the game, or by removing it.
