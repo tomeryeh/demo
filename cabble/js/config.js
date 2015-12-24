@@ -1,9 +1,10 @@
 var config = {
     kuzzleUrl: 'http://localhost:7512',
+    index: 'cabble',
     collections: {
         names: {
-            users: 'cabble-users',
-            rides: 'cabble-rides'
+            users: 'users',
+            rides: 'rides'
         },
         mapping: {
             users: {
