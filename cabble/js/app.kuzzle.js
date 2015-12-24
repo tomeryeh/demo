@@ -7,7 +7,7 @@ $(function() {
       // then instantiate the collections
       collections = {
         users: kuzzle.dataCollectionFactory(config.collections.names.users),
-        positions: kuzzle.dataCollectionFactory(config.collections.names.positions),
+        connections: kuzzle.dataCollectionFactory(config.collections.names.users),
         rides: kuzzle.dataCollectionFactory(config.collections.names.rides)
       };
       // first, prepare the collections

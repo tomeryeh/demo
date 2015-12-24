@@ -3,7 +3,6 @@ var config = {
     collections: {
         names: {
             users: 'cabble-users',
-            positions: 'cabble-positions',
             rides: 'cabble-rides'
         },
         mapping: {
