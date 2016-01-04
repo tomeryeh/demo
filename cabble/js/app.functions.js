@@ -5,16 +5,12 @@ var prepareCollections = function(cb) {
       if (res === undefined) {
         // assumes there is currently no mapping
         console.log('putting right mapping to '+name);
-        collections[name].create(function(err, res){
+        collections[name].putMapping(mapping, function (err, res) {
           console.log(err);
           console.log(res);
-          collections[name].putMapping(mapping, function (err, res) {
-            console.log(err);
-            console.log(res);
-            if(cb) {
-              cb();
-            }
-          });
+          if(cb) {
+            cb();
+          }
         });
       } else {
         // there is a mapping, lets compare
