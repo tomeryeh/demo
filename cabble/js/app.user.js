@@ -65,7 +65,7 @@ user = {
   save: function(persistant) {
     // save the current user status into Kuzzle, only if it has been created
     var document;
-    if (this.id !== 0) {
+    if (this.id !== '0') {
       if (persistant === undefined) {
         persistant = true;
       }
