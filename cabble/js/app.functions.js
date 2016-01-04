@@ -16,7 +16,7 @@ var prepareCollections = function(cb) {
         // there is a mapping, lets compare
         console.log('mapping retrieved for '+name);
         var keys = Object.keys(mapping);
-        if (res.mapping[keys[0]].type !== mapping[keys[0]].type) {
+        if (res.mapping[keys[0]] === undefined || res.mapping[keys[0]].type !== mapping[keys[0]].type) {
           // the mappings differs, lets put the right one
           console.log('putting right mapping to '+name);
           collections[name].putMapping(mapping, function (err, res) {

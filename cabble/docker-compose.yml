@@ -8,7 +8,7 @@ demo:
     - "80:80"
 
 kuzzle:
-  image: kuzzleio/kuzzle
+  image: kuzzleio/kuzzle:latest
   ports:
     - "7512:7512"
   links:
@@ -22,4 +22,4 @@ redis:
 
 elasticsearch:
   image: elasticsearch:1.5.2
-  command: elasticsearch --cluster.name=cabble
+  command: elasticsearch --cluster.name=cabble --action.auto_create_index=0

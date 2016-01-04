@@ -1,6 +1,6 @@
 $(function() {
   // instantiate the kuzzle object and perform some more thing when done
-  kuzzle = new Kuzzle(config.kuzzleUrl, {index: config.index, autoReconnect: true}, function(err, res) {
+  kuzzle = new Kuzzle(config.kuzzleUrl, config.index,  {autoReconnect: true}, function(err, res) {
     if (err) {
       console.log(err);
     } else {
