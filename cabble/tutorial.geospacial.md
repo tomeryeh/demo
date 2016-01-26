@@ -4,7 +4,7 @@ This tutorial will try to show you how to make some geospacial searchs and filte
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-## Table of content
+**Table of content**
 
 - [Before to start](#before-to-start)
 - [Advanced search](#advanced-search)
