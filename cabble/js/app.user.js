@@ -1,5 +1,5 @@
 user = {
-  id: 0,
+  id: '0',
   meta: {
     type: 'none',           // cab or customer
     pos: {lon: 0, lat: 0},  // geoloc
@@ -65,7 +65,7 @@ user = {
   save: function(persistant) {
     // save the current user status into Kuzzle, only if it has been created
     var document;
-    if (this.id !== 0) {
+    if (this.id !== '0') {
       if (persistant === undefined) {
         persistant = true;
       }
@@ -122,15 +122,14 @@ user = {
     };
 
     options = {
-      listenToConnections: true,
-      listenToDisconnections: true
+      subscribeToSelf: false
     };
     if (renew === true) {
       user.roomsToListen.users.renew(filter, function(err, res){
         console.log('room notification');
         console.log(err);
         console.log(res);
-        if( res.scope !== 'out') {
+        if( res.scope !== 'out' ) {
           setPeopleMarker({id: res._id, meta: res._source});
         } else {
           console.log('Someone got out of the scope');
@@ -140,11 +139,11 @@ user = {
       console.log('Re-ubscribed to '+statuses+' '+user.meta.pos.lat+', '+user.meta.pos.lon);
       console.log(user.roomsToListen.users);
     } else {
-      user.roomsToListen.users = collections.users.subscribe(filter, {subscribeToSelf: false}, function(err, res) {
+      user.roomsToListen.users = collections.users.subscribe(filter, options, function(err, res) {
         console.log('room notification');
         console.log(err);
         console.log(res);
-        if( res.scope !== 'out') {
+        if( res.scope !== 'out' ) {
           setPeopleMarker({id: res._id, meta: res._source});
         } else {
           console.log('Someone got out of the scope');
@@ -155,6 +154,19 @@ user = {
       console.log('Subscribed to '+statuses+' '+user.meta.pos.lat+', '+user.meta.pos.lon);
       console.log(user.roomsToListen.users);
     }
+  },
+
+  subscribeToConnections: function() {
+    console.log('Subscribe to connections with user.id ' + user.id);
+    user.roomsToListen.connections = collections.users.subscribe({}, {subscribeToSelf: false, scope: 'none', users: 'out', metadata: {_id: user.id}}, function(err, res) {
+      console.log('disconnection');
+      console.log(err);
+      console.log(res);
+      // delete the point
+      deletePeople(res.metadata._id);
+      // the user is disconnected, but may be have not had the time to delete its document
+      collections.users.deleteDocument(res.metadata._id);
+    });
   },
 
   subscribeToRides: function(renew) {
@@ -203,7 +215,7 @@ user = {
     this.unsubscribe();
     this.subscribeToUsers();
     this.subscribeToRides();
-
+    this.subscribeToConnections();
   },
 
   unsubscribe: function() {

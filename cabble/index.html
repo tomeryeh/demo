@@ -139,6 +139,26 @@
         <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel the ride</button>
     </script>
 
+
+    <script type="text/html" id="customer_toProposal_PopupTemplate">
+        <strong>User #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> Looking for a cab
+        <br><br>
+        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}" disabled="">Awaiting response...</button>
+        <br>
+        <button class="btn btn-danger btn-block cancel" data-sibling="AVINCIb4v1qEOWdfDSVI">Cancel</button>        
+    </script>
+    <script type="text/html" id="cab_toProposal_PopupTemplate">
+        <strong>User #{{id}}</strong>
+        <br><br>
+        <strong>Current status:</strong> Looking for a customer
+        <br><br>
+        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}" disabled="">Awaiting response...</button>
+        <br>
+        <button class="btn btn-danger btn-block cancel" data-sibling="AVINCIb4v1qEOWdfDSVI">Cancel</button>        
+    </script>
+
     <script src="bower_components/jquery/dist//jquery.min.js"></script>
     <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="bower_components/leaflet/dist/leaflet.js"></script>

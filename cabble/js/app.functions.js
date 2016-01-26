@@ -16,7 +16,7 @@ var prepareCollections = function(cb) {
         // there is a mapping, lets compare
         console.log('mapping retrieved for '+name);
         var keys = Object.keys(mapping);
-        if (res.mapping[keys[0]].type !== mapping[keys[0]].type) {
+        if (res.mapping[keys[0]] === undefined || res.mapping[keys[0]].type !== mapping[keys[0]].type) {
           // the mappings differs, lets put the right one
           console.log('putting right mapping to '+name);
           collections[name].putMapping(mapping, function (err, res) {
@@ -172,39 +172,76 @@ var setPeopleMarker = function(people) {
   if (people.id === user.id) {
     return;
   }
-  peopleBucket[people.id] = people;
+  var found = false;
+
+  if (peopleBucket[people.id] !== undefined) {
+    peopleBucket[people.id].meta.pos = people.meta.pos;
+  } else {
+    peopleBucket[people.id] = people;
+  }
 
   if (peopleMarkers[people.id] === undefined) {
 
     console.log('Create the people '+people.id);
     var peopleMarker = L.marker([people.meta.pos.lat, people.meta.pos.lon], {icon: icons[people.meta.type][people.meta.status]});
     if ($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').length === 1) {
-      peopleMarker.bindPopup(Mustache.render($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').html(), people));
+      _.forOwn(user.proposals.their, function(_proposal, _id) {
+        if (_proposal.from === people.id) {
+          peopleMarker.bindPopup(Mustache.render($('#' + people.meta.type + '_proposal_PopupTemplate').html(), {id: people.id, proposal: _id}));
+          found = true;
+        }
+      });
+      if (!found) {
+        _.forOwn(user.proposals.mine, function(_proposal, _id) {
+          if (_proposal.to === people.id) {
+            peopleMarker.bindPopup(Mustache.render($('#' + people.meta.type + '_toProposal_PopupTemplate').html(), {id: people.id}));
+            found = true;
+          }
+        });
+      }
+      if (!found) {
+        peopleMarker.bindPopup(Mustache.render($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').html(), people));
+      }
     }
     peopleLayer.addLayer(peopleMarker);
     peopleMarkers[people.id] = peopleMarker;
-
+    if (found) {
+      peopleMarker.openPopup();
+    }
   } else if (people.meta !== undefined) {
     // the marker had been updated
     console.log('Move the people '+people.id);
 
+    peopleMarkers[people.id].setLatLng(people.meta.pos);
+
     // Set the icon
     if (people.id === user.sibling) {
       peopleMarkers[people.id].setIcon(icons[people.meta.type].mine);
-    } else {
-      peopleMarkers[people.id].setIcon(icons[people.meta.type][people.meta.status]);
-    }
-
-    peopleMarkers[people.id].setLatLng(people.meta.pos);
-
-    // set the popup content
-    if (people.id === user.sibling) {
       peopleMarkers[people.id].setPopupContent(Mustache.render($('#' + people.meta.type + '_mine_PopupTemplate').html(), people));
     } else {
-      if (people.meta.type !== mode) {
-        peopleMarkers[people.id].setPopupContent(Mustache.render($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').html(), people));
+      peopleMarkers[people.id].setIcon(icons[people.meta.type][people.meta.status]);
+
+      _.forOwn(user.proposals.their, function(_proposal, _id) {
+        if (_proposal.from === people.id) {
+          peopleMarkers[people.id].setPopupContent(Mustache.render($('#' + people.meta.type + '_proposal_PopupTemplate').html(), {id: people.id, proposal: _id}));
+          found = true;
+        }
+      });
+      if (!found) {
+        _.forOwn(user.proposals.mine, function(_proposal, _id) {
+          if (_proposal.to === people.id) {
+            peopleMarkers[people.id].setPopupContent(Mustache.render($('#' + people.meta.type + '_toProposal_PopupTemplate').html(), {id: people.id}));
+            found = true;
+          }
+        });
+      }
+      if (!found) {
+        if (people.meta.type !== mode) {
+          peopleMarkers[people.id].setPopupContent(Mustache.render($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').html(), people));   
+        }
       }
     }
+
 
   }
   userLayer.bringToFront();

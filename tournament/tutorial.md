@@ -38,7 +38,7 @@ We did this mainly because we wanted to show how Kuzzle can act as a central poi
 
 Here is how it looks like:
 
-![Base Architecture](tutorial/Kuzzle Tournament - Base Architecture.png)
+![Base Architecture](http://kuzzle.io/wp-content/uploads/2016/01/Kuzzle-Tournament-Base-Architecture.png)
 
 
 Here is what happens when a new player starts a game:
@@ -50,7 +50,7 @@ Here is what happens when a new player starts a game:
 The game server itself subscribes to all room it creates, in order to listen to the game updates, and to orchestrate how the game goes.  
 The game server also ask Kuzzle to send notifications when players exit the game, and eventually notify other players to end the game when there is not enough players left in it.
 
-The game server is implemented in the following file: [server/tournament_server.js](server/tournament_server.js)
+The game server is implemented in the following file: [server/tournament_server.js](https://github.com/kuzzleio/demo/blob/master/tournament/server/tournament_server.js)
 
 # Handling players connection and disconnection
 
