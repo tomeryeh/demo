@@ -1,0 +1,12 @@
+{
+  "mainindex": {
+    "KuzzleTodoDemoMessages": [
+      { "create" : {}},
+      { "label": "Install Kuzzle", "done": true },
+      { "create" : {}},
+      { "label": "Start TODO List demo", "done": true },
+      { "create" : {}},
+      { "label": "Learn how to extend Kuzzle", "done": false }
+    ]
+  }
+}
