@@ -4,11 +4,11 @@
 angular.module("KuzzleTodoDemo", [])
   // setup kuzzle as an Angular service
   .factory('kuzzle', function () {
-    return new Kuzzle(config.kuzzleUrl);
+    return new Kuzzle(config.kuzzleUrl, {defaultIndex: config.appIndex});
   })
   // KuzzleDataCollection on which the messages are submited
   .factory('kuzzleMessagesCollection', ['kuzzle', function (kuzzle) {
-    return kuzzle.dataCollectionFactory('KuzzleTodoDemoMessages');
+    return kuzzle.dataCollectionFactory(config.todoCollection);
   }])
   .controller("KuzzleTodoController", ["$scope", 'kuzzleMessagesCollection', function($scope, kuzzleMessagesCollection) {
     $scope.newTodo = null;
@@ -27,9 +27,9 @@ angular.module("KuzzleTodoDemo", [])
           // In case the action is "create", we call the addToList action
           if(response.action === "create") {
             var newTodo = {
-              _id: response._id,
-              label: response._source.label,
-              done: response._source.done
+              _id: response.result._id,
+              label: response.result._source.label,
+              done: response.result._source.done
             };
 
             addToList(newTodo);
@@ -38,7 +38,7 @@ angular.module("KuzzleTodoDemo", [])
           // In case the action is "delete", we splice the angular model for remove the entry in array
           if(response.action === "delete") {
             $scope.todos.some(function(todo, index) {
-              if(todo._id === response._id) {
+              if(todo._id === response.result._id) {
                 $scope.todos.splice(index, 1);
                 return true;
               }
@@ -48,8 +48,8 @@ angular.module("KuzzleTodoDemo", [])
           // In case the action is "update", we replace in the angular model with the new one
           if(response.action === "update") {
             $scope.todos.some(function(todo, index) {
-              if(todo._id === response._id) {
-                $scope.todos[index].done = response._source.done;
+              if(todo._id === response.result._id) {
+                $scope.todos[index].done = response.result._source.done;
                 return true;
               }
             });
@@ -86,7 +86,7 @@ angular.module("KuzzleTodoDemo", [])
     $scope.addTodo = function() {
       kuzzleMessagesCollection.createDocument(
         {type: "todo", label: $scope.newTodo.label, done: false},
-        {updateIfExist: true}
+        {updateIfExist: false}
       );
       $scope.newTodo = null;
     };
