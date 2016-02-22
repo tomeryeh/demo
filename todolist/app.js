@@ -1,5 +1,5 @@
 /**
- * This Todo List demo is based on the Kuzzle JS SDK 1.0.1
+ * This Todo List demo is based on the Kuzzle JS SDK 1.6.3
  */
 angular.module("KuzzleTodoDemo", [])
   // setup kuzzle as an Angular service
@@ -15,8 +15,6 @@ angular.module("KuzzleTodoDemo", [])
     $scope.todos = [];
 
     $scope.init = function () {
-      getAllTodos();
-
       kuzzleMessagesCollection.subscribe({},
         function(error, response) {
           if (error) {
@@ -35,7 +33,7 @@ angular.module("KuzzleTodoDemo", [])
             addToList(newTodo);
           }
 
-          // In case the action is "delete", we splice the angular model for remove the entry in array
+          // A todo has been removed, we splice the angular model for remove the entry in array
           if(response.action === "delete") {
             $scope.todos.some(function(todo, index) {
               if(todo._id === response.result._id) {
@@ -57,26 +55,51 @@ angular.module("KuzzleTodoDemo", [])
           $scope.$apply();
         }
       );
+
+      getAllTodos();
+    };
+
+    var initFixtures = function () {
+      var fixtures = [
+        { "label": "Install Kuzzle", "done": true },
+        { "label": "Start TODO List demo", "done": true },
+        { "label": "Learn how to extend Kuzzle", "done": false }
+      ];
+
+      kuzzleMessagesCollection.deleteDocument("is_virgin");
+      angular.forEach(fixtures, function (fixture) {
+        kuzzleMessagesCollection.createDocument({
+          type: "todo",
+          label: fixture.label,
+          done: fixture.done
+        });
+      });
     };
 
     var getAllTodos = function() {
-      kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
-        if (error) {
-          console.error("[Kuzzle]:" + error.message);
-          return;
+      kuzzleMessagesCollection.fetchDocument("is_virgin", function (error) {
+        if (!error) {
+          // we got a document with id is_virgin, we inject the fixtures.
+          return initFixtures();
         }
 
-        response.documents.forEach(function(todo) {
-          var newTodo = {
-            _id: todo.id,
-            label: todo.content.label,
-            done: todo.content.done
-          };
+        kuzzleMessagesCollection.advancedSearch({}, function (error, response) {
+          if (error) {
+            console.error("[Kuzzle]:" + error.message);
+            return;
+          }
 
-          $scope.todos.push(newTodo);
+          response.documents.forEach(function (todo) {
+            var newTodo = {
+              _id: todo.id,
+              label: todo.content.label,
+              done: todo.content.done
+            };
+            $scope.todos.push(newTodo);
+          });
+
+          $scope.$apply();
         });
-
-        $scope.$apply();
       });
     };
 
@@ -120,4 +143,4 @@ angular.module("KuzzleTodoDemo", [])
       $scope.todos.push(todo);
     };
 
-  }])
+  }]);
