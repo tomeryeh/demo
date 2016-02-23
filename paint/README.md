@@ -1,8 +1,8 @@
-### kuzzle paint
+### Kuzzle paint
 
-A simple multiuser painting application using Kuzzle.
+A simple multi-users painting application using Kuzzle.
 
-This demo is adapted from [Hynda Paint](https://github.com/hydna/hydna-paint) demo, that uses [Kuzzle](http://www.kuzzle.io) with [Kuzzle SDK v1.0](https://github.com/kuzzleio/sdk-javascript/tree/v1.0.0-alpha.1) insted of [Hydna platform](https://www.hydna.com/).
+This demo is adapted from [Hynda Paint](https://github.com/hydna/hydna-paint) demo, that uses [Kuzzle](http://www.kuzzle.io) with [Kuzzle SDK v1.6.3](https://github.com/kuzzleio/sdk-javascript/tree/1.6.3) insted of [Hydna platform](https://www.hydna.com/).
 
 This demo has 3 versions : 
 - [root folder](#) : adapted version using Kuzzle instead of Hydna platform
