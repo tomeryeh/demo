@@ -1,7 +1,7 @@
 angular.module('KuzzleChatDemo', ['luegg.directives'])
   // setup kuzzle as an Angular service
   .factory('kuzzle', function () {
-    return new Kuzzle(config.kuzzleUrl);
+    return new Kuzzle(config.kuzzleUrl, {defaultIndex: config.appIndex});
   })
 
   // KuzzleDataCollection on which the messages are submited
@@ -39,12 +39,11 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       this.kuzzleSubscription = kuzzleMessagesCollection
         .subscribe(
           {term: {chatRoom: self.id}},
-          {subscribeToSelf: true, scope: 'all', state: 'all'},
-          function (err, result) {
+          function (err, response) {
             self.messages.push({
-              color: result._source.color,
-              nickName: result._source.nickName,
-              content: result._source.content
+              color: response.result._source.color,
+              nickName: response.result._source.nickName,
+              content: response.result._source.content
             });
             $rootScope.$apply();
           }
@@ -108,9 +107,10 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       kuzzleChatRoomListCollection
         .subscribe(
           {},
-          {subscribeToSelf: true},
-          function (err, result) {
-            if (result.action === 'delete') {
+          function (err, response) {
+            var result = response.result;
+
+            if (response.action === 'delete') {
               self.del(result._id);
               return;
             }
@@ -159,6 +159,11 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
 
       kuzzleChatRoomListCollection
         .fetchAllDocuments(function (err, result) {
+          if (err) {
+            console.log(err);
+            return false;
+          }
+
           $.each(result.documents, function (k, doc) {
             if (!self.all[doc.id]) {
               self.all[doc.id] = new ChatRoom({
@@ -221,7 +226,9 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
         kuzzleChatRoomListCollection
           .documentFactory(this.all[roomId].id, {})
           .delete(function (err, result) {
-
+            if (err) {
+              console.log(err);
+            }
           });
       }
 

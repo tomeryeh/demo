@@ -30,16 +30,21 @@ The complete source files can be found in our [Github repository](https://github
 
 ## Include Kuzzle SDK's library
 
-In order to use Kuzzle, you first need to include Javascript SDK.
+In order to use Kuzzle, you first need to include its Javascript SDK and its dependencies.  
 
-Download the [kuzzle.min.js](https://github.com/kuzzleio/sdk-javascript/blob/browser/kuzzle.min.js) file from the [browser branch of Kuzzle Javascript SDK Github repository](https://github.com/kuzzleio/sdk-javascript/tree/browser).
+
+```shell
+cd path/to/chat/demo
+bower install
+```
 
 In your html, you can then include it.
 
 ```html
 101.html --
   [..]
-  <script type="text/javascript" src="js/vendor/kuzzle.min.js"></script>
+  <script src="bower_components/kuzzle-sdk/dist/kuzzle.min.js"></script>
+  <script src="config.js"></script>
   <script src="js/app.101.js"></script>
   <script>
     $(document).foundation();
@@ -58,20 +63,21 @@ js/app.101.js --
 angular.module('KuzzleChatDemo', [])
   // setup kuzzle as an Angular service
   .factory('kuzzle', function () {
-    return new Kuzzle(config.kuzzleUrl);
+    return new Kuzzle(config.kuzzleUrl, {defaultIndex: config.appIndex});
   })
   [..]
 ```
 
 Where config.kuzzleUrl is set to your Kuzzle server's end point, i.e.
-http://localhost:7512.
+http://localhost:7512.  
+The defaultIndex is the index to use.
 
 ## Preparing our Chat room and linking it to Kuzzle
 
 We create a ChatRoom model object that exposes methods needed to our
 current functionalities: subscribe to a room and send a message.
 
-Once again, we use Angular services and we expose the constructor as a service".
+Once again, we use Angular services and we expose the constructor as a service.
 
 ```javascript
 js/app.101.js --
@@ -143,15 +149,14 @@ ChatRoom.prototype.subscribe = function () {
   this.kuzzleSubscription = kuzzleMessagesCollection
     .subscribe(
       {term: {chatRoom: self.id}},
-      function (err, result) {
+      function (err, response) {
         self.messages.push({
-          color: result._source.color,
-          nickName: result._source.nickName,
-          content: result._source.content
+          color: response.result._source.color,
+          nickName: response.result._source.nickName,
+          content: response.result._source.content
         });
         $rootScope.$apply();
-      },
-      {subscribeToSelf: true}
+      }
     );
   this.subscribed = true;
 };
@@ -163,8 +168,8 @@ Kuzzle's `subscribe` method expects to receive three parameters:
 
 1. filters to apply to incoming documents before noticing the user back.
 Only documents matching these filters will be received by our application.
-2. a callback function which will be triggered when a document matching the filter is published or modified.
-3. an optional option object.
+2. an optional option object, not given here.
+3. a callback function which will be triggered when a document matching the filter is published or modified.
 
 In our case, we define as a filter all the documents whose chatRoom id property matches our current room one ('Main room').
 

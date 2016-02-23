@@ -168,8 +168,10 @@ ChatRoomList.prototype.subscribe = function () {
   kuzzleChatRoomListCollection
     .subscribe(
       {},
-      function (err, result) {
-        if (result.action === 'delete') {
+      function (err, response) {
+        var result = response.result;
+
+        if (response.action === 'delete') {
           self.del(result._id);
           return;
         }
