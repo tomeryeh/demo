@@ -57,18 +57,26 @@ Our TODOs will be managed by the `KuzzleTodoDemoMessages` collection in Kuzzle: 
 
 One convenient thing to know here is that we don't have to explicitly create our collection to work with it: Kuzzle does it seamlessly for us.
 
-On line 17, we define the `init` function (called by the `ng-init` directive above). The first thing we need to do when initializing our app, is to fetch all the existing TODOs:
+On line 17, we define the `init` function (called by the `ng-init` directive above). In this function, after having subscribed to the TODOs changes (more about this in the [real-time section](#real-time)), we get the initial TODOs either from the database or by creating them.
 
 ```js
 $scope.init = function() {
-    getAllTodo();
+  // real-time subscription
+  ..
+
+  getAllTodos();
 }
 ```
 
 <a name="get-all-todo" />
 ## Function getAllTodos
 
-To do so, we ask Kuzzle to get us all the existing documents in the `KuzzleTodoDemoMessages` collection.
+We first check if a TODO document with an `id` "is_virgin" exists in the database.  
+If so, we are the first user to run the application and we create the initial data set by calling the `initFixtures` function.
+
+:bulb: In order to receive some notifications on documents in Kuzzle, these need to be linked to the notification rooms. In the deletion case, for the time being, this implies creating the documents _after_ we have subscribed to the notification room.
+
+If the database is already initialized, we ask Kuzzle to get us all the existing documents in the `KuzzleTodoDemoMessages` collection.
 The method that the Javascript SDK provides for this purpose is [`advancedSearch`](https://kuzzleio.github.io/sdk-documentation/#advancedsearch).
 It takes the following arguments:
 
@@ -97,27 +105,25 @@ We add the line `return false;` to stop the callback execution and prevent any e
 Now that we are sure to get a result, we can loop on all TODOs and add them to the `$scope.todos` array.
 
 ```js
-var getAllTodos = function() {
-  kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
-    if (error) {
-      console.error(error);
-      return false;
-    }
+kuzzleMessagesCollection.advancedSearch({}, function(error, response) {
+  if (error) {
+    console.error(error);
+    return false;
+  }
 
-    // The array with all responses is response.hits.hits
-    response.documents.forEach(function(todo) {
-      var newTodo = {
-        _id: todo.id,
-        label: todo.content.label,
-        done: todo.content.done
-      };
+  // The array with all responses is response.hits.hits
+  response.documents.forEach(function(todo) {
+    var newTodo = {
+      _id: todo.id,
+      label: todo.content.label,
+      done: todo.content.done
+    };
 
-      $scope.todos.push(newTodo);
-    });
-
-    $scope.$apply();
+    $scope.todos.push(newTodo);
   });
-};
+
+  $scope.$apply();
+});
 ```
 
 The line `$scope.$apply()` is added to make Angular manually update the view. See [Angular documentation](https://docs.angularjs.org/api/ng/type/$rootScope.Scope#$apply) for more details.
