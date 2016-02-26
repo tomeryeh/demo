@@ -47,7 +47,7 @@ var TOUCH_DEVICE              = 'ontouchstart' in global ||
 
   setInterval(synchronize, 1000);
 
-  channel = new PaintChannel(config.kuzzleUrl);
+  channel = new PaintChannel(config);
   controls = new PaintControls(document.getElementById('menu'));
   viewport = new CanvasViewport(document.getElementById('canvas'));
   input = TOUCH_DEVICE ? new TouchInterface(document.getElementById('canvas'))
@@ -63,7 +63,7 @@ var TOUCH_DEVICE              = 'ontouchstart' in global ||
 
 
 
-function PaintChannel (url) {
+function PaintChannel (config) {
   var
     self = this,
     kuzzle,
@@ -141,13 +141,11 @@ function PaintChannel (url) {
       query = {term: {type: 'lines'}},
       clearFilters = {term: {type: 'clear'}};
 
-    kuzzle = new Kuzzle(url, {autoReconnect: true});
+    kuzzle = new Kuzzle(config.kuzzleUrl, {defaultIndex: config.appIndex, autoReconnect: true});
     paintCollection = kuzzle.dataCollectionFactory('paint');
 
-    var newLineNotif = function (error, result) {
-      if (result.controller == 'write' && result.action == 'create') {
-        self.ondata(JSON.parse(result._source.line));
-      }
+    var newLineNotif = function (error, response) {
+      self.ondata(JSON.parse(response.result._source.line));
     };
 
     var clearNotif = function (error, result) {
