@@ -40,7 +40,7 @@ Now, you can try to access the chat demo on http://localhost
 ### Stand alone
 
 * A running [kuzzle](https://github.com/kuzzleio/kuzzle) instance
-* (Optional) Edit the the ``js/config.js`` file to configure your Kuzzle instance URL, if you don't opt for a default installation
+* (Optional) Edit the ``js/config.js`` file to configure your Kuzzle instance URL, if you don't opt for a default installation
 * You can directly open the `index.html` file in your browser.
 
 **Note:**
