@@ -8,7 +8,9 @@ demo:
     - "80:80"
 
 kuzzle:
-  image: kuzzleio/kuzzle:0.5.3
+  image: kuzzleio/kuzzle:1.0.0-beta.1
+  volumes:
+    - "./fixtures.json:/fixtures.json"
   ports:
     - "7512:7512"
   links:
@@ -16,10 +18,13 @@ kuzzle:
     - redis
   environment:
     - LIKE_A_VIRGIN=1
+    - FIXTURES=/fixtures.json
 
 redis:
   image: redis:3.0.2
 
 elasticsearch:
-  image: elasticsearch:1.5.2
+  image: elasticsearch:1.7
   command: elasticsearch --cluster.name=chat
+  ports:
+    - 9200:9200

@@ -1,7 +1,7 @@
 angular.module('KuzzleChatDemo', ['luegg.directives'])
   // setup kuzzle as an Angular service
   .factory('kuzzle', function () {
-    return new Kuzzle(config.kuzzleUrl);
+    return new Kuzzle(config.kuzzleUrl, {defaultIndex: config.appIndex});
   })
   // KuzzleDataCollection on which the messages are submited
   .factory('kuzzleMessagesCollection', ['kuzzle', function (kuzzle) {
@@ -43,12 +43,11 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
       this.kuzzleSubscription = kuzzleMessagesCollection
         .subscribe(
           {term: {chatRoom: self.id}},
-          {subscribeToSelf: true},
-          function (err, result) {
+          function (err, response) {
             self.messages.push({
-              color: result._source.color,
-              nickName: result._source.nickName,
-              content: result._source.content
+              color: response.result._source.color,
+              nickName: response.result._source.nickName,
+              content: response.result._source.content
             });
             $rootScope.$apply();
           }

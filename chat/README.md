@@ -24,21 +24,23 @@ Simple tutorial project used to demonstrate Kuzzle basic features.
 
 Prerequisites:
 
+* [Bower](http://bower.io/)
 * [Docker](https://docs.docker.com/installation/#installation)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 
-In this directory you can use the default `docker-compose.yml` with all you need for running Kuzzle container and this demo:
+From this directory you can use the default `docker-compose.yml` to run Kuzzle and this demo within a container:
 
 ```
+$ bower install
 $ docker-compose up
 ```
 
-Now, you can try to use the todolist at http://localhost
+Now, you can try to access the chat demo on http://localhost
 
 ### Stand alone
 
 * A running [kuzzle](https://github.com/kuzzleio/kuzzle) instance
-* (Optional) Edit the first line of the ``js/app.js`` file to configure your Kuzzle instance URL, if you don't opt for a default installation
+* (Optional) Edit the ``js/config.js`` file to configure your Kuzzle instance URL, if you don't opt for a default installation
 * You can directly open the `index.html` file in your browser.
 
 **Note:**
