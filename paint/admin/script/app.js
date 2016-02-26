@@ -149,9 +149,7 @@ function PaintChannel (config) {
     };
 
     var clearNotif = function (error, result) {
-      if (result.controller == 'write' && result.action == 'create') {
-        self.onclear();
-      }
+      self.onclear();
     };
 
     paintCollection.subscribe(filters, newLineNotif);
