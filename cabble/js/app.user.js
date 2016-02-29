@@ -124,7 +124,7 @@ user = {
         if( res.scope !== 'out' ) {
           setPeopleMarker({id: res.result._id, meta: res.result._source});
         } else {
-          deletePeople(res._id);
+          deletePeople(res.result._id);
         }
       });
     } else {
@@ -135,7 +135,7 @@ user = {
         if( res.scope !== 'out' ) {
           setPeopleMarker({id: res.result._id, meta: res.result._source});
         } else {
-          deletePeople(res._id);
+          deletePeople(res.result._id);
         }
       });
     }
