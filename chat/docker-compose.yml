@@ -21,10 +21,8 @@ kuzzle:
     - FIXTURES=/fixtures.json
 
 redis:
-  image: redis:3.0.2
+  image: redis:3.0
 
 elasticsearch:
   image: elasticsearch:1.7
   command: elasticsearch --cluster.name=chat
-  ports:
-    - 9200:9200
