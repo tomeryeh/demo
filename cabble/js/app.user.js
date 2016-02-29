@@ -23,7 +23,6 @@ user = {
     this.meta.pos = pos;
     this.save(persistant);
     if (user.roomsToListen.users !== undefined && renew) {
-      console.log('setpos renew');
       this.subscribeToUsers(true); // renew the subscription
       _.forOwn(peopleMarkers, function(marker, id){
         deletePeople(id);
@@ -46,15 +45,12 @@ user = {
     // create the user into Kuzzle
     collections.users.createDocument(this.meta, {updateIfExist: true}, function (err, res) {
       if (err) {
-        console.log(err);
+        console.error(err);
       }
-      console.log('User created into Kuzzle');
-      console.log(res);
       user.id = res.id;
       $(window).on('beforeunload', function() {
         // delete the user and logout
         collections.users.deleteDocument(user.id, function(err, res){
-          console.log('user deleted');
           kuzzle.logout();
         });
       });
@@ -72,17 +68,13 @@ user = {
       if (persistant) {
         collections.users.createDocument(this.id, this.meta, {updateIfExist: true}, function (err, res) {
           if (err) {
-            console.log(err);
+            console.error(err);
           }
-          console.log('User updated into Kuzzle');
-          console.log(res);
         });
       } else {
         document = _.cloneDeep(this.meta);
         document.id = this.id;
         collections.positions.publishMessage(document);
-        console.log('Position update sent');
-        console.log(document);
       }
     }
   },
@@ -106,9 +98,9 @@ user = {
           terms:{
             type: types
           }
-        }, 
+        },
         {
-          terms: { 
+          terms: {
             status: statuses,
           }
         },
@@ -126,42 +118,34 @@ user = {
     };
     if (renew === true) {
       user.roomsToListen.users.renew(filter, function(err, res){
-        console.log('room notification');
-        console.log(err);
-        console.log(res);
+        if (err) {
+          console.error(err);
+        }
         if( res.scope !== 'out' ) {
-          setPeopleMarker({id: res._id, meta: res._source});
+          setPeopleMarker({id: res.result._id, meta: res.result._source});
         } else {
-          console.log('Someone got out of the scope');
           deletePeople(res._id);
         }
       });
-      console.log('Re-ubscribed to '+statuses+' '+user.meta.pos.lat+', '+user.meta.pos.lon);
-      console.log(user.roomsToListen.users);
     } else {
       user.roomsToListen.users = collections.users.subscribe(filter, options, function(err, res) {
-        console.log('room notification');
-        console.log(err);
-        console.log(res);
+        if (err) {
+          console.error(err);
+        }
         if( res.scope !== 'out' ) {
-          setPeopleMarker({id: res._id, meta: res._source});
+          setPeopleMarker({id: res.result._id, meta: res.result._source});
         } else {
-          console.log('Someone got out of the scope');
           deletePeople(res._id);
         }
       });
-
-      console.log('Subscribed to '+statuses+' '+user.meta.pos.lat+', '+user.meta.pos.lon);
-      console.log(user.roomsToListen.users);
     }
   },
 
   subscribeToConnections: function() {
-    console.log('Subscribe to connections with user.id ' + user.id);
     user.roomsToListen.connections = collections.users.subscribe({}, {subscribeToSelf: false, scope: 'none', users: 'out', metadata: {_id: user.id}}, function(err, res) {
-      console.log('disconnection');
-      console.log(err);
-      console.log(res);
+      if (err) {
+        console.error(err);
+      }
       // delete the point
       deletePeople(res.metadata._id);
       // the user is disconnected, but may be have not had the time to delete its document
@@ -176,7 +160,7 @@ user = {
     filter = {
       or: [
         {
-          term: { 
+          term: {
             to: user.id
           }
         },
@@ -189,11 +173,12 @@ user = {
     };
 
     user.roomsToListen.rides = collections.rides.subscribe(filter, {subscribeToSelf: false}, function (err, res) {
-      console.log('Ride recieved');
-      console.log(res);
+      if (err) {
+        console.error(err);
+      }
       if (res.action !== 'delete') {
-        var proposal = res._source;
-        var proposalId = res._id;
+        var proposal = res.result._source;
+        var proposalId = res.result._id;
         if (proposal.from === user.id || proposal.status !== 'awaiting') {
           user.manageProposals.recieve.response(proposalId, proposal);
         } else {
@@ -201,14 +186,11 @@ user = {
         }
       }
     });
-
-    console.log('Subscribed to rides');
-    console.log(user.roomsToListen.rides);
   },
 
   subscribe: function() {
     // (un)subscribe automatically to some Kuzzle rooms
-    // if the user is a cab, for example, 
+    // if the user is a cab, for example,
     //      - if will automatically stop to listen to any rooms
     //      - it will automatically listen to customer who wants to hire a cab within a radius of X meters
 
@@ -222,7 +204,7 @@ user = {
     _.forOwn(user.roomsToListen, function(room, name) {
       room.unsubscribe();
       delete user.roomsToListen[name];
-    });    
+    });
   },
 
   manageProposals: {
@@ -237,9 +219,6 @@ user = {
       collections.rides.createDocument(proposal, function(err, res) {
 
         user.proposals.mine[res.id] = proposal;
-
-        console.log('proposal sent');
-
         if(cb) {
           cb(res.id);
         }
@@ -255,7 +234,7 @@ user = {
       }
 
       switch (action) {
-        case 'accept': 
+        case 'accept':
           proposal.status = 'accepted';
           break;
         case 'decline':
@@ -267,8 +246,6 @@ user = {
       }
 
       collections.rides.updateDocument(proposalId, proposal, function(err, res) {
-
-        console.log('Proposal ' + proposal.status);
 
         // delete the proposal from storage
         delete user.proposals.their[proposalId];
@@ -304,7 +281,7 @@ user = {
             }
             break;
           case 'declined':
-          case 'cancelled': 
+          case 'cancelled':
             if (cb) {
               cb();
             }
@@ -319,9 +296,10 @@ user = {
       user.currentRide.proposal.status = 'finished';
 
       collections.rides.updateDocument(user.currentRide.id, user.currentRide.proposal, function(err, res) {
-        console.log(err);
-        console.log(res);
-        
+        if (err) {
+          console.error(err);
+        }
+
         setPeopleMarker(people);
 
         peopleMarkers[people.id].closePopup();
@@ -359,7 +337,7 @@ user = {
           cb();
         }
       },
-      response: function(proposalId, proposal, cb) {    
+      response: function(proposalId, proposal, cb) {
 
         switch (proposal.status) {
           case 'accepted':
@@ -406,12 +384,12 @@ user = {
 
             $('#riding').show('200');
             $('#map').hide('200');
- 
+
             if (cb) {
               cb();
             }
             break;
-          case 'declined': 
+          case 'declined':
             // delete the proposal from storage since it is not pending any more
             delete user.proposals.mine[proposalId];
             var sibling = peopleBucket[proposal.to];
@@ -419,7 +397,7 @@ user = {
             var template = $('#' + sibling.meta.type + '_' + sibling.meta.status + '_PopupTemplate').html();
             var data = {id: sibling.id};
 
-            collections.rides.deleteDocument(proposalId, function (err, res) {             
+            collections.rides.deleteDocument(proposalId, function (err, res) {
 
               marker.setPopupContent(Mustache.render(template, data));
               marker.closePopup();
@@ -472,9 +450,9 @@ user = {
 
               $('#riding').hide('200');
               $('#map').show('200');
-        
+
               user.setStatus('idle');
-              setIndicator();      
+              setIndicator();
 
               notify('Ride finished!', 'The ride with ' + sibling.meta.type + ' #' + sibling.id + ' is finished!', 'success');
 
