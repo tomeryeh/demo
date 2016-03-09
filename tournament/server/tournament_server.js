@@ -103,7 +103,6 @@ function createRoom () {
   subscribedRoom = kuzzleRoom.subscribe({}, {scope: 'none', users: 'none'}, function (error, data) {
     var alivePlayer = [];
 
-    console.log('# sub[', room, ']', data);
     switch (data.result._source.event) {
       case Configuration.events.PLAYER_JOINED:
         logger.info('Player ' + data.result._source.player.username + ' joined the game');
