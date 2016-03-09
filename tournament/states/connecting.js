@@ -149,17 +149,17 @@ ConnectingState.prototype = {
     connectText.setText("Connecting to server...\nOK!");
 
     kuzzle
-      .dataCollectionFactory(Room.id)
+      .dataCollectionFactory(Configuration.server.kuzzleIndex, Room.id)
       .subscribe({}, {scope: 'none', users: 'none', subscribeToSelf: false}, function (error, data) {
-        switch (data._source.event) {
+        switch (data.result._source.event) {
           case Configuration.events.PLAYER_JOINED:
-            if (data._source.player.id !== game.player.id) {
-              Players[data._source.player.id] = data._source.player;
-              Players[data._source.player.id].updated = false;
-              Players[data._source.player.id].hp = Configuration.player.hp;
+            if (data.result._source.player.id !== game.player.id) {
+              Players[data.result._source.player.id] = data.result._source.player;
+              Players[data.result._source.player.id].updated = false;
+              Players[data.result._source.player.id].hp = Configuration.player.hp;
 
               if (gameStarted) {
-                text = game.add.text(game.camera.width / 2, 32, "A new challenger appears: " + data._source.player.username);
+                text = game.add.text(game.camera.width / 2, 32, "A new challenger appears: " + data.result._source.player.username);
                 text.fixedToCamera = true;
                 text.font = 'Arial';
                 text.fontWeight = 'bold';
@@ -185,7 +185,7 @@ ConnectingState.prototype = {
             break;
 
           case Configuration.events.PLAYER_LEFT:
-            text = game.add.text(game.camera.width / 2, 32, "Player " + Players[data._source.id].username + " left the game");
+            text = game.add.text(game.camera.width / 2, 32, "Player " + Players[data.result._source.id].username + " left the game");
             text.fixedToCamera = true;
             text.font = 'Arial';
             text.fontWeight = 'bold';
@@ -200,29 +200,29 @@ ConnectingState.prototype = {
             var textTweenOut = game.add.tween(text).to({alpha: 0.0}, 1000).delay(3000);
             game.add.tween(text).to({alpha: 1.0}, 1000, Phaser.Easing.Exponential.Out).start().chain(textTweenOut);
 
-            if (Players[data._source.id]) {
-              if (Players[data._source.id].sprite) {
-                Players[data._source.id].sprite.body.enable = false;
-                Players[data._source.id].sprite.kill();
-                Players[data._source.id].sprite.destroy();
+            if (Players[data.result._source.id]) {
+              if (Players[data.result._source.id].sprite) {
+                Players[data.result._source.id].sprite.body.enable = false;
+                Players[data.result._source.id].sprite.kill();
+                Players[data.result._source.id].sprite.destroy();
               }
 
-              if (Players[data._source.id].shadow) {
-                Players[data._source.id].shadow.kill();
-                Players[data._source.id].shadow.destroy();
+              if (Players[data.result._source.id].shadow) {
+                Players[data.result._source.id].shadow.kill();
+                Players[data.result._source.id].shadow.destroy();
               }
 
-              if (Players[data._source.id].hpMeter) {
-                Players[data._source.id].hpMeter.kill();
-                Players[data._source.id].hpMeter.destroy();
+              if (Players[data.result._source.id].hpMeter) {
+                Players[data.result._source.id].hpMeter.kill();
+                Players[data.result._source.id].hpMeter.destroy();
               }
 
-              if (Players[data._source.id].tag) {
-                Players[data._source.id].tag.kill();
-                Players[data._source.id].tag.destroy();
+              if (Players[data.result._source.id].tag) {
+                Players[data.result._source.id].tag.kill();
+                Players[data.result._source.id].tag.destroy();
               }
 
-              delete Players[data._source.id];
+              delete Players[data.result._source.id];
 
               if (!gameStarted) {
                 self.drawLobby(true);
@@ -236,7 +236,7 @@ ConnectingState.prototype = {
             break;
 
           case Configuration.events.GAME_START:
-            Room.rules = data._source.rules;
+            Room.rules = data.result._source.rules;
             Room.winner = undefined;
 
             if (typeof game.state.states.lobby.startGame === 'function') {
@@ -245,27 +245,27 @@ ConnectingState.prototype = {
             }
             break;
           case Configuration.events.GAME_END:
-            Room.winner = data._source.winner;
+            Room.winner = data.result._source.winner;
             self.prepareToGameEnd();
             break;
 
           case Configuration.events.PLAYER_UPDATE:
-            if (data._source.id !== game.player.id && typeof self.updatePlayer === 'function') {
-              self.updatePlayer(data._source);
+            if (data.result._source.id !== game.player.id && typeof self.updatePlayer === 'function') {
+              self.updatePlayer(data.result._source);
             }
             break;
 
           case Configuration.events.PLAYER_DIE:
-            if (data._source.player.id !== game.player.id && typeof self.playerDies === 'function') {
-              self.playerDies(Players[data._source.player.id], false);
+            if (data.result._source.player.id !== game.player.id && typeof self.playerDies === 'function') {
+              self.playerDies(Players[data.result._source.player.id], false);
             }
         }
       });
-
+    self.subscribed = true;
     connectTextTweenOut.start();
 
     kuzzle
-      .dataCollectionFactory(Room.id)
+      .dataCollectionFactory(Configuration.server.kuzzleIndex, Room.id)
       .publishMessage({event: Configuration.events.PLAYER_JOINED, player: game.player});
 
     if (Room.state === 'game_launched') {
@@ -294,14 +294,14 @@ ConnectingState.prototype = {
     };
 
     kuzzle
-      .dataCollectionFactory(Configuration.server.room)
+      .dataCollectionFactory(Configuration.server.kuzzleIndex, Configuration.server.room)
       .subscribe({}, {metadata: game.player, subscribeToSelf: false}, function (error, data) {
-        if (data._source.id === myId) {
-          Room = data._source.room;
+        if (data.result._source.id === myId) {
+          Room = data.result._source.room;
 
           Players = {};
 
-          data._source.players.forEach(function (p) {
+          data.result._source.players.forEach(function (p) {
             Players[p.id] = p;
 
             if (p.id === game.player.id) {
@@ -309,7 +309,9 @@ ConnectingState.prototype = {
             }
           });
 
-          self.subscribeAndGo();
+          if (!self.subscribed) {
+            self.subscribeAndGo();
+          }
         }
       });
   },
