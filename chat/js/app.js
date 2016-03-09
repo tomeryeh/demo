@@ -71,7 +71,7 @@ angular.module('KuzzleChatDemo', ['luegg.directives'])
     ChatRoom.prototype.refreshUserCount = function () {
       var self = this;
 
-      if (!this.kuzzleSubscription) {
+      if (!this.kuzzleSubscription || !this.kuzzleSubscription.roomId) {
         return;
       }
       this.kuzzleSubscription.count(function (err, result) {
