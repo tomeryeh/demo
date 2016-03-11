@@ -1,0 +1,23 @@
+{
+  "name": "Kuzzle arrow hero demo",
+  "homepage": "https://github.com/kuzzleio/demo",
+  "authors": [
+    "David Bengsch",
+    "Anthony Sendra"
+  ],
+  "description": "",
+  "main": "index.html",
+  "moduleType": [],
+  "license": "Apache2",
+  "ignore": [
+    "**/.*",
+    "bower_components"
+  ],
+  "dependencies": {
+    "kuzzle-sdk": "1.7.2",
+    "jquery": "1.11.3",
+    "angular": "~1.4.1",
+    "bootstrap": "~3.1.1",
+    "moment": "~2.12.0"
+  }
+}
