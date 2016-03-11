@@ -30,7 +30,7 @@
         return false;
       }
 
-      if (!this.uniquid) { // generate a unique ID for the player if it has not be done yet
+      if (!this.uniquid) { // generate a unique ID for the player if it has not been done yet
         this.uniquid = this.generateUid();
       }
 
