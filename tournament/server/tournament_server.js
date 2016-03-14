@@ -23,8 +23,8 @@ function startServer() {
 
     // Listening to connected/disconnected players
     kuzzle
-      .dataCollectionFactory(Configuration.server.room)
-      .subscribe({}, {scope: 'none', users: 'all'}, (error, data) => {
+      .dataCollectionFactory(Configuration.server.kuzzleIndex, Configuration.server.room)
+      .subscribe({}, {subscribeToSelf: false, scope: 'none', users: 'all'}, (error, data) => {
         var
         roomId,
         players = [];
@@ -35,7 +35,7 @@ function startServer() {
 
           Object.keys(Rooms[roomId].players).forEach(p => players.push(Rooms[roomId].players[p]));
           kuzzle
-            .dataCollectionFactory(Configuration.server.room)
+            .dataCollectionFactory(Configuration.server.kuzzleIndex, Configuration.server.room)
             .publishMessage({id: data.metadata.id, room: Rooms[roomId], players: players });
         } else if (data.action === 'off') {
           logger.info('Player left: ', data.metadata.username, ' - ' , data.metadata.id);
@@ -79,7 +79,7 @@ function removePlayer(playerId) {
   if (Players[playerId]) {
     roomId = Players[playerId];
     kuzzle
-      .dataCollectionFactory(roomId)
+      .dataCollectionFactory(Configuration.server.kuzzleIndex, roomId)
       .publishMessage({event: Configuration.events.PLAYER_LEFT, id: playerId});
     delete Rooms[roomId].players[playerId];
   }
@@ -95,7 +95,7 @@ function createRoom () {
   },
   roomId = room.id,
   subscribedRoom,
-  kuzzleRoom = kuzzle.dataCollectionFactory(roomId);
+  kuzzleRoom = kuzzle.dataCollectionFactory(Configuration.server.kuzzleIndex, roomId);
 
   logger.info('Creating new room: ', roomId);
   Rooms[roomId] = room;
@@ -103,9 +103,9 @@ function createRoom () {
   subscribedRoom = kuzzleRoom.subscribe({}, {scope: 'none', users: 'none'}, function (error, data) {
     var alivePlayer = [];
 
-    switch (data._source.event) {
+    switch (data.result._source.event) {
       case Configuration.events.PLAYER_JOINED:
-        logger.info('Player ' + data._source.player.username + ' joined the game');
+        logger.info('Player ' + data.result._source.player.username + ' joined the game');
         if (Object.keys(room.players).length >= Configuration.server.minPlayersPerRoom && room.state !== 'game_launched') {
           // We got enough connected players to start a new game on that room
           startNewGame(roomId);
@@ -132,8 +132,8 @@ function createRoom () {
         }
         break;
       case Configuration.events.PLAYER_DIE:
-        logger.info('Player ' + data._source.player.username + ' died');
-        room.players[data._source.player.id].state = 'died';
+        logger.info('Player ' + data.result._source.player.username + ' died');
+        room.players[data.result._source.player.id].state = 'died';
         checkWinner(roomId);
         break;
     }
@@ -190,7 +190,7 @@ function startNewGame (roomId) {
   setTimeout(function () {
     logger.info('Room', room.id, ': launching new game');
     kuzzle
-      .dataCollectionFactory(room.id)
+      .dataCollectionFactory(Configuration.server.kuzzleIndex, room.id)
       .publishMessage({event: Configuration.events.GAME_START, rules: room.rules});
   }, 5000);
 }
@@ -198,7 +198,7 @@ function startNewGame (roomId) {
 function checkWinner(roomId) {
   var
     room = Rooms[roomId],
-    kuzzleRoom = kuzzle.dataCollectionFactory(roomId),
+    kuzzleRoom = kuzzle.dataCollectionFactory(Configuration.server.kuzzleIndex, roomId),
     teams = {blue: 0, red: 0},
     alivePlayers = [];
 

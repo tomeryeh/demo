@@ -1,14 +1,15 @@
 var Configuration = {
   gameOptions: {
     music: false,
-    fullscreen: false,
+    fullscreen: false
   },
 
   server: {
     room: 'tournament-server-room',
     minPlayersPerRoom: 2,
     maxPlayersPerRoom: 8,
-    kuzzleUrl: 'http://localhost:7512'
+    kuzzleUrl: 'http://localhost:7512',
+    kuzzleIndex: 'tournament'
   },
 
   player: {
@@ -22,7 +23,7 @@ var Configuration = {
     GAME_START: 4,
     GAME_END: 5,
     PLAYER_UPDATE: 6,
-    PLAYER_DIE: 7,
+    PLAYER_DIE: 7
   }
 };
 

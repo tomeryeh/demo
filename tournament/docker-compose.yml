@@ -12,7 +12,7 @@ server:
     - ".:/var/app/server"
 
 kuzzle:
-  image: kuzzleio/kuzzle:0.6.0
+  image: kuzzleio/kuzzle:1.0.0-beta.4
   ports:
     - "7512:7512"
   links:
