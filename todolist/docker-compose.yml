@@ -6,7 +6,7 @@ demo:
     - "80:80"
 
 kuzzle:
-  image: kuzzleio/kuzzle:1.0.0-beta.0
+  image: kuzzleio/kuzzle:1.0.0-beta.3
   volumes:
     - "./fixtures.json:/fixtures.json"
   ports:
@@ -19,8 +19,8 @@ kuzzle:
     - FIXTURES=/fixtures.json
 
 redis:
-  image: redis:3.0.2
+  image: redis:3.0
 
 elasticsearch:
-  image: elasticsearch:1.5.2
+  image: elasticsearch:1.7
   command: elasticsearch --cluster.name=todolist
