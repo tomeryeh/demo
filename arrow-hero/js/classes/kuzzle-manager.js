@@ -9,7 +9,7 @@
   connexionEstablished: false,
   connexionLastCheck: 0,
   connexionInterval: false,
-  debug: true,
+  debug: false,
   server: config.kuzzleUrl,
   kuzzleGame: false,
   mainRoom: config.mainRoom,
