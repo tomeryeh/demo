@@ -26,5 +26,6 @@ Those demos are here juste to demonstrate what can be done with kuzzle
 
 # What is Kuzzle
 
-Kuzzle is a back-end as a service project, featuring an open-source API handling communications and data storage.  
+Kuzzle is an on premises (ie self-hostable) back-end solution for various applications:  web, mobile, IoT, information systems… Kuzzle back-end enables application developers to focus on the core of their job. Kuzzle offers an API to manage application data: in real-time, synchronization, notifications, storage, research, data analysis, etc.
+
 You can access to the main Kuzzle repository here: https://github.com/kuzzleio/kuzzle

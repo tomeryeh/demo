@@ -4,30 +4,26 @@ var prepareCollections = function(cb) {
     collections[name].getMapping(function (err, res) {
       if (res === undefined) {
         // assumes there is currently no mapping
-        console.log('putting right mapping to '+name);
-        collections[name].putMapping(mapping, function (err, res) {
-          console.log(err);
-          console.log(res);
-          if(cb) {
-            cb();
-          }
-        });
-      } else {
-        // there is a mapping, lets compare
-        console.log('mapping retrieved for '+name);
-        var keys = Object.keys(mapping);
-        if (res.mapping[keys[0]] === undefined || res.mapping[keys[0]].type !== mapping[keys[0]].type) {
-          // the mappings differs, lets put the right one
-          console.log('putting right mapping to '+name);
-          collections[name].putMapping(mapping, function (err, res) {
-            console.log(err);
-            console.log(res);
+        collections[name]
+          .dataMappingFactory(mapping)
+          .apply(function (err, res) {
             if(cb) {
               cb();
             }
-          });
+          })
+      } else {
+        // there is a mapping, lets compare
+        var keys = Object.keys(mapping);
+        if (res.mapping[keys[0]] === undefined || res.mapping[keys[0]].type !== mapping[keys[0]].type) {
+          // the mappings differs, lets put the right one
+          collections[name]
+            .dataMappingFactory(mapping)
+            .apply(function (err, res) {
+              if(cb) {
+                cb();
+              }
+            })
         } else {
-          console.log('the mapping is right for '+name);
           if(cb) {
             cb();
           }
@@ -38,7 +34,7 @@ var prepareCollections = function(cb) {
 };
 
 var populateMap = function() {
-  // populate the map with actual data depending on the mode 
+  // populate the map with actual data depending on the mode
   var statuses,
     types,
     query;
@@ -67,7 +63,7 @@ var populateMap = function() {
           }
         },
         {
-          terms: { 
+          terms: {
             status: statuses,
           }
         }
@@ -75,23 +71,16 @@ var populateMap = function() {
     }
   };
 
-  console.log(query);
   collections.users.advancedSearch(query, function (err, res) {
-    console.log(err);
-    console.log('populating the map with');
-    console.log(query);
-    console.log(res);
     if (res !== undefined) {
       res.documents.forEach(function (element, index) {
-        console.log('people');
-        console.log(element);
         setPeopleMarker({id: element.id, meta: element.content});
       });
     }
   });
 };
 
-// Set the default location from real geoloc or from the default one if 
+// Set the default location from real geoloc or from the default one if
 // the geolocation API is not available or if the user refuses to use it
 var setLoc = function() {
 	var getLoc = function(loc) {
@@ -117,7 +106,7 @@ var setIndicator = function() {
   } else {
     $('#mode-indicator').html('<img src="images/customer.idle.png" width="18" height="18"> You are a customer');
     $('#user-action .label').html('Look for a cab');
-  }  
+  }
   $('#user-action').addClass('btn-info').removeClass('btn-success');
   user.setType(mode);
 };
@@ -131,7 +120,7 @@ var setUserMarker = function() {
   }
 
   userMarker = L.marker([origLoc.lat, origLoc.lon], {icon: icons[mode].mine, riseOnHover: true});
-  
+
   // if the user drags the marker, center the map on it
   userMarker.bindPopup('This is you!');
   userMarker.on('drag', function() {
@@ -168,7 +157,6 @@ var setUserMarker = function() {
 
 // Set the user marker and configure the map to handle it correctly
 var setPeopleMarker = function(people) {
-
   if (people.id === user.id) {
     return;
   }
@@ -181,8 +169,6 @@ var setPeopleMarker = function(people) {
   }
 
   if (peopleMarkers[people.id] === undefined) {
-
-    console.log('Create the people '+people.id);
     var peopleMarker = L.marker([people.meta.pos.lat, people.meta.pos.lon], {icon: icons[people.meta.type][people.meta.status]});
     if ($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').length === 1) {
       _.forOwn(user.proposals.their, function(_proposal, _id) {
@@ -210,8 +196,6 @@ var setPeopleMarker = function(people) {
     }
   } else if (people.meta !== undefined) {
     // the marker had been updated
-    console.log('Move the people '+people.id);
-
     peopleMarkers[people.id].setLatLng(people.meta.pos);
 
     // Set the icon
@@ -237,7 +221,7 @@ var setPeopleMarker = function(people) {
       }
       if (!found) {
         if (people.meta.type !== mode) {
-          peopleMarkers[people.id].setPopupContent(Mustache.render($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').html(), people));   
+          peopleMarkers[people.id].setPopupContent(Mustache.render($('#' + people.meta.type + '_' + people.meta.status + '_PopupTemplate').html(), people));
         }
       }
     }
@@ -249,7 +233,6 @@ var setPeopleMarker = function(people) {
 };
 
 var deletePeople = function(id) {
-    console.log('Delete the people '+id);
     peopleMarkers[id].closePopup();
     peopleMarkers[id].unbindPopup();
     peopleLayer.removeLayer(peopleMarkers[id]);
@@ -370,7 +353,7 @@ var initializeUi = function () {
       var people = peopleBucket[$this.data('sibling')];
       setPeopleMarker(people);
       peopleMarkers[people.id].closePopup();
-        
+
       $btn.button('reset');
       $btn.prop('disabled', false);
       $this.hide('50');
@@ -394,7 +377,7 @@ var initializeUi = function () {
       $this.prop('disabled', false);
       var people = peopleBucket[$this.data('sibling')];
       setPeopleMarker(people);
-      peopleMarkers[people.id].closePopup();      
+      peopleMarkers[people.id].closePopup();
     });
   });
 
@@ -406,7 +389,7 @@ var initializeUi = function () {
       $this.button('reset');
 
       user.setStatus('idle');
-      setIndicator();      
+      setIndicator();
     });
   });
 
@@ -422,7 +405,7 @@ var initializeUi = function () {
     }
   });
   // hide the loader
-  $('#loader').hide(200);  
+  $('#loader').hide(200);
 };
 
 var notify = function(title, message, type) {

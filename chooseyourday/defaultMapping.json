@@ -1,9 +1,13 @@
 {
-  "chooseyourday": [
-    {
-      "properties" : {
-        "event" : {"type" : "string", "store" : true, "index" : "not_analyzed" }
+  "chooseyourday": {
+    "chooseyourday": {
+      "properties": {
+        "event": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed"
+        }
       }
     }
-  ]
+  }
 }
