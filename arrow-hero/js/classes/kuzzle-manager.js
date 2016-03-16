@@ -1,4 +1,4 @@
-KuzzleGame.KuzzleManager = {
+ KuzzleGame.KuzzleManager = {
 
   kuzzle: false,
   isHost: false,
@@ -12,24 +12,31 @@ KuzzleGame.KuzzleManager = {
   debug: false,
   server: config.kuzzleUrl,
   kuzzleGame: false,
+  mainRoom: config.mainRoom,
+  mainIndex: 'arrow-hero',
 
 
-  initServer: function() {
+  initServer: function(cb) {
     if (!this.kuzzle) { // if it has not be done yet...
-      this.kuzzle = Kuzzle.init(this.server); // init the Kuzzle server
+      this.kuzzle = new Kuzzle(this.server, cb);
     }
   },
 
   init: function(kuzzleGame) {
 
-    this.initServer();
+    this.initServer((err, res) => {
+      if (err) {
+        console.error('Cannot connect to Kuzzle instance: ', err);
+        return false;
+      }
 
-    if (!this.uniquid) { // generate an unique ID for the player if it has not be done yet
-      this.uniquid = this.generateUid();
-    }
+      if (!this.uniquid) { // generate a unique ID for the player if it has not be done yet
+        this.uniquid = this.generateUid();
+      }
 
-    this.kuzzleGame = kuzzleGame;
-    this.findHost(); // go to find host
+      this.kuzzleGame = kuzzleGame;
+      this.findHost(); // go to find host
+    });
 
   },
 
@@ -47,20 +54,19 @@ KuzzleGame.KuzzleManager = {
       }
     };
 
-    KuzzleGame.KuzzleManager.kuzzle.search("kg_main_room", filters, function(error, response) {
-
+    KuzzleGame.KuzzleManager.kuzzle.dataCollectionFactory(this.mainIndex, this.mainRoom).advancedSearch(filters, (error, response) => {
       if (error) {
         console.error(error);
       }
 
-      if (error || response.hits.total == 0) {
+      if (error || response.total == 0) {
         KuzzleGame.KuzzleManager.log('no host found');
         KuzzleGame.KuzzleManager.registerAsHost();
 
       } else {
         KuzzleGame.KuzzleManager.log('host found');
-        KuzzleGame.KuzzleManager.hostID = response.hits.hits[0]._source.hostID;
-        KuzzleGame.KuzzleManager.log(response.hits.hits[0]);
+        KuzzleGame.KuzzleManager.hostID = response.documents[0].content.hostID;
+        KuzzleGame.KuzzleManager.log(response.documents[0]);
         KuzzleGame.KuzzleManager.subscribeToHost();
         KuzzleGame.KuzzleManager.checkConnexion();
       }
@@ -76,10 +82,10 @@ KuzzleGame.KuzzleManager = {
 
     KuzzleGame.KuzzleManager.log('registering as host');
 
-    this.kuzzle.create("kg_main_room", {
+    this.kuzzle.dataCollectionFactory(this.mainIndex, "kg_main_room").createDocument({
       hostID: this.uniquid,
       hostDifficulty: KuzzleGame.Difficulty.currentDifficulty
-    }, true, function(error, response) {
+    }, function(error, response) {
       if (error) {
         console.error(error);
       } else {
@@ -126,7 +132,7 @@ KuzzleGame.KuzzleManager = {
     if (typeof(clearHostId) === 'undefined') clearHostId = true;
 
 
-    this.kuzzle.deleteByQuery("kg_main_room", filters, function(error, response) {
+    this.kuzzle.dataCollectionFactory(this.mainIndex, this.mainRoom).deleteDocument(filters, (error, response) => {
 
       if (error) {
         console.error(error);
@@ -157,9 +163,9 @@ KuzzleGame.KuzzleManager = {
    */
   createHostSubChannel: function() {
     if (this.hostID) {
-      this.kuzzle.create("kg_room_" + this.hostID, {
+      this.kuzzle.dataCollectionFactory(this.mainIndex, "kg_room_" + this.hostID).createDocument({
         hostID: this.hostID
-      }, true, function(error, response) {
+      }, (error, response) => {
         if (error) {
           console.error(error);
         } else {
@@ -184,7 +190,7 @@ KuzzleGame.KuzzleManager = {
       }
     };
 
-    this.kuzzle.deleteByQuery("kg_room_" + this.hostID, filters, function(error, response) {
+    this.kuzzle.dataCollectionFactory(this.mainIndex, "kg_room_" + this.hostID).deleteDocument(filters, (error, response) => {
       if (error) {
         console.error(error);
       }
@@ -208,7 +214,7 @@ KuzzleGame.KuzzleManager = {
       }
     };
 
-    this.kuzzle.subscribe("kg_room_" + this.hostID, filters, this.fireEvent);
+    this.kuzzle.dataCollectionFactory(this.mainIndex, "kg_room_" + this.hostID).subscribe(filters, this.fireEvent);
 
   },
 
@@ -218,7 +224,7 @@ KuzzleGame.KuzzleManager = {
    */
   fireEvent: function(error, response) {
 
-    var eventExploded = response._source.event_type.split('_');
+    var eventExploded = response.result._source.event_type.split('_');
 
     for (var i = 0; i < eventExploded.length; i++) {
       eventExploded[i] = eventExploded[i].toLowerCase();
@@ -226,15 +232,15 @@ KuzzleGame.KuzzleManager = {
     }
 
     var eventFunctionName = 'event' + eventExploded.join('');
-    KuzzleGame.KuzzleManager.log('Event Fired : ' + response._source.event_type + ' , calling ' + eventFunctionName);
+    KuzzleGame.KuzzleManager.log('Event Fired : ' + response.result._source.event_type + ' , calling ' + eventFunctionName);
 
-    if ((KuzzleGame.KuzzleManager.isHost && KuzzleGame.KuzzleManager.peering === false) || (!KuzzleGame.KuzzleManager.isHost && KuzzleGame.KuzzleManager.peering === false && KuzzleGame.KuzzleManager.hostID == response._source.event_owner)) {
-      KuzzleGame.KuzzleManager.peering = response._source.event_owner;
+    if ((KuzzleGame.KuzzleManager.isHost && KuzzleGame.KuzzleManager.peering === false) || (!KuzzleGame.KuzzleManager.isHost && KuzzleGame.KuzzleManager.peering === false && KuzzleGame.KuzzleManager.hostID == response.result._source.event_owner)) {
+      KuzzleGame.KuzzleManager.peering = response.result._source.event_owner;
     }
 
-    if (KuzzleGame.KuzzleManager.peering == response._source.event_owner) {
+    if (KuzzleGame.KuzzleManager.peering == response.result._source.event_owner) {
 
-      window["KuzzleGame"]["KuzzleManager"][eventFunctionName](response._source.event_value);
+      window["KuzzleGame"]["KuzzleManager"][eventFunctionName](response.result._source.event_value);
     }
 
   },
@@ -246,12 +252,12 @@ KuzzleGame.KuzzleManager = {
    * @param value
    */
   throwEvent: function(eventType, value) {
-    this.kuzzle.create("kg_room_" + this.hostID, {
+    this.kuzzle.dataCollectionFactory(this.mainIndex, "kg_room_" + this.hostID).createDocument({
       event: "kg_event",
       event_type: eventType,
       event_value: value,
       event_owner: KuzzleGame.KuzzleManager.uniquid
-    }, false, function(error, response) {
+    }, (error, response) => {
       if (error) {
         console.error(error);
       }
