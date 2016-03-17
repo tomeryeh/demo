@@ -36,8 +36,7 @@ var filters = {
     }
 }
 
-subscriptionID = kuzzle.subscribe(		// we now can subscribe...
-	"documents", 						// to the "documents" collection, where the blog documents are stored...
+subscriptionID = kuzzle.dataCollectionFactory("index", "documents").subscribe(		// we now can subscribe...
 	filters, 							// filtering documents by the previously defined filters...
 	function(error, response) {			// with all events handled by this callback
 	    if(error) {
@@ -149,12 +148,12 @@ To throw an event to the room, you can do like in the demo:
    * @param value
    */
   throwEvent: function(eventType, value) {
-    this.kuzzle.create("kg_room_" + this.hostID, {
+    this.kuzzle.dataCollectionFactory(this.mainIndex, "kg_room_" + this.hostID).createDocument({
       event: "kg_event",
       event_type: eventType,
       event_value: value,
       event_owner: KuzzleGame.KuzzleManager.uniquid
-    }, false, function(error, response) {
+    }, (error, response) => {
       if (error) {
         console.error(error);
       }
@@ -180,7 +179,7 @@ To catch the events, you just have to subscribe to the event documents, then par
       }
     };
 
-    this.kuzzle.subscribe("kg_room_" + this.hostID, filters, this.fireEvent);
+    this.kuzzle.dataCollectionFactory(this.mainIndex, "kg_room_" + this.hostID).subscribe(filters, this.fireEvent);
 
   },
 
