@@ -1,0 +1,19 @@
+#user-action {
+    margin-top: 5px;
+}
+
+.leaflet-popup-content-wrapper {
+    background-color: #4e5d6c;
+}
+
+.leaflet-popup-tip {
+    background-color: #4e5d6c;
+}
+
+.accept, .accept:hover {
+    color: #000000;
+}
+
+.decline, .decline:hover {
+    color: #000000;
+}

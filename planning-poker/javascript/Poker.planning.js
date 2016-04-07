@@ -8,6 +8,8 @@ Poker.planning = {
 
         KUZZLE_SERVER: "http://localhost:7512",
 
+        KUZZLE_INDEX: "planning-poker",
+
         // URL of the application, ex: http://www.poker.kaliop.com/index.html
         // DO NOT ADD SLASH AT THE END
         APPLICATION_URL: "http://localhost/index.html",
@@ -23,7 +25,7 @@ Poker.planning = {
      */
     run: function() {
 
-        this.kuzzle = Kuzzle.init(this.params.KUZZLE_SERVER);
+        this.kuzzle = new Kuzzle(this.params.KUZZLE_SERVER, {defaultIndex: this.params.KUZZLE_INDEX});
 
         // activating bootstrap tooltips
         $('[data-toggle="tooltip"]').tooltip();

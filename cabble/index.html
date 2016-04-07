@@ -3,31 +3,26 @@
 	<head>
         <meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" type="text/css" href="./stylesheets/bootstrap.css">
+
         <link rel="stylesheet" type="text/css" href="bower_components/pnotify/src/pnotify.core.min.css">
         <link rel="stylesheet" type="text/css" href="bower_components/leaflet/dist/leaflet.css">
 		<link rel="stylesheet" type="text/css" href="./stylesheets/styles.css">
+        <link rel="stylesheet" type="text/css" href="./stylesheets/custom.css">
 		<title>Cabble a Kuzzle demo</title>
 	</head>
-	<body>
+	<body style="background: url('images/home.jpg')">
     <div class="container" id="home">
         <div class="row center">
-            <div class="col-md-12">
-                <h1>Welcome to Cabble</h1>
-                <p>Please, choose a role:</p>
-            </div>
+            <img src="images/cabble_logo.png">
         </div>
         <div class="row center">
-            <div class="col-md-6">
+            <div class="col-md-6 col-md-offset-3">
                 <button class="btn btn-warning btn-lg btn-block trigger-start" data-mode="cab">
-                    <img src="images/cab.idle.png" width="26" height="26"> I am a cab
+                    I am a cab
                 </button>
-            </div>
-
-            <div class="col-md-6">
-                <button class="btn btn-primary btn-lg btn-block trigger-start" data-mode="customer">
-                    <img src="images/customer.idle.png" width="26" height="26"> I need a cab
+                <button class="btn btn-success btn-lg btn-block trigger-start" data-mode="customer">
+                    I need a cab
                 </button>
             </div>
         </div>
@@ -37,12 +32,10 @@
             <p><span id="mode-indicator"></span> <a class="btn btn-sm btn-default" role="button" data-toggle="collapse" href="#options" aria-expanded="false" aria-controls="collapseExample"><span class="glyphicon glyphicon-cog"></span></a></p>
 
             <div id="options" class="collapse">
-                <button id="change-behavior" class="btn btn-primary btn-block">Change your role</button>
-                <hr>
-                <button id="move-user" class="btn btn-block btn-default">Adjust your position</button>
+                <button id="change-behavior" class="btn btn-success btn-block">Change your role</button>
+                <button id="move-user" class="btn btn-info btn-block">Adjust your position</button>
             </div>
-            <hr>
-            <button id="user-action" class="btn btn-block btn-info"><span class="label"></span></button>
+            <button id="user-action" class="btn btn-primary btn-block"><span class="label"></span></button>
         </div>
         <div id="map"></div>
     </div>
@@ -69,12 +62,21 @@
     </div>
     <div id="riding" style="display:none;">
         <div class="backdrop">
-            <img src="images/ride.gif" width="500" height="281" style="position:absolute;top:-999999999px;">
-            <div>
-                <button class="btn btn-lg btn-warning btn-block finish" data-sending-text="Finishing...">Finish the ride</button>
+            <div class="row center">
+                <div class="col-md-6 col-md-offset-3">
+                    <img src="images/cabble_logo.png"><br>
+                    <img src="images/loader.gif"><br>
+                    <div style="margin-bottom: 20px!important;">&nbsp;</div>
+                    <button class="btn btn-lg btn-info finish" data-sending-text="Finishing...">Finish the ride</button>
+                </div>
             </div>
         </div>
     </div>
+
+    <footer style="position: absolute; bottom: 0; left: 10px;">
+        <label style="color: grey;"> Powered by <a href="http://kuzzle.io" target="_blank">Kuzzle</a></label>
+    </footer>
+
     <script type="text/html" id="cab_idle_PopupTemplate">
         <strong>Cab #{{id}}</strong>
         <br><br>
@@ -90,21 +92,21 @@
         <br><br>
         <strong>Current status:</strong> Looking for a customer
         <br><br>
-        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}">Ask for a ride</button>
+        <button class="btn btn-warning btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}">Ask for a ride</button>
         <br>
-        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel</button>
+        <button class="btn btn-success btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel</button>
     </script>
     <script type="text/html" id="cab_proposal_PopupTemplate">
         <strong>Cab #{{id}} is proposing you a ride!</strong>
         <br><br>
-        <button class="btn btn-success btn-block accept" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Accept</button>
+        <button class="btn btn-warning btn-block accept" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Accept</button>
         <br>
-        <button class="btn btn-danger btn-block decline" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Decline</button>
+        <button class="btn btn-success btn-block decline" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Decline</button>
     </script>
     <script type="text/html" id="cab_mine_PopupTemplate">
         <strong>Your cab</strong>
         <br><br>
-        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel the ride</button>
+        <button class="btn btn-success btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel the ride</button>
     </script>
 
     <script type="text/html" id="customer_idle_PopupTemplate">
@@ -122,21 +124,21 @@
         <br><br>
         <strong>Current status:</strong> Looking for a cab
         <br><br>
-        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}">Propose a ride</button>
+        <button class="btn btn-warning btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}">Propose a ride</button>
         <br>
-        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel</button>
+        <button class="btn btn-success btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel</button>
     </script>
     <script type="text/html" id="customer_proposal_PopupTemplate">
         <strong>User #{{id}} is asking for a ride!</strong>
         <br><br>
-        <button class="btn btn-success btn-block accept" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Accept</button>
+        <button class="btn btn-warning btn-block accept" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Accept</button>
         <br>
-        <button class="btn btn-danger btn-block decline" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Decline</button>
+        <button class="btn btn-success btn-block decline" data-sending-text="Sending response..." data-sibling="{{id}}" data-proposal="{{proposal}}">Decline</button>
     </script>
     <script type="text/html" id="customer_mine_PopupTemplate">
         <strong>Your customer</strong>
         <br><br>
-        <button class="btn btn-danger btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel the ride</button>
+        <button class="btn btn-success btn-block cancel" style="display:none" data-sibling="{{id}}">Cancel the ride</button>
     </script>
 
 
@@ -145,18 +147,18 @@
         <br><br>
         <strong>Current status:</strong> Looking for a cab
         <br><br>
-        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}" disabled="">Awaiting response...</button>
+        <button class="btn btn-warning btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}" disabled="">Awaiting response...</button>
         <br>
-        <button class="btn btn-danger btn-block cancel" data-sibling="AVINCIb4v1qEOWdfDSVI">Cancel</button>
+        <button class="btn btn-success btn-block cancel" data-sibling="AVINCIb4v1qEOWdfDSVI">Cancel</button>
     </script>
     <script type="text/html" id="cab_toProposal_PopupTemplate">
         <strong>User #{{id}}</strong>
         <br><br>
         <strong>Current status:</strong> Looking for a customer
         <br><br>
-        <button class="btn btn-primary btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}" disabled="">Awaiting response...</button>
+        <button class="btn btn-warning btn-block propose" data-sending-text="Sending proposal..." data-awaiting-text="Awaiting response..." data-sibling="{{id}}" disabled="">Awaiting response...</button>
         <br>
-        <button class="btn btn-danger btn-block cancel" data-sibling="AVINCIb4v1qEOWdfDSVI">Cancel</button>
+        <button class="btn btn-success btn-block cancel" data-sibling="AVINCIb4v1qEOWdfDSVI">Cancel</button>
     </script>
 
     <script src="bower_components/jquery/dist//jquery.min.js"></script>

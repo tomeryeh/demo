@@ -402,7 +402,7 @@ user = {
               marker.setPopupContent(Mustache.render(template, data));
               marker.closePopup();
 
-              notify('Proposal declined', '#' + sibling.id + ' had declined your proposal', 'info');
+              notify('Proposal declined', '#' + sibling.id + ' had declined your proposal', 'btn-primary');
 
               if (cb) {
                 cb();
@@ -424,7 +424,7 @@ user = {
               marker.setPopupContent(Mustache.render(template, data));
               marker.closePopup();
 
-              notify('Proposal cancelled', '#' + sibling.id + ' had cancelled his/her proposal', 'info');
+              notify('Proposal cancelled', '#' + sibling.id + ' had cancelled his/her proposal', 'btn-primary');
 
               if (cb) {
                 cb();
