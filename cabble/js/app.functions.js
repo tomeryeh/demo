@@ -107,7 +107,6 @@ var setIndicator = function() {
     $('#mode-indicator').html('<img src="images/customer.idle.png" width="18" height="18"> You are a customer');
     $('#user-action .label').html('Look for a cab');
   }
-  $('#user-action').addClass('btn-info').removeClass('btn-success');
   user.setType(mode);
 };
 
@@ -306,10 +305,10 @@ var initializeUi = function () {
   $('#move-user').click(function() {
     userMarkerDraggable = !userMarkerDraggable;
     if (userMarkerDraggable) {
-      $(this).removeClass('btn-default').addClass('btn-success');
+      $(this).removeClass('btn-info').addClass('btn-warning');
       userMarker.dragging.enable();
     } else {
-      $(this).addClass('btn-default').removeClass('btn-success');
+      $(this).addClass('btn-info').removeClass('btn-warning');
       userMarker.dragging.disable();
     }
   });
@@ -324,7 +323,6 @@ var initializeUi = function () {
         user.setStatus('wantToHire');
         $('#user-action .label').html('Stop looking for a cab');
       }
-      $('#user-action').removeClass('btn-info').addClass('btn-success');
     } else {
       user.setStatus('idle');
       setIndicator();

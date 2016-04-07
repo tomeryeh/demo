@@ -152,9 +152,9 @@ Poker.planning.pokerPage = {
                     copy_id: Poker.planning.RoomManager.currentRoom().copyId()
                 }
             };
-            Poker.planning.pokerPage.roomIdSubscription = Poker.planning.kuzzle.subscribe(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION, subscriptionFilters, function(error, response) {
+            Poker.planning.pokerPage.roomIdSubscription = Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION).subscribe(subscriptionFilters, function(error, response) {
                 if(error) {
-                    console.log("Error in pokerPage.run() function when subscribing to room update.")
+                    console.log("Error in pokerPage.run() function when subscribing to room update.");
                     console.error(error);
                 }
                 else {
@@ -164,7 +164,7 @@ Poker.planning.pokerPage = {
                         Poker.planning.homePage.redirectToThisPage();
                     }
                     else {
-                        Poker.planning.RoomManager.currentRoom().refresh(response._id, response.body);
+                        Poker.planning.RoomManager.currentRoom().refresh(response.id, response.body);
                         Poker.planning.pokerPage.display();
                     }
                 }
@@ -173,12 +173,12 @@ Poker.planning.pokerPage = {
 
 
             // Subscribes to poker actions
-            Poker.planning.pokerPage.actionSubscription = Poker.planning.kuzzle.subscribe(Poker.planning.pokerPage.KUZZLE_POKER_ACTION_COLLECTION, {term: {roomid: Poker.planning.RoomManager.currentRoom().id()}}, function(error, response) {
+            Poker.planning.pokerPage.actionSubscription = Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.pokerPage.KUZZLE_POKER_ACTION_COLLECTION).subscribe({term: {roomid: Poker.planning.RoomManager.currentRoom().id()}}, function(error, response) {
                 if(error) {
                     console.error(error);
                 }
                 else {
-                    var body = response._source;
+                    var body = response.result._source;
                     switch(body.action) {
 
                         case Poker.planning.pokerPage.ACTION_LAUNCH_VOTE:
@@ -252,11 +252,11 @@ Poker.planning.pokerPage = {
     unsubscribe: function()
     {
         if(Poker.planning.pokerPage.roomIdSubscription != null) {
-            Poker.planning.kuzzle.unsubscribe(Poker.planning.pokerPage.roomIdSubscription);
+            Poker.planning.pokerPage.roomIdSubscription.unsubscribe();
         }
 
         if(Poker.planning.pokerPage.actionSubscription != null) {
-            Poker.planning.kuzzle.unsubscribe(Poker.planning.pokerPage.actionSubscription);
+            Poker.planning.pokerPage.actionSubscription.unsubscribe();
         }
     },
 
@@ -312,15 +312,13 @@ Poker.planning.pokerPage = {
      * @param value : the value of the card (text)
      */
     vote: function(value) {
-        Poker.planning.kuzzle.create(
-            Poker.planning.pokerPage.KUZZLE_POKER_ACTION_COLLECTION,
+        Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.pokerPage.KUZZLE_POKER_ACTION_COLLECTION).createDocument(
             {
                 action: Poker.planning.pokerPage.ACTION_VOTE,
                 roomid: Poker.planning.RoomManager.currentRoom().id(),
                 user: Poker.planning.nickname(),
                 vote: value
             },
-            false,
             function(error, response) {
                 if(error) {
                     console.log("Error in pokerPage.vote function");
@@ -365,12 +363,11 @@ Poker.planning.pokerPage = {
      */
     sendLaunchVoteAction: function() {
         if(Poker.planning.pokerPage.isVoting == false) {
-            Poker.planning.kuzzle.create(Poker.planning.pokerPage.KUZZLE_POKER_ACTION_COLLECTION, 
+            Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.pokerPage.KUZZLE_POKER_ACTION_COLLECTION).createDocument(
             {
                 action: Poker.planning.pokerPage.ACTION_LAUNCH_VOTE, 
                 roomid: Poker.planning.RoomManager.currentRoom().id()
             }, 
-            false, 
             function(error, response) {
                 if(error) {
                     console.error(error);

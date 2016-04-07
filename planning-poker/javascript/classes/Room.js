@@ -129,7 +129,7 @@ Poker.planning.Room = function()
         }
         this.datas.users = newUsers;
 
-        if(this.usersCount() == 0) {
+        if (this.usersCount() == 0) {
             Poker.planning.RoomManager.removeRoom(this.id(), callback);
         }
         else {
@@ -169,23 +169,22 @@ Poker.planning.Room = function()
         if(this.id() == "") { // creation
 
             this.id(UUID());
-            Poker.planning.kuzzle.create(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION, this.datas, true, function (error, response) {
+            Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION).createDocument(this.datas, function (error, response) {
                 if(error) {
                     console.error(error);
                 }
                 else {
-                    context.id(response._id);
-                    context.copyId(response._id);
+                    context.id(response.id);
+                    context.copyId(response.id);
 
                     // saving again for setting copy_id field
-                    Poker.planning.kuzzle.update(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION, context.datas, function (error, response) {
+                    Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION).updateDocument(response.id, context.datas, function (error, response) {
                         if(error) {
                             console.error(error);
                         }
                         var rooms = Poker.planning.RoomManager.rooms();
 
                         Poker.planning.RoomManager.rooms()[context.id()] = context;
-
 
                         if(callback != undefined) {
                             callback();
@@ -197,7 +196,7 @@ Poker.planning.Room = function()
         }
         else { // update
 
-            Poker.planning.kuzzle.update(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION, this.datas, function (error, response) {
+            Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION).updateDocument(this.datas.id, this.datas, function (error, response) {
                 if(error) {
                     console.error(error);
                 }

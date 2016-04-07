@@ -67,16 +67,18 @@ Poker.planning.RoomManager = {
         this._rooms = {};
 
         // Kuzzle request
-        Poker.planning.kuzzle.search(this.KUZZLE_ROOM_COLLECTION, {size: 50}, function(error, response) {
+        Poker.planning.kuzzle.dataCollectionFactory(this.KUZZLE_ROOM_COLLECTION).advancedSearch({size: 50}, function(error, response) {
             if(error) {
                 console.error(error);
+                callback();
+                return false;
             }
 
             if(callback != undefined) {
-                for(var i = 0; i < response.hits.hits.length; i++) {
-                    var roomInfos = response.hits.hits[i];
+                for(var i = 0; i < response.documents.length; i++) {
+                    var roomInfos = response.documents[i];
                     var room = new Poker.planning.Room();
-                    room.datas = roomInfos._source;
+                    room.datas = roomInfos.content;
                     room.id(roomInfos._id);
                     Poker.planning.RoomManager._rooms[room.id()] = room;
                 }
@@ -99,7 +101,7 @@ Poker.planning.RoomManager = {
             return false;
         }
 
-        Poker.planning.kuzzle.delete(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION, roomId, function (error, response) {
+        Poker.planning.kuzzle.dataCollectionFactory(Poker.planning.RoomManager.KUZZLE_ROOM_COLLECTION).deleteDocument(roomId, function (error, response) {
 
             if (error) {
                 console.error(error);
@@ -134,11 +136,11 @@ Poker.planning.RoomManager = {
      */
     updateOrCreateRoom: function(kuzzleResponse) {
         if(Poker.planning.RoomManager.rooms()[kuzzleResponse._id] != undefined) {
-            Poker.planning.RoomManager.rooms()[kuzzleResponse._id].refresh(kuzzleResponse._id, kuzzleResponse._source);
+            Poker.planning.RoomManager.rooms()[kuzzleResponse._id].refresh(kuzzleResponse._id, kuzzleResponse.result._source);
         }
         else {
             var room = new Poker.planning.Room();
-            room.refresh(kuzzleResponse._id, kuzzleResponse._source);
+            room.refresh(kuzzleResponse._id, kuzzleResponse.result._source);
             Poker.planning.RoomManager._rooms[kuzzleResponse._id] = room;
         }
     }
