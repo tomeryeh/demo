@@ -1,5 +1,5 @@
 var config = {
-    kuzzleUrl: 'http://cabble.kuzzle.io:7512',
+    kuzzleUrl: 'http://localhost:7512',
     index: 'cabble',
     collections: {
         names: {
