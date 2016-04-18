@@ -94,6 +94,9 @@ var setLoc = function() {
     origLoc = defaultLoc;
     user.setPos(origLoc, true, false);
   }
+  if (origLoc.lat === 0 && origLoc.lon === 0) {
+    origLoc = defaultLoc;
+  }
   return origLoc;
 };
 
@@ -148,9 +151,9 @@ var setUserMarker = function() {
           })
     .on('dragend', function() {
       // on drag end, recenter the map to the user position 3 seconds later if it is out of the view
-      reCenterTimer = setTimeout(function() {
+      /*reCenterTimer = setTimeout(function() {
         map.fitBounds(userLayer.getBounds(), {maxZoom: defaultZoom});
-      }, 3000);
+      }, 3000);*/
     });
 };
 
