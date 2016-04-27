@@ -13,7 +13,7 @@
   server: config.kuzzleUrl,
   kuzzleGame: false,
   mainRoom: config.mainRoom,
-  mainIndex: 'arrow-hero',
+  mainIndex: 'arrowhero',
 
 
   initServer: function(cb) {
