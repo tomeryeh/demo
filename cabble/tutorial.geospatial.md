@@ -1,6 +1,6 @@
-# Tutorial - geoSpacial
+# Tutorial - geoSpatial
 
-This tutorial will try to show you how to make some geospacial searchs and filters with the Cabble demo as an example.
+This tutorial will try to show you how to make some geospatial searchs and filters with the Cabble demo as an example.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -15,19 +15,19 @@ This tutorial will try to show you how to make some geospacial searchs and filte
 
 ## Before to start
 
-Since Kuzzle is using ElasticSearch as a datastorage, geospacial search and filters will need to have the right mapping in ElasticSearch.
+Since Kuzzle is using ElasticSearch as a datastorage, geospatial search and filters will need to have the right mapping in ElasticSearch.
 
 To do so, you have the choice between:
 * put the mapping before your application starts
 * put the mapping when the first client connects
 
-As we wanted the Cabble demo as simple as possible, we've choosen the second choice: at the very early stage of the application launch, we retrieve the mapping of the geospacial collection, test if the geospacial field is right, and if not, we put the right mapping into it.
+As we wanted the Cabble demo as simple as possible, we've choosen the second choice: at the very early stage of the application launch, we retrieve the mapping of the geospatial collection, test if the geospatial field is right, and if not, we put the right mapping into it.
 
 Here is an example: 
 ```js
 var collection;
 var mapping = {
-    pos: {type: 'geo_point'}, // <- this is our geospacial field
+    pos: {type: 'geo_point'}, // <- this is our geospatial field
     type: {type: 'string', index: 'analyzed', null_value: 'none'},
     status: {type: 'string', index: 'analyzed', null_value: 'none'}
 };
@@ -67,11 +67,11 @@ var kuzzle = new Kuzzle(
 
 Please refer to the [ElasticSearch documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.7/mapping-geo-point-type.html) to learn how to write the mapping.
 
-**Remember:** no geospacial search or filter will work if the mapping is wrong.
+**Remember:** no geospatial search or filter will work if the mapping is wrong.
 
 ## Advanced search
 
-In Cabble, when a new user is connecting, we need to populate the map with the other relevant actually connected users. To do so, we do an advanced search with a geospacial filter.
+In Cabble, when a new user is connecting, we need to populate the map with the other relevant actually connected users. To do so, we do an advanced search with a geospatial filter.
 
 Here is an example of such a query: 
 ```javascript
@@ -115,7 +115,7 @@ collection.advancedSearch(query, function (err, res) {
 
 ```
 
-You can refer to the [ElasticSearch Filters documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.7/query-dsl-geo-bounding-box-filter.html) to learn more about the geospacial filters.
+You can refer to the [ElasticSearch Filters documentation](https://www.elastic.co/guide/en/elasticsearch/reference/1.7/query-dsl-geo-bounding-box-filter.html) to learn more about the geospatial filters.
 
 ## Subscriptions
 
