@@ -25,7 +25,7 @@ Poker.planning = {
      */
     run: function() {
 
-        this.kuzzle = new Kuzzle(this.params.KUZZLE_SERVER, {defaultIndex: this.params.KUZZLE_INDEX});
+        this.kuzzle = new Kuzzle(config.kuzzleUrl, {defaultIndex: config.index});
 
         // activating bootstrap tooltips
         $('[data-toggle="tooltip"]').tooltip();
