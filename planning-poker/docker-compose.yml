@@ -8,7 +8,7 @@ demo:
     - "80:80"
 
 kuzzle:
-  image: kuzzleio/kuzzle:1.0.0-beta.4
+  image: kuzzleio/kuzzle:beta
   volumes:
     - "./defaultMapping.json:/defaultMapping.json"
   ports:

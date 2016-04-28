@@ -36,7 +36,7 @@ Poker.planning.RoomManager = {
      */
     currentRoom: function(roomId)
     {
-        if(roomId != undefined) {
+        if(roomId != undefined && roomId != false) {
             this._currentRoomId = roomId;
         }
 
@@ -97,6 +97,7 @@ Poker.planning.RoomManager = {
      */
     removeRoom: function(roomId, callback)
     {
+        console.log('removeroom');
         if(roomId == undefined) {
             return false;
         }

@@ -155,8 +155,10 @@ Poker.planning.Room = function()
      */
     this.refresh = function(id, datas)
     {
-        this.datas = datas;
-        this.id(id);
+        if (datas) {
+            this.datas = datas;
+            this.id(id);
+        }
     }
 
     /**

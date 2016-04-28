@@ -102,7 +102,10 @@ Poker.planning.pokerPage = {
 
             // removing the current player when unload the page
             $(window).unload(function(e) {
-                Poker.planning.RoomManager.currentRoom().removeUser();
+                var currentRoom = Poker.planning.RoomManager.currentRoom();
+                if (currentRoom) {
+                    currentRoom.removeUser();
+                }
             });
 
             // event change the iframe URL
@@ -164,7 +167,7 @@ Poker.planning.pokerPage = {
                         Poker.planning.homePage.redirectToThisPage();
                     }
                     else {
-                        Poker.planning.RoomManager.currentRoom().refresh(response.id, response.body);
+                        Poker.planning.RoomManager.currentRoom().refresh(response.id, response.result._source);
                         Poker.planning.pokerPage.display();
                     }
                 }
