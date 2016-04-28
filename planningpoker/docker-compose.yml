@@ -13,7 +13,6 @@ kuzzle:
     - "./defaultMapping.json:/defaultMapping.json"
   ports:
     - "7512:7512"
-    - "7511:7511"
   links:
     - elasticsearch
     - redis
