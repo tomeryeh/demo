@@ -8,7 +8,7 @@ Poker.planning = {
 
         KUZZLE_SERVER: "http://localhost:7512",
 
-        KUZZLE_INDEX: "planning-poker",
+        KUZZLE_INDEX: "planningpoker",
 
         // URL of the application, ex: http://www.poker.kaliop.com/index.html
         // DO NOT ADD SLASH AT THE END

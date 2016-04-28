@@ -26,4 +26,4 @@ redis:
 
 elasticsearch:
   image: elasticsearch:1.7
-  command: elasticsearch --cluster.name=planning-poker
+  command: elasticsearch --cluster.name=planningpoker
