@@ -2,6 +2,8 @@
 
 chnage here
 
+
+now chckin from this side of the moon
 A simple Meeting helper built on [Kuzzle](http://www.kuzzle.io)
 
 The step-by-step tutorial can be found [here](./tutorial.md).
